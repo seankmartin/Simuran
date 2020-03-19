@@ -25,8 +25,9 @@ def test_param_load():
 
 def test_experiment():
     ex = Experiment(params_file=os.path.join(
-        main_dir, "examples", "example_params.py"))
-    assert ex.param_handler["0"]["channels"] == [0, 1, 2, 3]
+        main_dir, "simuran", "default_params.py"))
+    print(ex.signals)
+    assert ex.param_handler["signals"]["region"][0] == "ACC"
 
 
 if __name__ == "__main__":

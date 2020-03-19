@@ -39,8 +39,8 @@ class ParamHandler:
         return self.params[key]
 
     def __repr__(self):
-        return ("ParamHandler with params {} from {}".format(
-            self.params, self.location))
+        return ("{} with params {} from {}".format(
+            self.__class__.__name__, self.params, self.location))
 
     @staticmethod
     def _val_to_str(val):
