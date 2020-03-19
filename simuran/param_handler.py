@@ -4,8 +4,12 @@ from typing import Iterable
 
 
 class ParamHandler:
-    def __init__(self, params=None):
+    def __init__(self, params=None, in_loc=None):
         self.params = params
+        self.location = None
+        if in_loc is not None:
+            self.read(in_loc)
+            self.location = in_loc
 
     def set_param_dict(self, params):
         self.params = params
@@ -31,10 +35,16 @@ class ParamHandler:
     def read(self, in_loc):
         self.params = read_python(in_loc)["mapping"]
 
+    def __getitem__(self, key):
+        return self.params[key]
+
+    def __repr__(self):
+        return ("ParamHandler with params {} from {}".format(
+            self.params, self.location))
+
     @staticmethod
     def _val_to_str(val):
         if not isinstance(val, Iterable) or isinstance(val, str):
-            print("{} is not iterable".format(val))
             return "\'{}\'".format(val)
         else:
             return val
