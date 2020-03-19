@@ -1,7 +1,9 @@
 """This module holds single experiment related information."""
 from simuran.base_class import BaseSimuran
 from simuran.param_handler import ParamHandler
-from simuran.containers import SignalContainer
+from simuran.containers import GenericContainer
+from simuran.base_signal import AbstractSignal
+from simuran.single_unit import SingleUnit
 from skm_pyutils.py_config import split_dict
 
 
@@ -36,9 +38,16 @@ class Experiment(BaseSimuran):
 
     def _setup(self):
         # The params file should describe the signals, units, etc.
-        self.signals = SignalContainer()
+        self.signals = GenericContainer(AbstractSignal)
         signal_dict = self.param_handler["signals"]
         for i in range(signal_dict["num_signals"]):
             params = split_dict(signal_dict, i)
             self.signals.append_new(params)
+
+        self.units = GenericContainer(SingleUnit)
+        units_dict = self.param_handler["units"]
+        for i in range(units_dict["num_groups"]):
+            params = split_dict(units_dict, i)
+            self.units.append_new(params)
+
         # The params file should be python code, similar to how spike sorting works.

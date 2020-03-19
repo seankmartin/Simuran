@@ -7,7 +7,7 @@ from simuran.base_signal import AbstractSignal
 class AbstractContainer(ABC):
     """TODO Put the docstring here."""
 
-    def __init__(self, **kwargs):
+    def __init__(self):
         self.container = []
         super().__init__()
 
@@ -20,22 +20,28 @@ class AbstractContainer(ABC):
                 indices.append(i)
         return group, indices
 
-    @abstractmethod
-    def __repr__(self):
-        """Called on print."""
-        pass
-
-    @abstractmethod
-    def __iter__(self):
-        """Iterate through the container."""
-        pass
-
-    @abstractmethod
-    def __len__(self):
-        pass
-
-    @abstractmethod
     def __getitem__(self, key):
+        return self.container[key]
+
+    def __len__(self):
+        return len(self.container)
+
+    def __iter__(self):
+        return iter(self.container)
+
+    def __repr__(self):
+        return "{} with {} elements:\n{}".format(
+            self.__class__.__name__, len(self), self.container)
+
+    def append(self, signal, key=None):
+        self.container.append(signal)
+
+    def append_new(self, params, key=None):
+        to_add = self._create_new(params)
+        self.append(to_add)
+
+    @abstractmethod
+    def _create_new(self, params):
         pass
 
 
@@ -45,33 +51,13 @@ class ExperimentContainer(AbstractContainer):
         super().__init__()
 
 
-class SignalContainer(AbstractContainer):
+class GenericContainer(AbstractContainer):
 
-    def __init__(self, **kwargs):
+    def __init__(self, cls):
+        self.cls = cls
         super().__init__()
-        self.container = OrderedDict()
 
-    def __getitem__(self, key):
-        if type(key) is int:
-            return list(self.container.values())[key]
-        return self.container.get(key, None)
-
-    def __len__(self):
-        return len(self.container)
-
-    def __iter__(self):
-        return self.container.values()
-
-    def __repr__(self):
-        return "{} with {} elements:\n{}".format(
-            self.__class__.__name__, len(self), self.container)
-
-    def append(self, signal, key=None):
-        if key is None:
-            key = len(self)
-        self.container[key] = signal
-
-    def append_new(self, params, key=None):
-        signal = AbstractSignal()
-        signal.setup(params)
-        self.append(signal, key=key)
+    def _create_new(self, params):
+        new = self.cls()
+        new.setup(params)
+        return new

@@ -14,11 +14,6 @@ class BaseSimuran(ABC):
         self.tag = None
         super().__init__()
 
-    @abstractmethod
-    def __repr__(self):
-        """Called on print."""
-        pass
-
     def add_info(self, key, info, name):
         if self.info is None:
             self.info = {}
@@ -38,3 +33,12 @@ class BaseSimuran(ABC):
                 if name in item.keys():
                     return True
         return False
+
+    def setup(self, params):
+        for key, value in params.items():
+            setattr(self, key, value)
+
+    def __repr__(self):
+        """Called on print."""
+        return "{} with attributes {}".format(
+            self.__class__.__name__, self.__dict__)

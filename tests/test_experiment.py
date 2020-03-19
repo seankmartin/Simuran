@@ -26,7 +26,7 @@ def test_param_load():
 def test_experiment():
     ex = Experiment(params_file=os.path.join(
         main_dir, "simuran", "default_params.py"))
-    print(ex.signals)
+    print(ex)
     assert ex.param_handler["signals"]["region"][0] == "ACC"
 
 

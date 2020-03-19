@@ -13,14 +13,6 @@ class AbstractSignal(BaseSimuran):
         self.group = None
         super().__init__()
 
-    def setup(self, params):
-        for key, value in params.items():
-            setattr(self, key, value)
-
-    def __repr__(self):
-        return "{} with attributes {}".format(
-            self.__class__.__name__, self.__dict__)
-
     # Alternatively
     # def __getattr__(self, key):
     #     return self.params.get(key, None)
