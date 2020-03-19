@@ -1,1 +1,1 @@
-"""Module for multi-region analysis."""
+"""Package for multi-region analysis."""
