@@ -13,6 +13,6 @@ class AbstractSignal(BaseSimuran):
         self.group = None
         super().__init__()
 
-    # Alternatively
-    # def __getattr__(self, key):
-    #     return self.params.get(key, None)
+    def load(self, *args, **kwargs):
+        super().load()
+        self.underlying = self.loader.load_signal(self.source_file, **kwargs)

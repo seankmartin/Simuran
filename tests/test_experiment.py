@@ -1,6 +1,6 @@
 import os
 
-from simuran.experiment import Experiment
+from simuran.recording import Recording
 from simuran.param_handler import ParamHandler
 from skm_pyutils.py_config import read_python
 
@@ -23,13 +23,33 @@ def test_param_load():
     os.remove("test_simuran_temp.py")
 
 
-def test_experiment():
-    ex = Experiment(params_file=os.path.join(
+def test_recording_setup():
+    ex = Recording(params_file=os.path.join(
         main_dir, "simuran", "default_params.py"))
-    print(ex)
     assert ex.param_handler["signals"]["region"][0] == "ACC"
+    assert ex.signals.group_by_property("region", "BLA")[1] == [30, 31]
+
+
+def test_recording_loading():
+    loc = r"D:\SubRet_recordings_imaging\muscimol_data\CanCSCa1_muscimol\01082018\t1_smallsq_beforeinfusion"
+    ex = Recording(params_file=os.path.join(
+        main_dir, "examples", "nc_params.py"),
+        base_file=loc)
+    print(ex.signals[11].underlying.get_samples()[0:200])
+
+
+def test_loader():
+    from simuran.loaders.nc_loader import NCLoader
+    ncl = NCLoader()
+    ncl.load_params["system"] = "Axona"
+    loc = r"D:\SubRet_recordings_imaging\muscimol_data\CanCSCa1_muscimol\01082018\t1_smallsq_beforeinfusion"
+    file_locs = ncl.auto_fname_extraction(loc, verbose=False)
+    print(file_locs)
 
 
 if __name__ == "__main__":
+    test_recording_loading()
+    exit(-1)
+    test_loader()
     test_param_load()
-    test_experiment()
+    test_recording_setup()

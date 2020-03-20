@@ -1,6 +1,7 @@
 """Module to hold the abstract class setting up information held in a class."""
 
 from abc import ABC, abstractmethod
+from simuran.loaders.base_loader import BaseLoader
 
 
 class BaseSimuran(ABC):
@@ -12,6 +13,9 @@ class BaseSimuran(ABC):
         self.date = None
         self.time = None
         self.tag = None
+        self.loader = None
+        self.source_file = None
+        self.underlying = None
         super().__init__()
 
     def add_info(self, key, info, name):
@@ -37,6 +41,23 @@ class BaseSimuran(ABC):
     def setup(self, params):
         for key, value in params.items():
             setattr(self, key, value)
+
+    def set_loader(self, loader):
+        if not isinstance(loader, BaseLoader):
+            raise ValueError(
+                "Loader set in set_loader should be derived from BaseLoader" +
+                " actual class is {}".format(loader.__class__.__name__))
+        self.loader = loader
+
+    def set_source_file(self, file):
+        self.source_file = file
+
+    @abstractmethod
+    def load(self, *args, **kwargs):
+        if self.loader is None:
+            raise ValueError(
+                "Set a loader in {} before calling load.".format(
+                    self.__class__.__name__))
 
     def __repr__(self):
         """Called on print."""
