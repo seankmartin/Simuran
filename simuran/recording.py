@@ -42,11 +42,6 @@ class Recording(BaseSimuran):
     def set_base_file(self, base):
         self.source_file = base
 
-    def __repr__(self):
-        return ("{} with params {} and source files {}".format(
-            self.__class__.__name__, self.param_handler.params,
-            self.source_files))
-
     def _parse_source_files(self):
         source_files = {}
         for item, name in zip(self.get_available(), self.available):
@@ -127,6 +122,11 @@ class Recording(BaseSimuran):
 
         if load:
             self.load()
+
+    def __repr__(self):
+        return ("{} with params {} and source files {}".format(
+            self.__class__.__name__, self.param_handler.params,
+            self.source_files))
 
 
 class RecordingContainer(AbstractContainer):

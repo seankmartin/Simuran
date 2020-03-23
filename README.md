@@ -29,3 +29,9 @@ Interface with other programs such as SpikeInterface to allow for many different
 ## TODO
 1. Add build system using fbs build system
 2. Add unit test cases
+
+## Inspiration
+1. https://github.com/seankmartin/NeuroChaT
+2. https://github.com/SpikeInterface
+3. https://github.com/seankmartin/NeuroChaT_API_Scripts
+4. 

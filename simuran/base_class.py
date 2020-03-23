@@ -59,6 +59,24 @@ class BaseSimuran(ABC):
                 "Set a loader in {} before calling load.".format(
                     self.__class__.__name__))
 
+    def data_dict_from_attr_list(self, attr_list, friendly_names=None):
+        data_out = {}
+        for i, attr_tuple in enumerate(attr_list):
+            item = self
+            for a in attr_tuple:
+                if a is None:
+                    break
+                if hasattr(self, a):
+                    item = getattr(item, a)
+                else:
+                    item = item[a]
+            if friendly_names is None:
+                key = "_".join(attr_tuple)
+            else:
+                key = friendly_names[i]
+            data_out[key] = item
+        return data_out
+
     def __repr__(self):
         """Called on print."""
         return "{} with attributes {}".format(

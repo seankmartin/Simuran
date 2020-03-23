@@ -1,7 +1,14 @@
 """This module holds containers to allow for batch processing."""
 from abc import ABC, abstractmethod
+import os
 
+import numpy as np
+
+from simuran.base_class import BaseSimuran
 from simuran.base_signal import AbstractSignal
+from skm_pyutils.py_path import make_path_if_not_exists
+from skm_pyutils.py_save import save_mixed_dict_to_csv
+from skm_pyutils.py_save import save_dicts_to_csv
 
 
 class AbstractContainer(ABC):
@@ -43,6 +50,56 @@ class AbstractContainer(ABC):
     def append_new(self, params):
         to_add = self._create_new(params)
         self.append(to_add)
+
+    def save_single_data(
+            self, attr_list, friendly_names=None, idx_list=None, out_dir_list=None, name_list=None):
+        """
+        This saves one file per object in the container.
+
+        Currently dict, np.ndarray, and list are supported values.
+        """
+        if idx_list is None:
+            idx_list = [i for i in range(len(self))]
+
+        if name_list == None:
+            name_list = ["results" + str(i) + ".csv" for i in idx_list]
+
+        if out_dir_list == None:
+            out_dir_list = [
+                os.path.join(os.getcwd(), "results_simuran")
+                for i in range(len(idx_list))]
+        elif isinstance(out_dir_list, "str"):
+            out_dir_list = [out_dir_list] * len(idx_list)
+
+        for i in idx_list:
+            data = self.data_from_attr_list(
+                attr_list, idx=i, friendly_names=friendly_names)
+            save_mixed_dict_to_csv(data, out_dir_list[i], name_list[i])
+
+    def save_summary_data(self, location, attr_list, friendly_names=None):
+        """
+        This saves one file for the whole container, each row is an object.
+        """
+        data_list = self.data_from_attr_list(
+            attr_list, friendly_names=friendly_names)
+        save_dicts_to_csv(location, data_list)
+
+    def data_from_attr_list(self, attr_list, friendly_names=None, idx=None):
+        def get_single(item, attr_list):
+            if isinstance(item, BaseSimuran):
+                data = item.data_dict_from_attr_list(attr_list, friendly_names)
+            else:
+                raise ValueError(
+                    "data_from_attr_list is only called on BaseSimuran objects")
+            return data
+
+        if idx is None:
+            data_out = []
+            for item in self:
+                data_out.append(get_single(item, attr_list))
+        else:
+            data_out = get_single(self[idx], attr_list)
+        return data_out
 
     @abstractmethod
     def _create_new(self, params):
