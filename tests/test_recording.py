@@ -34,12 +34,18 @@ def test_recording_setup():
 
 def test_nc_recording_loading():
     from neurochat.nc_lfp import NLfp
+    from neurochat.nc_spike import NSpike
+    from neurochat.nc_spatial import NSpatial
+
     loc = r"D:\SubRet_recordings_imaging\muscimol_data\CanCSCa1_muscimol\01082018\t1_smallsq_beforeinfusion"
     ex = Recording(param_file=os.path.join(
         main_dir, "examples", "nc_params.py"),
         base_file=loc, load=False)
     ex.signals[11].load()
     ex.signals[12].load()
+    ex.units[5].load()
+    ex.units[5].underlying.set_unit_no(1)
+    ex.spatial.load()
     # print(ex)
     # exit(-1)
     lfp = NLfp()
@@ -48,7 +54,21 @@ def test_nc_recording_loading():
                      "01082018_CanCSubCa1_muscimol_smallsq_before_1_1.eeg12"))
     lfp.load(system="Axona")
 
+    unit = NSpike()
+    unit.set_filename(os.path.join(
+        loc, "01082018_CanCSubCa1_muscimol_smallsq_before_1_1.10"))
+    unit.load(system="Axona")
+    unit.set_unit_no(1)
+
+    spatial = NSpatial()
+    spatial.set_filename(os.path.join(
+        loc, "01082018_CanCSubCa1_muscimol_smallsq_before_1_1_10.txt"))
+    spatial.load(system="Axona")
+
     assert np.all(ex.signals[11].underlying.get_samples() == lfp.get_samples())
+    assert np.all(ex.units[5].underlying.get_unit_stamp() ==
+                  unit.get_unit_stamp())
+    assert np.all(ex.spatial.underlying.get_pos_x() == spatial.get_pos_x())
 
 
 def test_nc_loader_fname_extract():

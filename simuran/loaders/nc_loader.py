@@ -67,8 +67,6 @@ class NCLoader(BaseLoader):
                             base_sig_name))
 
             tet_groups = kwargs.get("unit_groups", [i + 1 for i in range(16)])
-            print(tet_groups)
-            print(kwargs)
             spike_names_all = []
             cluster_names_all = []
             base_tet_name = base[:-3]
