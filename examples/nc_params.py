@@ -22,13 +22,14 @@ mapping["signals"]["sampling_rate"] = [250] * num_signals
 
 # Specific to NC
 eeg_chan_nums = [i + 1 for i in range(32)]
+mapping["signals"]["channels"] = eeg_chan_nums
 
 
 # Setting up the tetrode data
-num_groups = 16
+num_groups = 8
 regions = ["CA1"] * num_groups
-groups = [i for i in range(16)]
-mapping["units"]["num_groups"] = 16
+groups = [i for i in range(1, 5)] + [i for i in range(9, 13)]
+mapping["units"]["num_groups"] = num_groups
 mapping["units"]["region"] = regions
 mapping["units"]["group"] = groups
 

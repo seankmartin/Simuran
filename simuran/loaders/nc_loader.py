@@ -49,7 +49,7 @@ class NCLoader(BaseLoader):
             cluster_names = ndc.add_axona_files_from_dir(
                 os.path.dirname(base), **kwargs)
             spike_names = [s[0] for s in ndc.get_file_dict("Spike")]
-            channels = kwargs.get("channels", [i + 1 for i in range(32)])
+            channels = kwargs.get("sig_channels", [i + 1 for i in range(32)])
             base_sig_name = ndc.get_file_dict("LFP")[0][0]
             signal_names = []
             for c in channels:
@@ -65,9 +65,26 @@ class NCLoader(BaseLoader):
                     else:
                         raise ValueError("{} does not exist".format(
                             base_sig_name))
+
+            tet_groups = kwargs.get("unit_groups", [i + 1 for i in range(16)])
+            spike_names_all = []
+            cluster_names_all = []
+            base_tet_name = base[:-3]
+            for tet in tet_groups:
+                if os.path.exists(base_tet_name + str(tet)):
+                    spike_names_all.append(base_tet_name + str(tet))
+                    if (base_tet_name + str(tet)) in spike_names:
+                        idx = spike_names.index(base_tet_name + str(tet))
+                        cluster_names_all.append(cluster_names[idx])
+                    else:
+                        cluster_names_all.append(None)
+                else:
+                    raise ValueError("{} does not exist".format(
+                        base_tet_name + str(tet)))
+
             file_locs = {
-                "Spike": spike_names,
-                "Clusters": cluster_names,
+                "Spike": spike_names_all,
+                "Clusters": cluster_names_all,
                 "Spatial": ndc.get_file_dict("Position")[0][0],
                 "Signal": signal_names,
                 "Stimulation": ndc.get_file_dict("STM")[0][0],

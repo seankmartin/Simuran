@@ -1,18 +1,23 @@
 """This module holds single experiment related information."""
+from copy import copy
+import os
+
 from simuran.base_class import BaseSimuran
 from simuran.param_handler import ParamHandler
 from simuran.containers import GenericContainer
+from simuran.containers import AbstractContainer
 from simuran.base_signal import AbstractSignal
 from simuran.single_unit import SingleUnit
 from simuran.spatial import Spatial
 from simuran.loaders.loader_list import loaders_dict
 from skm_pyutils.py_config import split_dict
+from skm_pyutils.py_path import get_all_files_in_dir
 
 
 class Recording(BaseSimuran):
 
     def __init__(
-            self, params=None, params_file=None, base_file=None, load=True):
+            self, params=None, param_file=None, base_file=None, load=True):
         super().__init__()
         self.signals = None
         self.units = None
@@ -22,8 +27,8 @@ class Recording(BaseSimuran):
         self.param_handler = None
         self.source_file = base_file
         self.source_files = {}
-        if params_file is not None:
-            self._setup_from_file(params_file)
+        if param_file is not None:
+            self._setup_from_file(param_file)
         elif params is not None:
             self._setup_from_dict(params)
         if load:
@@ -56,8 +61,8 @@ class Recording(BaseSimuran):
     def _run_analysis(self, fn, **kwargs):
         pass
 
-    def _setup_from_file(self, params_file):
-        self.param_handler = ParamHandler(in_loc=params_file)
+    def _setup_from_file(self, param_file):
+        self.param_handler = ParamHandler(in_loc=param_file)
         self._setup()
 
     def _setup_from_dict(self, params):
@@ -65,18 +70,30 @@ class Recording(BaseSimuran):
         self._setup()
 
     def _setup(self):
-        data_loader_cls = loaders_dict.get(self.param_handler["loader"], None)
+        data_loader_cls = loaders_dict.get(
+            self.param_handler.get("loader", None), None)
         if data_loader_cls is None:
             raise ValueError(
                 "Unrecognised loader {}, options are {}".format(
-                    self.param_handler["loader"], loaders_dict.keys()))
+                    self.param_handler.get("loader", None),
+                    list(loaders_dict.keys())))
+        elif data_loader_cls == "params_only_no_cls":
+            data_loader = None
         else:
             data_loader = data_loader_cls(self.param_handler["loader_kwargs"])
         if self.source_file == None:
-            base = self.param_handler["base_fname"]
+            base = self.param_handler.get("base_fname", None)
         else:
             base = self.source_file
-        fnames = data_loader.auto_fname_extraction(base)
+
+        if data_loader is not None:
+            num_sigs = self.param_handler["signals"]["num_signals"]
+            default_chans = [i + 1 for i in range(num_sigs)]
+            chans = self.param_handler["signals"].get(
+                "channels", default_chans)
+            groups = self.param_handler["units"]["group"]
+            fnames = data_loader.auto_fname_extraction(
+                base, sig_channels=chans, unit_groups=groups)
 
         # TODO establish what is loaded
         self.signals = GenericContainer(AbstractSignal)
@@ -85,24 +102,61 @@ class Recording(BaseSimuran):
         for i in range(signal_dict["num_signals"]):
             params = split_dict(signal_dict, i)
             self.signals.append_new(params)
-            self.signals[-1].set_source_file(fnames["Signal"][i])
-            self.signals[-1].set_loader(data_loader)
+            if data_loader is not None:
+                self.signals[-1].set_source_file(fnames["Signal"][i])
+                self.signals[-1].set_loader(data_loader)
 
         self.units = GenericContainer(SingleUnit)
         self.available.append("units")
         units_dict = self.param_handler["units"]
-        for i in range(len(fnames["Clusters"])):
+        for i in range(units_dict["num_groups"]):
             params = split_dict(units_dict, i)
             self.units.append_new(params)
-            self.units[-1].set_source_file(
-                {"Spike": fnames["Spike"][i],
-                 "Clusters": fnames["Clusters"][i]
-                 })
-            self.units[-1].set_loader(data_loader)
+            if data_loader is not None:
+                self.units[-1].set_source_file(
+                    {"Spike": fnames["Spike"][i],
+                     "Clusters": fnames["Clusters"][i]
+                     })
+                self.units[-1].set_loader(data_loader)
 
         self.spatial = Spatial()
         self.available.append("spatial")
-        self.spatial.set_source_file(fnames["Spatial"])
-        self.spatial.set_loader(data_loader)
+        if data_loader is not None:
+            self.spatial.set_source_file(fnames["Spatial"])
+            self.spatial.set_loader(data_loader)
 
         self._parse_source_files()
+
+
+class RecordingContainer(AbstractContainer):
+
+    def __init__(self, load_on_fly=True, **kwargs):
+        super().__init__()
+        self.load_on_fly = load_on_fly
+        self.last_loaded = Recording()
+        self.last_loaded_idx = None
+
+    def auto_setup(self, start_dir, recursive=False, re_filter=None):
+        param_files = []
+        fnames = get_all_files_in_dir(
+            start_dir, ext=".py", return_absolute=True,
+            recursive=recursive, case_sensitive_ext=True,
+            re_filter=re_filter)
+        for fname in fnames:
+            if os.path.basename["fnames"] == "simuran_params.py":
+                param_files.append(fname)
+        should_load = not self.load_on_fly
+        for param_file in param_files:
+            recording = Recording(
+                param_file=param_file, load=should_load)
+            self.append(recording)
+
+    def get(self, idx):
+        """This loads the data if not loaded."""
+        if self.load_on_fly:
+            if self.last_loaded_idx != idx:
+                self.last_loaded = copy(self[idx])
+                self.last_loaded.load()
+            return self.last_loaded
+        else:
+            return self[idx]

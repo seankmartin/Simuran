@@ -1,6 +1,6 @@
 """This module holds containers to allow for batch processing."""
 from abc import ABC, abstractmethod
-from collections import OrderedDict
+
 from simuran.base_signal import AbstractSignal
 
 
@@ -20,8 +20,8 @@ class AbstractContainer(ABC):
                 indices.append(i)
         return group, indices
 
-    def __getitem__(self, key):
-        return self.container[key]
+    def __getitem__(self, idx):
+        return self.container[idx]
 
     def __len__(self):
         return len(self.container)
@@ -37,22 +37,16 @@ class AbstractContainer(ABC):
         for item in self:
             item.load()
 
-    def append(self, signal, key=None):
+    def append(self, signal):
         self.container.append(signal)
 
-    def append_new(self, params, key=None):
+    def append_new(self, params):
         to_add = self._create_new(params)
         self.append(to_add)
 
     @abstractmethod
     def _create_new(self, params):
         pass
-
-
-class ExperimentContainer(AbstractContainer):
-
-    def __init__(self, **kwargs):
-        super().__init__()
 
 
 class GenericContainer(AbstractContainer):

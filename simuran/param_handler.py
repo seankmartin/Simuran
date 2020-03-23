@@ -35,6 +35,12 @@ class ParamHandler:
     def read(self, in_loc):
         self.params = read_python(in_loc)["mapping"]
 
+    def get(self, key, default=None):
+        if key in self.params.keys():
+            return self[key]
+        else:
+            return default
+
     def __getitem__(self, key):
         return self.params[key]
 

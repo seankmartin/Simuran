@@ -2,7 +2,10 @@
 
 mapping = {
     "signals": {},
-    "units": {}
+    "units": {},
+    "spatial": {},
+    "loader": "params_only",
+    "loader_kwargs": {}
 }
 
 # Setting up the signals
@@ -27,3 +30,4 @@ mapping["units"]["group"] = groups
 
 # Setting up the spatial data
 arena_size = "default"
+mapping["spatial"]["arena_size"] = arena_size
