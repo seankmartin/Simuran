@@ -28,11 +28,9 @@ class Recording(BaseSimuran):
         self.source_file = base_file
         self.source_files = {}
         if param_file is not None:
-            self._setup_from_file(param_file)
+            self._setup_from_file(param_file, load=load)
         elif params is not None:
-            self._setup_from_dict(params)
-        if load:
-            self.load()
+            self._setup_from_dict(params, load=load)
 
     def load(self, *args, **kwargs):
         for item in self.get_available():
@@ -61,15 +59,20 @@ class Recording(BaseSimuran):
     def _run_analysis(self, fn, **kwargs):
         pass
 
-    def _setup_from_file(self, param_file):
+    def _setup_from_file(self, param_file, load=True):
         self.param_handler = ParamHandler(in_loc=param_file)
-        self._setup()
+        self._setup(load=load)
 
-    def _setup_from_dict(self, params):
+    def _setup_from_dict(self, params, load=True):
         self.param_handler = ParamHandler(params=params)
-        self._setup()
+        self._setup(load=load)
 
-    def _setup(self):
+    def _setup(self, load=True):
+        if self.source_file == None:
+            base = self.param_handler.get("base_fname", None)
+        else:
+            base = self.source_file
+
         data_loader_cls = loaders_dict.get(
             self.param_handler.get("loader", None), None)
         if data_loader_cls is None:
@@ -79,14 +82,9 @@ class Recording(BaseSimuran):
                     list(loaders_dict.keys())))
         elif data_loader_cls == "params_only_no_cls":
             data_loader = None
+            load = False
         else:
             data_loader = data_loader_cls(self.param_handler["loader_kwargs"])
-        if self.source_file == None:
-            base = self.param_handler.get("base_fname", None)
-        else:
-            base = self.source_file
-
-        if data_loader is not None:
             num_sigs = self.param_handler["signals"]["num_signals"]
             default_chans = [i + 1 for i in range(num_sigs)]
             chans = self.param_handler["signals"].get(
@@ -126,6 +124,9 @@ class Recording(BaseSimuran):
             self.spatial.set_loader(data_loader)
 
         self._parse_source_files()
+
+        if load:
+            self.load()
 
 
 class RecordingContainer(AbstractContainer):

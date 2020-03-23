@@ -1,5 +1,7 @@
 import os
 
+import numpy as np
+
 from simuran.recording import Recording
 from simuran.param_handler import ParamHandler
 from skm_pyutils.py_config import read_python
@@ -36,12 +38,17 @@ def test_nc_recording_loading():
     ex = Recording(param_file=os.path.join(
         main_dir, "examples", "nc_params.py"),
         base_file=loc, load=False)
-    print(ex)
-    exit(-1)
+    ex.signals[11].load()
+    ex.signals[12].load()
+    # print(ex)
+    # exit(-1)
     lfp = NLfp()
-    lfp.set_filename(loc + ".eeg12")
+    lfp.set_filename(
+        os.path.join(loc,
+                     "01082018_CanCSubCa1_muscimol_smallsq_before_1_1.eeg12"))
     lfp.load(system="Axona")
-    assert ex.signals[11].underlying == lfp
+
+    assert np.all(ex.signals[11].underlying.get_samples() == lfp.get_samples())
 
 
 def test_nc_loader_fname_extract():
@@ -49,9 +56,10 @@ def test_nc_loader_fname_extract():
     ncl = NCLoader()
     ncl.load_params["system"] = "Axona"
     loc = r"D:\SubRet_recordings_imaging\muscimol_data\CanCSCa1_muscimol\01082018\t1_smallsq_beforeinfusion"
-    file_locs = ncl.auto_fname_extraction(loc, verbose=False)
+    file_locs = ncl.auto_fname_extraction(
+        loc, verbose=False, unit_groups=[1, 2, 3, 4, 9, 10, 11, 12])
     assert "01082018_CanCSubCa1_muscimol_smallsq_before_1_1_10.cut" in [
-        os.path.basename(f) for f in file_locs["Clusters"]]
+        os.path.basename(f) for f in file_locs["Clusters"] if f is not None]
 
 
 if __name__ == "__main__":
