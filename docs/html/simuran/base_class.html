@@ -28,6 +28,7 @@
 <pre><code class="python">&#34;&#34;&#34;Module to hold the abstract class setting up information held in a class.&#34;&#34;&#34;
 
 from abc import ABC, abstractmethod
+from simuran.loaders.base_loader import BaseLoader
 
 
 class BaseSimuran(ABC):
@@ -39,12 +40,10 @@ class BaseSimuran(ABC):
         self.date = None
         self.time = None
         self.tag = None
+        self.loader = None
+        self.source_file = None
+        self.underlying = None
         super().__init__()
-
-    @abstractmethod
-    def __repr__(self):
-        &#34;&#34;&#34;Called on print.&#34;&#34;&#34;
-        pass
 
     def add_info(self, key, info, name):
         if self.info is None:
@@ -64,7 +63,33 @@ class BaseSimuran(ABC):
             for item in self.info.values():
                 if name in item.keys():
                     return True
-        return False</code></pre>
+        return False
+
+    def setup(self, params):
+        for key, value in params.items():
+            setattr(self, key, value)
+
+    def set_loader(self, loader):
+        if not isinstance(loader, BaseLoader):
+            raise ValueError(
+                &#34;Loader set in set_loader should be derived from BaseLoader&#34; +
+                &#34; actual class is {}&#34;.format(loader.__class__.__name__))
+        self.loader = loader
+
+    def set_source_file(self, file):
+        self.source_file = file
+
+    @abstractmethod
+    def load(self, *args, **kwargs):
+        if self.loader is None:
+            raise ValueError(
+                &#34;Set a loader in {} before calling load.&#34;.format(
+                    self.__class__.__name__))
+
+    def __repr__(self):
+        &#34;&#34;&#34;Called on print.&#34;&#34;&#34;
+        return &#34;{} with attributes {}&#34;.format(
+            self.__class__.__name__, self.__dict__)</code></pre>
 </details>
 </section>
 <section>
@@ -95,12 +120,10 @@ class BaseSimuran(ABC):
         self.date = None
         self.time = None
         self.tag = None
+        self.loader = None
+        self.source_file = None
+        self.underlying = None
         super().__init__()
-
-    @abstractmethod
-    def __repr__(self):
-        &#34;&#34;&#34;Called on print.&#34;&#34;&#34;
-        pass
 
     def add_info(self, key, info, name):
         if self.info is None:
@@ -120,7 +143,33 @@ class BaseSimuran(ABC):
             for item in self.info.values():
                 if name in item.keys():
                     return True
-        return False</code></pre>
+        return False
+
+    def setup(self, params):
+        for key, value in params.items():
+            setattr(self, key, value)
+
+    def set_loader(self, loader):
+        if not isinstance(loader, BaseLoader):
+            raise ValueError(
+                &#34;Loader set in set_loader should be derived from BaseLoader&#34; +
+                &#34; actual class is {}&#34;.format(loader.__class__.__name__))
+        self.loader = loader
+
+    def set_source_file(self, file):
+        self.source_file = file
+
+    @abstractmethod
+    def load(self, *args, **kwargs):
+        if self.loader is None:
+            raise ValueError(
+                &#34;Set a loader in {} before calling load.&#34;.format(
+                    self.__class__.__name__))
+
+    def __repr__(self):
+        &#34;&#34;&#34;Called on print.&#34;&#34;&#34;
+        return &#34;{} with attributes {}&#34;.format(
+            self.__class__.__name__, self.__dict__)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -129,7 +178,9 @@ class BaseSimuran(ABC):
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="simuran.base_signal.AbstractSignal" href="base_signal.html#simuran.base_signal.AbstractSignal">AbstractSignal</a></li>
-<li><a title="simuran.experiment.Experiment" href="experiment.html#simuran.experiment.Experiment">Experiment</a></li>
+<li><a title="simuran.recording.Recording" href="recording.html#simuran.recording.Recording">Recording</a></li>
+<li><a title="simuran.single_unit.SingleUnit" href="single_unit.html#simuran.single_unit.SingleUnit">SingleUnit</a></li>
+<li><a title="simuran.spatial.Spatial" href="spatial.html#simuran.spatial.Spatial">Spatial</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -183,6 +234,67 @@ class BaseSimuran(ABC):
     return self.info[key][name]</code></pre>
 </details>
 </dd>
+<dt id="simuran.base_class.BaseSimuran.load"><code class="name flex">
+<span>def <span class="ident">load</span></span>(<span>self, *args, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abstractmethod
+def load(self, *args, **kwargs):
+    if self.loader is None:
+        raise ValueError(
+            &#34;Set a loader in {} before calling load.&#34;.format(
+                self.__class__.__name__))</code></pre>
+</details>
+</dd>
+<dt id="simuran.base_class.BaseSimuran.set_loader"><code class="name flex">
+<span>def <span class="ident">set_loader</span></span>(<span>self, loader)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_loader(self, loader):
+    if not isinstance(loader, BaseLoader):
+        raise ValueError(
+            &#34;Loader set in set_loader should be derived from BaseLoader&#34; +
+            &#34; actual class is {}&#34;.format(loader.__class__.__name__))
+    self.loader = loader</code></pre>
+</details>
+</dd>
+<dt id="simuran.base_class.BaseSimuran.set_source_file"><code class="name flex">
+<span>def <span class="ident">set_source_file</span></span>(<span>self, file)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_source_file(self, file):
+    self.source_file = file</code></pre>
+</details>
+</dd>
+<dt id="simuran.base_class.BaseSimuran.setup"><code class="name flex">
+<span>def <span class="ident">setup</span></span>(<span>self, params)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def setup(self, params):
+    for key, value in params.items():
+        setattr(self, key, value)</code></pre>
+</details>
+</dd>
 </dl>
 </dd>
 </dl>
@@ -203,10 +315,14 @@ class BaseSimuran(ABC):
 <ul>
 <li>
 <h4><code><a title="simuran.base_class.BaseSimuran" href="#simuran.base_class.BaseSimuran">BaseSimuran</a></code></h4>
-<ul class="">
+<ul class="two-column">
 <li><code><a title="simuran.base_class.BaseSimuran.add_info" href="#simuran.base_class.BaseSimuran.add_info">add_info</a></code></li>
 <li><code><a title="simuran.base_class.BaseSimuran.does_info_exist" href="#simuran.base_class.BaseSimuran.does_info_exist">does_info_exist</a></code></li>
 <li><code><a title="simuran.base_class.BaseSimuran.get_info" href="#simuran.base_class.BaseSimuran.get_info">get_info</a></code></li>
+<li><code><a title="simuran.base_class.BaseSimuran.load" href="#simuran.base_class.BaseSimuran.load">load</a></code></li>
+<li><code><a title="simuran.base_class.BaseSimuran.set_loader" href="#simuran.base_class.BaseSimuran.set_loader">set_loader</a></code></li>
+<li><code><a title="simuran.base_class.BaseSimuran.set_source_file" href="#simuran.base_class.BaseSimuran.set_source_file">set_source_file</a></code></li>
+<li><code><a title="simuran.base_class.BaseSimuran.setup" href="#simuran.base_class.BaseSimuran.setup">setup</a></code></li>
 </ul>
 </li>
 </ul>
