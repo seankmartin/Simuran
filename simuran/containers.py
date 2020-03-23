@@ -33,6 +33,10 @@ class AbstractContainer(ABC):
         return "{} with {} elements:\n{}".format(
             self.__class__.__name__, len(self), self.container)
 
+    def load(self):
+        for item in self:
+            item.load()
+
     def append(self, signal, key=None):
         self.container.append(signal)
 

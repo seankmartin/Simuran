@@ -34,8 +34,11 @@ def test_recording_loading():
     loc = r"D:\SubRet_recordings_imaging\muscimol_data\CanCSCa1_muscimol\01082018\t1_smallsq_beforeinfusion"
     ex = Recording(params_file=os.path.join(
         main_dir, "examples", "nc_params.py"),
-        base_file=loc)
-    print(ex.signals[11].underlying.get_samples()[0:200])
+        base_file=loc, load=False)
+    print(ex)
+    # print(ex.signals[11].underlying.get_samples()[0:200])
+    print(ex.signals[11])
+    print(ex.signals[12])
 
 
 def test_loader():

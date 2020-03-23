@@ -9,4 +9,4 @@ class SingleUnit(BaseSimuran):
     def load(self, *args, **kwargs):
         super().load()
         self.underlying = self.loader.load_single_unit(
-            self.source_file, **kwargs)
+            self.source_file["Spike"], **kwargs)
