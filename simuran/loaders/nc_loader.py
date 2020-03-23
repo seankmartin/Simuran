@@ -25,9 +25,13 @@ class NCLoader(BaseLoader):
         return self.spatial
 
     def load_single_unit(self, *args, **kwargs):
-        self.single_unit = NSpike()
-        self.single_unit.load(*args, self.load_params["system"])
-        return self.single_unit
+        fname, clust_name = args
+        if clust_name is not None:
+            self.single_unit = NSpike()
+            self.single_unit.load(fname, self.load_params["system"])
+            return self.single_unit
+        else:
+            return None
 
     def auto_fname_extraction(self, base, **kwargs):
         # Currently only implemented for Axona systems

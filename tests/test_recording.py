@@ -46,8 +46,6 @@ def test_nc_recording_loading():
     ex.units[5].load()
     ex.units[5].underlying.set_unit_no(1)
     ex.spatial.load()
-    # print(ex)
-    # exit(-1)
     lfp = NLfp()
     lfp.set_filename(
         os.path.join(loc,
