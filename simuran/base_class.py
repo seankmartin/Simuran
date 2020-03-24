@@ -16,6 +16,7 @@ class BaseSimuran(ABC):
         self.loader = None
         self.source_file = None
         self.underlying = None
+        self.results = {}
         super().__init__()
 
     def add_info(self, key, info, name):
@@ -76,6 +77,15 @@ class BaseSimuran(ABC):
                 key = friendly_names[i]
             data_out[key] = item
         return data_out
+
+    def _run_fn(self, fn, *args, save_result=True, **kwargs):
+        result = fn(*args, **kwargs)
+        ctr = 0
+        if save_result:
+            while (str(fn) + "_" + str(ctr)) in self.results.keys():
+                ctr = ctr + 1
+            self.results[str(fn) + "_" + str(ctr)] = result
+        return result
 
     def __repr__(self):
         """Called on print."""

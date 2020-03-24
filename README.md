@@ -2,6 +2,15 @@
 Simultaneous Multi-Region Analysis.
 The general design is to have single objects with large amounts of information and an intuitive system to set this up.
 
+# Installation
+git clone https://github.com/seankmartin/PythonUtils
+cd PythonUtils
+pip install -e .
+cd ..
+git clone https://github.com/seankmartin/SIMURAN
+cd SIMURAN
+pip install -e .
+
 ## Requirements
 Describe what is in your data and facilitate batch processing.
 Provide some analysis methods and allow for easy creation of further analyses.
