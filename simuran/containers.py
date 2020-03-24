@@ -80,6 +80,9 @@ class AbstractContainer(ABC):
         """
         This saves one file for the whole container, each row is an object.
         """
+        attr_list = [("source_file",)] + attr_list
+        if friendly_names is not None:
+            friendly_names = ["Recording file", ] + friendly_names
         data_list = self.data_from_attr_list(
             attr_list, friendly_names=friendly_names)
         save_dicts_to_csv(location, data_list)

@@ -111,8 +111,6 @@ class NCLoader(BaseLoader):
                         raise ValueError("{} does not exist".format(
                             base_sig_name))
 
-            tet_groups = kwargs.get("unit_groups", [i + 1 for i in range(16)])
-
             file_locs = {
                 "Spike": spike_names_all,
                 "Clusters": cluster_names_all,

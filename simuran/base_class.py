@@ -67,8 +67,11 @@ class BaseSimuran(ABC):
             for a in attr_tuple:
                 if a is None:
                     break
-                if hasattr(self, a):
-                    item = getattr(item, a)
+                if isinstance(a, str):
+                    if hasattr(item, a):
+                        item = getattr(item, a)
+                    else:
+                        item = item[a]
                 else:
                     item = item[a]
             if friendly_names is None:

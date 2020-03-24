@@ -66,6 +66,7 @@ class Recording(BaseSimuran):
         if self.source_file == None:
             base = self.param_handler.get(
                 "base_fname", os.path.dirname(self.param_handler.location))
+            self.source_file = base
         else:
             base = self.source_file
 
@@ -142,6 +143,7 @@ class RecordingContainer(AbstractContainer):
         self.load_on_fly = load_on_fly
         self.last_loaded = Recording()
         self.last_loaded_idx = None
+        self.base_dir = None
 
     def auto_setup(self, start_dir, recursive=True, re_filter=None):
         param_files = []
@@ -163,6 +165,7 @@ class RecordingContainer(AbstractContainer):
                 print("Last recording was invalid, not adding to container")
             else:
                 self.append(recording)
+        self.base_dir = start_dir
 
     def get(self, idx):
         """This loads the data if not loaded."""

@@ -4,6 +4,7 @@ from pprint import pformat
 
 from skm_pyutils.py_config import read_python
 from skm_pyutils.py_path import get_dirs_matching_regex
+from skm_pyutils.py_path import get_all_files_in_dir
 from typing import Iterable
 
 
@@ -74,6 +75,15 @@ class ParamHandler:
             write_loc = os.path.join(d, fname)
             print("Writing params to {}".format(write_loc))
             self.write(write_loc, out_str=out_str)
+
+    @staticmethod
+    def clear_params(start_dir, recursive=True):
+        fnames = get_all_files_in_dir(
+            start_dir, ext=".py", recursive=recursive)
+        for fname in fnames:
+            if os.path.basename(fname) == "simuran_params.py":
+                print("Removing {}".format(fname))
+                os.remove(fname)
 
     def interactive_refilt(self, start_dir):
         re_filt = ""
