@@ -3,6 +3,7 @@ Simultaneous Multi-Region Analysis.
 The general design is to have single objects with large amounts of information and an intuitive system to set this up.
 
 # Installation
+```
 git clone https://github.com/seankmartin/PythonUtils
 cd PythonUtils
 pip install -e .
@@ -10,6 +11,7 @@ cd ..
 git clone https://github.com/seankmartin/SIMURAN
 cd SIMURAN
 pip install -e .
+```
 
 ## Requirements
 Describe what is in your data and facilitate batch processing.
@@ -37,10 +39,9 @@ Interface with other programs such as SpikeInterface to allow for many different
 
 ## TODO
 1. Add build system using fbs build system
-2. Add unit test cases
+2. Add more unit test cases
 
 ## Inspiration
 1. https://github.com/seankmartin/NeuroChaT
 2. https://github.com/SpikeInterface
 3. https://github.com/seankmartin/NeuroChaT_API_Scripts
-4. 
