@@ -5,8 +5,7 @@ from simuran.loaders.base_loader import BaseLoader
 from neurochat.nc_lfp import NLfp
 from neurochat.nc_spatial import NSpatial
 from neurochat.nc_spike import NSpike
-from neurochat.nc_datacontainer import NDataContainer
-from neurochat.nc_utils import get_all_files_in_dir
+from skm_pyutils.py_path import get_all_files_in_dir
 
 
 class NCLoader(BaseLoader):
@@ -36,9 +35,15 @@ class NCLoader(BaseLoader):
     def auto_fname_extraction(self, base, **kwargs):
         # Currently only implemented for Axona systems
         if self.load_params["system"] == "Axona":
+
+            # Find the set file if a directory is passed
             if os.path.isdir(base):
                 set_files = get_all_files_in_dir(base, ext="set")
-                if len(set_files) > 1:
+                if len(set_files) == 0:
+                    print("WARNING: No set files found in {}, skipping".format(
+                        base))
+                    return None
+                elif len(set_files) > 1:
                     raise ValueError(
                         "Found more than one set file, found {}".format(
                             len(set_files)))
@@ -46,15 +51,51 @@ class NCLoader(BaseLoader):
             elif not os.path.isfile(base):
                 raise ValueError(
                     "{} is not a file or directory".format(base))
-            kwargs["re_filter"] = (
-                "^" + os.path.splitext(os.path.basename(base))[0])
-            kwargs["save_result"] = False
-            ndc = NDataContainer(load_on_fly=True)
-            cluster_names = ndc.add_axona_files_from_dir(
-                os.path.dirname(base), **kwargs)
-            spike_names = [s[0] for s in ndc.get_file_dict("Spike")]
+
+            cluster_extension = kwargs.get("cluster_extension", ".cut")
+            clu_extension = kwargs.get("clu_extension", ".clu.X")
+            pos_extension = kwargs.get("pos_extension", ".txt")
+            lfp_extension = kwargs.get("lfp_extension", ".eeg")  # eeg or egf
+            stm_extension = kwargs.get("stm_extension", ".stm")
+            tet_groups = kwargs.get("unit_groups", [i + 1 for i in range(16)])
             channels = kwargs.get("sig_channels", [i + 1 for i in range(32)])
-            base_sig_name = ndc.get_file_dict("LFP")[0][0]
+
+            filename = os.path.splitext(base)[0]
+            base_filename = os.path.splitext(os.path.basename(base))[0]
+
+            # Extract the tetrode and cluster data
+            spike_names_all = []
+            cluster_names_all = []
+            for tetrode in tet_groups:
+                spike_name = filename + '.' + str(tetrode)
+                if not os.path.isfile(spike_name):
+                    raise ValueError(
+                        "Axona data is not available for {}".format(spike_name))
+                spike_names_all.append(spike_name)
+
+                cut_name = filename + '_' + str(tetrode) + cluster_extension
+                clu_name = filename + clu_extension[:-1] + str(tetrode)
+                if os.path.isfile(cut_name):
+                    cluster_name = cut_name
+                elif os.path.isfile(clu_name):
+                    cluster_name = clu_name
+                else:
+                    cluster_name = None
+                cluster_names_all.append(cluster_name)
+
+            # Extract the positional data
+            output_list = [None, None]
+            for i, ext in enumerate([pos_extension, stm_extension]):
+                for fname in get_all_files_in_dir(
+                        os.path.dirname(base), ext=ext,
+                        return_absolute=False, case_sensitive_ext=True):
+                    if fname[:(len(base_filename) + 1)] == base_filename + "_":
+                        name = os.path.join(os.path.dirname(base), fname)
+                        output_list[i] = name
+                        break
+            spatial_name, stim_name = output_list
+
+            base_sig_name = filename + lfp_extension
             signal_names = []
             for c in channels:
                 if c != 1:
@@ -71,27 +112,13 @@ class NCLoader(BaseLoader):
                             base_sig_name))
 
             tet_groups = kwargs.get("unit_groups", [i + 1 for i in range(16)])
-            spike_names_all = []
-            cluster_names_all = []
-            base_tet_name = base[:-3]
-            for tet in tet_groups:
-                if os.path.exists(base_tet_name + str(tet)):
-                    spike_names_all.append(base_tet_name + str(tet))
-                    if (base_tet_name + str(tet)) in spike_names:
-                        idx = spike_names.index(base_tet_name + str(tet))
-                        cluster_names_all.append(cluster_names[idx])
-                    else:
-                        cluster_names_all.append(None)
-                else:
-                    raise ValueError("{} does not exist".format(
-                        base_tet_name + str(tet)))
 
             file_locs = {
                 "Spike": spike_names_all,
                 "Clusters": cluster_names_all,
-                "Spatial": ndc.get_file_dict("Position")[0][0],
+                "Spatial": spatial_name,
                 "Signal": signal_names,
-                "Stimulation": ndc.get_file_dict("STM")[0][0],
+                "Stimulation": stim_name,
             }
             return file_locs
         else:

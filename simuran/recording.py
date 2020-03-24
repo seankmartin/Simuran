@@ -64,7 +64,8 @@ class Recording(BaseSimuran):
 
     def _setup(self, load=True):
         if self.source_file == None:
-            base = self.param_handler.get("base_fname", None)
+            base = self.param_handler.get(
+                "base_fname", os.path.dirname(self.param_handler.location))
         else:
             base = self.source_file
 
@@ -87,6 +88,9 @@ class Recording(BaseSimuran):
             groups = self.param_handler["units"]["group"]
             fnames = data_loader.auto_fname_extraction(
                 base, sig_channels=chans, unit_groups=groups)
+            if fnames is None:
+                self.valid = False
+                return
 
         # TODO establish what is loaded
         self.signals = GenericContainer(AbstractSignal)
@@ -123,6 +127,8 @@ class Recording(BaseSimuran):
         if load:
             self.load()
 
+        self.valid = True
+
     def __repr__(self):
         return ("{} with params {} and source files {}".format(
             self.__class__.__name__, self.param_handler.params,
@@ -137,20 +143,26 @@ class RecordingContainer(AbstractContainer):
         self.last_loaded = Recording()
         self.last_loaded_idx = None
 
-    def auto_setup(self, start_dir, recursive=False, re_filter=None):
+    def auto_setup(self, start_dir, recursive=True, re_filter=None):
         param_files = []
         fnames = get_all_files_in_dir(
             start_dir, ext=".py", return_absolute=True,
             recursive=recursive, case_sensitive_ext=True,
             re_filter=re_filter)
         for fname in fnames:
-            if os.path.basename["fnames"] == "simuran_params.py":
+            if os.path.basename(fname) == "simuran_params.py":
                 param_files.append(fname)
         should_load = not self.load_on_fly
-        for param_file in param_files:
+        out_str_load = "Loading" if should_load else "Parsing"
+        for i, param_file in enumerate(param_files):
+            print("{} recording {} of {} at {}".format(
+                out_str_load, i + 1, len(param_files), param_file))
             recording = Recording(
                 param_file=param_file, load=should_load)
-            self.append(recording)
+            if not recording.valid:
+                print("Last recording was invalid, not adding to container")
+            else:
+                self.append(recording)
 
     def get(self, idx):
         """This loads the data if not loaded."""
@@ -161,3 +173,7 @@ class RecordingContainer(AbstractContainer):
             return self.last_loaded
         else:
             return self[idx]
+
+    def _create_new(self, params):
+        recording = Recording(params=params)
+        return recording

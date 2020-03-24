@@ -44,8 +44,8 @@ class AbstractContainer(ABC):
         for item in self:
             item.load()
 
-    def append(self, signal):
-        self.container.append(signal)
+    def append(self, item):
+        self.container.append(item)
 
     def append_new(self, params):
         to_add = self._create_new(params)

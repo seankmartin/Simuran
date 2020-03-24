@@ -27,7 +27,7 @@ def test_param_load():
 
 def test_recording_setup():
     ex = Recording(param_file=os.path.join(
-        main_dir, "simuran", "default_params.py"))
+        main_dir, "simuran", "params", "default_params.py"))
     assert ex.param_handler["signals"]["region"][0] == "ACC"
     assert ex.signals.group_by_property("region", "BLA")[1] == [30, 31]
 
