@@ -104,6 +104,10 @@ class AbstractContainer(ABC):
             data_out = get_single(self[idx], attr_list)
         return data_out
 
+    def sort(self, sort_fn, reverse=False):
+        self.container = sorted(
+            self.container, key=sort_fn, reverse=reverse)
+
     @abstractmethod
     def _create_new(self, params):
         pass

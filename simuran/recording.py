@@ -176,3 +176,9 @@ class RecordingContainer(AbstractContainer):
     def _create_new(self, params):
         recording = Recording(params=params)
         return recording
+
+    def __repr__(self):
+        s_files = "\n".join([r.source_file for r in self])
+        return "{} with {} elements picked from {}:\n{}".format(
+            self.__class__.__name__, len(self), self.base_dir,
+            s_files)

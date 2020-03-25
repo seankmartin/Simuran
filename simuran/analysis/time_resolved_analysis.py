@@ -50,4 +50,12 @@ if __name__ == "__main__":
     # exit(-1)
     rc = RecordingContainer()
     rc.auto_setup(in_dir, recursive=True)
+
+    def sort_fn(x):
+        comp = x.source_file[len(rc.base_dir + os.sep) + 1:]
+        order = int(comp.split("_")[0])
+        return order
+
+    rc.sort(sort_fn, reverse=False)
+    print(rc)
     time_resolved_check(rc)

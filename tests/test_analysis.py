@@ -34,26 +34,34 @@ def test_analysis():
     ParamHandler.clear_params(os.path.join(in_dir, "t6_tmaze"))
     rc = RecordingContainer()
     rc.auto_setup(in_dir, recursive=True)
+
+    def sort_fn(x):
+        comp = x.source_file[len(rc.base_dir + os.sep) + 1:]
+        order = int(comp.split("_")[0])
+        return order
+
+    rc.sort(sort_fn, reverse=False)
     time_resolved_check(rc)
     with open("temp.csv", "r") as cf:
         reader = csv.reader(cf, delimiter=",")
         cols = [row[1][:6] for row in reader][1:]
-        vals = ["0.087336245",
-                "0.115936695",
-                "0.091756624",
-                "0.073743017",
-                "0.08306538",
-                "0.075157516",
-                "0.030627871",
-                "0.081031308",
-                "0.067497404",
+        vals = ["0.067497404",
                 "0.027263875",
                 "0.014662757",
                 "0.011589404",
                 "0.030674847",
                 "0.049013748",
                 "0.08045977",
-                "0.065048099"]
+                "0.065048099",
+                "0.087336245",
+                "0.115936695",
+                "0.091756624",
+                "0.073743017",
+                "0.08306538",
+                "0.075157516",
+                "0.030627871",
+                "0.081031308"
+                ]
         vals = [val[:6] for val in vals]
         assert cols == vals
     os.remove("temp.csv")
