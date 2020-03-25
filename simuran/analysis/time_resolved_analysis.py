@@ -15,19 +15,42 @@ def burst(recording, tetrode_idx, unit_num):
     return unit.underlying.get_results()
 
 
+def my_burst(recording, tetrode_idx, unit_num):
+    unit = recording.units[tetrode_idx]
+    unit.load()
+    unit_stamps = unit.timestamps[np.where(unit.unit_tags == unit_num)]
+    isi = np.diff(unit_stamps)
+    below_thresh = (isi < 0.005)
+    in_burst = False
+    num_bursts = 0
+    for i, val in enumerate(below_thresh):
+        if val:
+            if not in_burst:
+                num_bursts += 2
+                in_burst = True
+            else:
+                num_bursts += 1
+        else:
+            in_burst = False
+    return num_bursts / len(unit_stamps)
+
+
 def time_resolved_check(recording_container):
     ah = AnalysisHandler()
     for i in range(len(recording_container)):
         recording = recording_container[i]
         ah.add_fn(burst, recording, 1, 1)
+        ah.add_fn(my_burst, recording, 1, 1)
         ah.run_all_fns()
         recording.results = copy(ah.results)
         ah.reset()
     attr_list = [("results", "values", 0, "Propensity to burst")]
+    attr_list.append(("results", "values", 1))
     recording_container.save_summary_data(
         os.path.join(recording_container.base_dir,
                      "nc_results", "results.csv"),
-        attr_list=attr_list, friendly_names=["Tetrode 3 Unit 1 PtB"])
+        attr_list=attr_list, friendly_names=[
+            "Tetrode 3 Unit 1 PtB", "My burst"])
 
 
 def one_time_setup(in_dir):

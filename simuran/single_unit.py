@@ -5,9 +5,14 @@ class SingleUnit(BaseSimuran):
 
     def __init__(self):
         super().__init__()
+        self.timestamps = None
+        self.unit_tags = None
+        self.waveforms = None
 
     def load(self, *args, **kwargs):
-        super().load()
-        load_result = self.loader.load_single_unit(
-            self.source_file["Spike"], self.source_file["Clusters"], **kwargs)
-        self.save_attrs(load_result)
+        super().load(*args, **kwargs)
+        if not self.loaded():
+            load_result = self.loader.load_single_unit(
+                self.source_file["Spike"], self.source_file["Clusters"], **kwargs)
+            self.save_attrs(load_result)
+            self.last_loaded_source = self.source_file
