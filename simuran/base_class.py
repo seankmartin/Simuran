@@ -40,8 +40,7 @@ class BaseSimuran(ABC):
         return False
 
     def setup(self, params):
-        for key, value in params.items():
-            setattr(self, key, value)
+        self.save_attrs(params)
 
     def set_loader(self, loader):
         if not isinstance(loader, BaseLoader):
@@ -81,14 +80,11 @@ class BaseSimuran(ABC):
             data_out[key] = item
         return data_out
 
-    def _run_fn(self, fn, *args, save_result=True, **kwargs):
-        result = fn(*args, **kwargs)
-        ctr = 0
-        if save_result:
-            while (str(fn) + "_" + str(ctr)) in self.results.keys():
-                ctr = ctr + 1
-            self.results[str(fn) + "_" + str(ctr)] = result
-        return result
+    def save_attrs(self, attr_dict):
+        if attr_dict is not None:
+            if hasattr(attr_dict, "items"):
+                for key, value in attr_dict.items():
+                    setattr(self, key, value)
 
     def __repr__(self):
         """Called on print."""

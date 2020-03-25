@@ -51,9 +51,6 @@ class Recording(BaseSimuran):
                 source_files[name] = item.source_file
         self.source_files = source_files
 
-    def _run_analysis(self, fn, **kwargs):
-        pass
-
     def _setup_from_file(self, param_file, load=True):
         self.param_handler = ParamHandler(in_loc=param_file)
         self._setup(load=load)
@@ -93,7 +90,6 @@ class Recording(BaseSimuran):
                 self.valid = False
                 return
 
-        # TODO establish what is loaded
         self.signals = GenericContainer(AbstractSignal)
         self.available.append("signals")
         signal_dict = self.param_handler["signals"]

@@ -12,23 +12,39 @@ class NCLoader(BaseLoader):
     def __init__(self, load_params={}):
         super().__init__(load_params=load_params)
 
-    # TODO probably need to make new objects each time.
     def load_signal(self, *args, **kwargs):
         self.signal = NLfp()
         self.signal.load(*args, self.load_params["system"])
-        return self.signal
+        return {
+            "underlying": self.signal,
+            "timestamps": self.signal.get_timestamp(),
+            "samples": self.signal.get_samples(),
+            "date": self.signal.get_date(),
+            "time": self.signal.get_time()
+        }
 
     def load_spatial(self, *args, **kwargs):
         self.spatial = NSpatial()
         self.spatial.load(*args, self.load_params["system"])
-        return self.spatial
+        return {
+            "underlying": self.spatial,
+            "date": self.spatial.get_date(),
+            "time": self.spatial.get_time()
+        }
 
     def load_single_unit(self, *args, **kwargs):
         fname, clust_name = args
         if clust_name is not None:
             self.single_unit = NSpike()
             self.single_unit.load(fname, self.load_params["system"])
-            return self.single_unit
+            return {
+                "underlying": self.single_unit,
+                "timestamps": self.single_unit.get_timestamp(),
+                "unit_tags": self.single_unit.get_unit_tags(),
+                "waveforms": self.single_unit.get_waveform(),
+                "date": self.single_unit.get_date(),
+                "time": self.single_unit.get_time()
+            }
         else:
             return None
 

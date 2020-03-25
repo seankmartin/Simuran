@@ -8,4 +8,5 @@ class Spatial(BaseSimuran):
 
     def load(self, *args, **kwargs):
         super().load()
-        self.underlying = self.loader.load_spatial(self.source_file, **kwargs)
+        load_result = self.loader.load_spatial(self.source_file, **kwargs)
+        self.save_attrs(load_result)
