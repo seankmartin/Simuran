@@ -21,11 +21,8 @@ def time_resolved_check(recording_container):
 def one_time_setup(in_dir):
     ph = ParamHandler(
         in_loc=r"E:\Repos\SIMURAN\examples\musc_params.py")
-    # re_filts = ['.*\\\\(?:(?!nc).)+$',
-    #             '.*\\\\(?:(?!final).)+$', '.*\\\\(?:(?!data).)+$']
     re_filts = ['^t(?:(?!\\\\nc).)+$',
                 '^t(?:(?!\\\\final).)+$', '^t(?:(?!\\\\data).)+$']
-    # ph.interactive_refilt(in_dir)
     ph.batch_write(
         os.path.join(in_dir), re_filters=re_filts,
         check_only=False, overwrite=True)

@@ -8,7 +8,6 @@ class SingleUnit(BaseSimuran):
 
     def load(self, *args, **kwargs):
         super().load()
-        # TODO pass clustering also so NC only load if there is cluster.
         load_result = self.loader.load_single_unit(
             self.source_file["Spike"], self.source_file["Clusters"], **kwargs)
         self.save_attrs(load_result)

@@ -15,6 +15,7 @@ class BaseSimuran(ABC):
         self.tag = None
         self.loader = None
         self.source_file = None
+        self.last_loaded_source = None
         self.underlying = None
         self.results = {}
         super().__init__()
@@ -58,6 +59,13 @@ class BaseSimuran(ABC):
             raise ValueError(
                 "Set a loader in {} before calling load.".format(
                     self.__class__.__name__))
+        prev_loaded = (
+            (self.last_loaded_source is not None) and
+            (self.last_loaded_source == self.source_file))
+        if prev_loaded:
+            print("Already loaded {} from {}".format(
+                self.__class__.__name__, self.source_file))
+        self.last_loaded_source = self.source_file
 
     def data_dict_from_attr_list(self, attr_list, friendly_names=None):
         data_out = {}
@@ -73,6 +81,8 @@ class BaseSimuran(ABC):
                         item = item[a]
                 else:
                     item = item[a]
+                if callable(item):
+                    item = item()
             if friendly_names is None:
                 key = "_".join(attr_tuple)
             else:

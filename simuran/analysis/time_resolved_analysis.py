@@ -1,17 +1,29 @@
 import os
 import numpy as np
+from copy import copy
+
 from simuran.recording import RecordingContainer
 from simuran.param_handler import ParamHandler
+from simuran.analysis.analysis_handler import AnalysisHandler
+
+
+def burst(recording, tetrode_idx, unit_num):
+    unit = recording.units[tetrode_idx]
+    unit.load()
+    unit.underlying.set_unit_no(unit_num)
+    unit.underlying.burst()
+    return unit.underlying.get_results()
 
 
 def time_resolved_check(recording_container):
+    ah = AnalysisHandler()
     for i in range(len(recording_container)):
         recording = recording_container[i]
-        unit = recording.units[1]
-        unit.load()
-        unit.underlying.set_unit_no(1)
-        unit.underlying.burst()
-    attr_list = [("units", 1, "underlying", "_results", "Propensity to burst")]
+        ah.add_fn(burst, recording, 1, 1)
+        ah.run_all_fns()
+        recording.results = copy(ah.results)
+        ah.reset()
+    attr_list = [("results", "values", 0, "Propensity to burst")]
     recording_container.save_summary_data(
         os.path.join(recording_container.base_dir,
                      "nc_results", "results.csv"),
