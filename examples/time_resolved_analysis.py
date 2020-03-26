@@ -23,7 +23,7 @@ def my_burst(recording, tetrode_idx, unit_num):
     below_thresh = (isi < 0.005)
     in_burst = False
     num_bursts = 0
-    for i, val in enumerate(below_thresh):
+    for val in below_thresh:
         if val:
             if not in_burst:
                 num_bursts += 2

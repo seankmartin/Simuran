@@ -42,6 +42,20 @@ class Recording(BaseSimuran):
     def set_base_file(self, base):
         self.source_file = base
 
+    def get_signal_channels(self, as_idx=False):
+        num_sigs = self.param_handler["signals"]["num_signals"]
+        if as_idx:
+            return [i for i in range(num_sigs)]
+        default_chans = [i + 1 for i in range(num_sigs)]
+        chans = self.param_handler["signals"].get(
+            "channels", default_chans)
+        return chans
+
+    def get_name_for_save(self):
+        base_name_part, _ = os.path.splitext(
+            os.path.basename(self.source_file))
+        return base_name_part
+
     def _parse_source_files(self):
         source_files = {}
         for item, name in zip(self.get_available(), self.available):
@@ -61,8 +75,13 @@ class Recording(BaseSimuran):
 
     def _setup(self, load=True):
         if self.source_file == None:
-            base = self.param_handler.get(
-                "base_fname", os.path.dirname(self.param_handler.location))
+            default_base_val = None
+            if self.param_handler.location is not None:
+                default_base_val = os.path.dirname(self.param_handler.location)
+            base = self.param_handler.get("base_fname", default_base_val)
+
+            if base is None:
+                raise ValueError("Must set a base file in Recording setup")
             self.source_file = base
         else:
             base = self.source_file
@@ -79,10 +98,7 @@ class Recording(BaseSimuran):
             load = False
         else:
             data_loader = data_loader_cls(self.param_handler["loader_kwargs"])
-            num_sigs = self.param_handler["signals"]["num_signals"]
-            default_chans = [i + 1 for i in range(num_sigs)]
-            chans = self.param_handler["signals"].get(
-                "channels", default_chans)
+            chans = self.get_signal_channels()
             groups = self.param_handler["units"]["group"]
             fnames = data_loader.auto_fname_extraction(
                 base, sig_channels=chans, unit_groups=groups)
@@ -91,33 +107,36 @@ class Recording(BaseSimuran):
                 return
 
         self.signals = GenericContainer(AbstractSignal)
-        self.available.append("signals")
-        signal_dict = self.param_handler["signals"]
-        for i in range(signal_dict["num_signals"]):
-            params = split_dict(signal_dict, i)
-            self.signals.append_new(params)
-            if data_loader is not None:
-                self.signals[-1].set_source_file(fnames["Signal"][i])
-                self.signals[-1].set_loader(data_loader)
+        if "signals" in self.param_handler.keys():
+            self.available.append("signals")
+            signal_dict = self.param_handler["signals"]
+            for i in range(signal_dict["num_signals"]):
+                params = split_dict(signal_dict, i)
+                self.signals.append_new(params)
+                if data_loader is not None:
+                    self.signals[-1].set_source_file(fnames["Signal"][i])
+                    self.signals[-1].set_loader(data_loader)
 
-        self.units = GenericContainer(SingleUnit)
-        self.available.append("units")
-        units_dict = self.param_handler["units"]
-        for i in range(units_dict["num_groups"]):
-            params = split_dict(units_dict, i)
-            self.units.append_new(params)
-            if data_loader is not None:
-                self.units[-1].set_source_file(
-                    {"Spike": fnames["Spike"][i],
-                     "Clusters": fnames["Clusters"][i]
-                     })
-                self.units[-1].set_loader(data_loader)
+        if "units" in self.param_handler.keys():
+            self.units = GenericContainer(SingleUnit)
+            self.available.append("units")
+            units_dict = self.param_handler["units"]
+            for i in range(units_dict["num_groups"]):
+                params = split_dict(units_dict, i)
+                self.units.append_new(params)
+                if data_loader is not None:
+                    self.units[-1].set_source_file(
+                        {"Spike": fnames["Spike"][i],
+                         "Clusters": fnames["Clusters"][i]
+                         })
+                    self.units[-1].set_loader(data_loader)
 
-        self.spatial = Spatial()
-        self.available.append("spatial")
-        if data_loader is not None:
-            self.spatial.set_source_file(fnames["Spatial"])
-            self.spatial.set_loader(data_loader)
+        if "spatial" in self.param_handler.keys():
+            self.spatial = Spatial()
+            self.available.append("spatial")
+            if data_loader is not None:
+                self.spatial.set_source_file(fnames["Spatial"])
+                self.spatial.set_loader(data_loader)
 
         self._parse_source_files()
 

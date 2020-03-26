@@ -106,6 +106,15 @@ class ParamHandler:
         print("The final regex was: {}".format(re_filt))
         return re_filt, dirs
 
+    def keys(self):
+        return self.params.keys()
+
+    def vals(self):
+        return self.params.vals()
+
+    def items(self):
+        return self.params.items()
+
     def __getitem__(self, key):
         return self.params[key]
 

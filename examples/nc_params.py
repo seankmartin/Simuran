@@ -12,16 +12,16 @@ mapping = {
 num_signals = 32
 regions = ["ACC"] * 2 + ["CLA"] * 28 + ["BLA"] * 2
 groups = []
-for i in range(16):
+for i in range(int(num_signals / 2)):
     groups.append(i)
     groups.append(i)
-mapping["signals"]["num_signals"] = 32
+mapping["signals"]["num_signals"] = num_signals
 mapping["signals"]["region"] = regions
 mapping["signals"]["group"] = groups
 mapping["signals"]["sampling_rate"] = [250] * num_signals
 
 # Specific to NC
-eeg_chan_nums = [i + 1 for i in range(32)]
+eeg_chan_nums = [i + 1 for i in range(num_signals)]
 mapping["signals"]["channels"] = eeg_chan_nums
 
 

@@ -1,4 +1,4 @@
-"""Module to hold the abstract class setting up information held in a class."""
+"""Module to hold the base class setting up information and methods held in most SIMURAN classes."""
 
 from abc import ABC, abstractmethod
 from simuran.loaders.base_loader import BaseLoader
@@ -8,6 +8,7 @@ class BaseSimuran(ABC):
     """TODO Put the docstring here."""
 
     def __init__(self, **kwargs):
+        """See help(BaseSimuran) for more info."""
         self.kwargs = kwargs
         self.info = None
         self.date = None
