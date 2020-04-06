@@ -1,5 +1,6 @@
 """This module handles automatic creation of parameter files."""
 import os
+import shutil
 from pprint import pformat
 
 from skm_pyutils.py_config import read_python
@@ -9,9 +10,10 @@ from typing import Iterable
 
 
 class ParamHandler:
-    def __init__(self, params=None, in_loc=None):
+    def __init__(self, params=None, in_loc=None, name="mapping"):
         self.set_param_dict(params)
         self.location = None
+        self._param_name = name
         if in_loc is not None:
             self.read(in_loc)
             self.location = in_loc
@@ -45,7 +47,7 @@ class ParamHandler:
             f.write(out_str)
 
     def read(self, in_loc):
-        self.set_param_dict(read_python(in_loc)["mapping"])
+        self.set_param_dict(read_python(in_loc)[self._param_name])
 
     def get(self, key, default=None):
         if key in self.params.keys():
@@ -60,21 +62,40 @@ class ParamHandler:
 
     def batch_write(
             self, start_dir, re_filters=None, fname="simuran_params.py",
-            overwrite=True, check_only=False, return_absolute=True):
+            overwrite=True, check_only=False, return_absolute=True,
+            exact_file=None):
         dirs = get_dirs_matching_regex(
             start_dir, re_filters=re_filters, return_absolute=return_absolute)
 
         if check_only:
-            print("Would write parameters to the following dirs")
-            for d in dirs:
-                print(d)
-            return dirs
+            if exact_file is None:
+                print("Would write parameters:")
+                print(pformat(self.params, width=200))
+                print("to these directories:")
+                for d in dirs:
+                    print(d)
+                return dirs
+            else:
+                print("Would copy {} to these directories:".format(exact_file))
+                for d in dirs:
+                    print(d)
+                return dirs
 
-        out_str = self.params_to_str()
+        if exact_file is None:
+            out_str = self.params_to_str()
         for d in dirs:
             write_loc = os.path.join(d, fname)
-            print("Writing params to {}".format(write_loc))
-            self.write(write_loc, out_str=out_str)
+
+            if exact_file is None:
+                print("Writing params to {}".format(write_loc))
+                self.write(write_loc, out_str=out_str)
+            else:
+                if not os.path.isfile(exact_file):
+                    raise ValueError(
+                        "{} is not a valid file location".format(exact_file))
+                print("Copying from {} to {}".format(
+                    exact_file, write_loc))
+                shutil.copy(exact_file, write_loc)
 
     @staticmethod
     def clear_params(start_dir, recursive=True):
@@ -103,6 +124,8 @@ class ParamHandler:
             dirs = self.batch_write(
                 start_dir, re_filters=re_filt, check_only=True,
                 return_absolute=False)
+        if re_filt == "":
+            re_filt = []
         print("The final regex was: {}".format(re_filt))
         return re_filt, dirs
 
@@ -114,6 +137,9 @@ class ParamHandler:
 
     def items(self):
         return self.params.items()
+
+    def set_param_name(self, name):
+        self._param_name = name
 
     def __getitem__(self, key):
         return self.params[key]
