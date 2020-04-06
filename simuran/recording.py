@@ -51,9 +51,14 @@ class Recording(BaseSimuran):
             "channels", default_chans)
         return chans
 
-    def get_name_for_save(self):
-        base_name_part, _ = os.path.splitext(
-            os.path.basename(self.source_file))
+    def get_name_for_save(self, rel_dir=None):
+        if rel_dir is None:
+            base_name_part, _ = os.path.splitext(
+                os.path.basename(self.source_file))
+        else:
+            name_up_to_rel = self.source_file[len(rel_dir + os.sep):]
+            base_name_part, _ = os.path.splitext(name_up_to_rel)
+            base_name_part = base_name_part.replace(os.sep, "--")
         return base_name_part
 
     def _parse_source_files(self):
@@ -82,7 +87,6 @@ class Recording(BaseSimuran):
 
             if base is None:
                 raise ValueError("Must set a base file in Recording setup")
-            self.source_file = base
         else:
             base = self.source_file
 
@@ -100,11 +104,12 @@ class Recording(BaseSimuran):
             data_loader = data_loader_cls(self.param_handler["loader_kwargs"])
             chans = self.get_signal_channels()
             groups = self.param_handler["units"]["group"]
-            fnames = data_loader.auto_fname_extraction(
+            fnames, base = data_loader.auto_fname_extraction(
                 base, sig_channels=chans, unit_groups=groups)
             if fnames is None:
                 self.valid = False
                 return
+            self.source_file = base
 
         self.signals = GenericContainer(AbstractSignal)
         if "signals" in self.param_handler.keys():

@@ -10,7 +10,10 @@ from skm_pyutils.py_path import make_path_if_not_exists
 def get_normalised_diff(s1, s2):
     # MSE of one divided by MSE of main - Normalized squared differnce
     # Symmetric
-    return np.sum(np.square(s1 - s2)) / (np.sum(np.square(s1) + np.square(s2)) / 2)
+    return (
+        np.sum(np.square(s1 - s2)) /
+        (np.sum(np.square(s1) + np.square(s2)) / 2)
+    )
     # return np.sum(np.square(s1 - s2)) / np.sum(np.square(s1))  # Non-symmetric
 
 
@@ -31,7 +34,6 @@ def compare_lfp(
     # Do the actual calcualtion
     if ch_to_use == "all":
         ch_labels = recording.get_signal_channels()
-        ch_labels = [recording.signals[i - 1].region for i in ch_labels]
     ch = [i for i in range(len(ch_labels))]
 
     grid = np.meshgrid(ch, ch, indexing='ij')
@@ -47,10 +49,10 @@ def compare_lfp(
         result_a[i] = res
 
     # Save out a csv and do plotting
-    base_name_part = recording.get_name_for_save()
-    if out_base_dir == None:
-        out_base_dir = os.path.join(os.path.dirname(
-            recording.source_file), "sim_results", "lfp")
+    if out_base_dir is None:
+        out_base_dir = os.path.dirname(recording.source_file)
+    base_name_part = recording.get_name_for_save(rel_dir=out_base_dir)
+    out_base_dir = os.path.join(out_base_dir, "sim_results", "lfp")
 
     if save_result:
         out_name = base_name_part + "_LFP_Comp.csv"

@@ -134,7 +134,7 @@ class NCLoader(BaseLoader):
                 "Signal": signal_names,
                 "Stimulation": stim_name,
             }
-            return file_locs
+            return file_locs, base
         else:
             raise ValueError(
                 "auto_fname_extraction only implemented for Axona")
