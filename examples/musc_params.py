@@ -1,5 +1,3 @@
-"""This module holds default parameter values."""
-
 mapping = {
     "signals": {},
     "units": {},
