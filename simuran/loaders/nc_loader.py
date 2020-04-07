@@ -58,7 +58,7 @@ class NCLoader(BaseLoader):
                 if len(set_files) == 0:
                     print("WARNING: No set files found in {}, skipping".format(
                         base))
-                    return None
+                    return None, None
                 elif len(set_files) > 1:
                     raise ValueError(
                         "Found more than one set file, found {}".format(

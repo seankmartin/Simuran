@@ -63,7 +63,7 @@ class ParamHandler:
     def batch_write(
             self, start_dir, re_filters=None, fname="simuran_params.py",
             overwrite=True, check_only=False, return_absolute=True,
-            exact_file=None):
+            exact_file=None, verbose=False):
         dirs = get_dirs_matching_regex(
             start_dir, re_filters=re_filters, return_absolute=return_absolute)
 
@@ -87,25 +87,17 @@ class ParamHandler:
             write_loc = os.path.join(d, fname)
 
             if exact_file is None:
-                print("Writing params to {}".format(write_loc))
+                if verbose:
+                    print("Writing params to {}".format(write_loc))
                 self.write(write_loc, out_str=out_str)
             else:
                 if not os.path.isfile(exact_file):
                     raise ValueError(
                         "{} is not a valid file location".format(exact_file))
-                print("Copying from {} to {}".format(
-                    exact_file, write_loc))
+                if verbose:
+                    print("Copying from {} to {}".format(exact_file, write_loc))
                 shutil.copy(exact_file, write_loc)
         return dirs
-
-    @staticmethod
-    def clear_params(start_dir, to_remove="simuran_params.py", recursive=True):
-        fnames = get_all_files_in_dir(
-            start_dir, ext=".py", recursive=recursive)
-        for fname in fnames:
-            if os.path.basename(fname) == to_remove:
-                print("Removing {}".format(fname))
-                os.remove(fname)
 
     def interactive_refilt(self, start_dir):
         re_filt = ""

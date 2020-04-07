@@ -1,7 +1,9 @@
 import os
 import shutil
+from pprint import pformat
 
 from simuran.param_handler import ParamHandler
+from skm_pyutils.py_path import get_all_files_in_dir
 
 
 class BatchSetup(object):
@@ -60,7 +62,7 @@ class BatchSetup(object):
         shutil.move("temp.txt", self.file_loc)
         self.setup()
 
-    def write_batch_params(self, verbose_params=False):
+    def write_batch_params(self, verbose_params=False, verbose=False):
         """If verbose_params is True, writes the result of executing code."""
         check_only = self.ph["only_check"]
         overwrite = self.ph["overwrite"]
@@ -73,7 +75,8 @@ class BatchSetup(object):
                 new_ph = ParamHandler(in_loc=self.ph["mapping_file"])
             dirs = new_ph.batch_write(
                 self.in_dir, re_filters=re_filts, fname=self.ph["out_basename"],
-                check_only=check_only, overwrite=overwrite)
+                check_only=check_only, overwrite=overwrite,
+                verbose=verbose)
         else:
             fname = self.ph["mapping_file"]
             if self._bad_file:
@@ -81,9 +84,22 @@ class BatchSetup(object):
                     "Can't copy non-existant file {}".format(fname))
             dirs = self.ph.batch_write(
                 self.in_dir, re_filters=re_filts, fname=self.ph["out_basename"],
-                check_only=check_only, overwrite=overwrite, exact_file=fname)
+                check_only=check_only, overwrite=overwrite, exact_file=fname,
+                verbose=verbose)
         return dirs
 
+    @staticmethod
+    def clear_params(
+            start_dir, to_remove="simuran_params.py", recursive=True, verbose=False):
+        fnames = get_all_files_in_dir(
+            start_dir, ext=".py", recursive=recursive)
+        for fname in fnames:
+            if os.path.basename(fname) == to_remove:
+                if verbose:
+                    print("Removing {}".format(fname))
+                os.remove(fname)
+
     def __repr__(self):
-        return ("{} with parameters {} from {}".format(
-            self.__class__.__name__, self.ph, self.file_loc))
+        return ("{} from {} with parameters:\n {} ".format(
+            self.__class__.__name__, self.file_loc,
+            pformat(self.ph.params, width=200)))

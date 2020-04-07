@@ -86,11 +86,15 @@ class BaseSimuran(ABC):
                     item = item[a]
                 if callable(item):
                     item = item()
-            if friendly_names is None:
-                key = "_".join(attr_tuple)
+            if isinstance(item, dict):
+                for key, value in item.items():
+                    data_out[key] = value
             else:
-                key = friendly_names[i]
-            data_out[key] = item
+                if friendly_names is None:
+                    key = "_".join(attr_tuple)
+                else:
+                    key = friendly_names[i]
+                data_out[key] = item
         return data_out
 
     def save_attrs(self, attr_dict):

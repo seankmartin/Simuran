@@ -19,7 +19,7 @@ mapping = {}  # see default_params.py to set this up
 # Absolute path to a file that contains the mapping.
 # If left as empty string, will create an absolute path from the relative path.
 directory = ""
-mapping_file = os.path.join(directory, "simuran_params.py")
+mapping_file = os.path.join(directory, "simuran_base_params.py")
 
 # The basename of the output parameter files.
 out_basename = "simuran_params.py"
