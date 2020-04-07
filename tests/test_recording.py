@@ -74,10 +74,11 @@ def test_nc_loader_fname_extract():
     ncl = NCLoader()
     ncl.load_params["system"] = "Axona"
     loc = r"D:\SubRet_recordings_imaging\muscimol_data\CanCSCa1_muscimol\01082018\t1_smallsq_beforeinfusion"
-    file_locs = ncl.auto_fname_extraction(
+    file_locs, _ = ncl.auto_fname_extraction(
         loc, verbose=False, unit_groups=[1, 2, 3, 4, 9, 10, 11, 12])
-    assert "01082018_CanCSubCa1_muscimol_smallsq_before_1_1_10.cut" in [
+    clust_locs = [
         os.path.basename(f) for f in file_locs["Clusters"] if f is not None]
+    assert "01082018_CanCSubCa1_muscimol_smallsq_before_1_1_10.cut" in clust_locs
 
 
 if __name__ == "__main__":
