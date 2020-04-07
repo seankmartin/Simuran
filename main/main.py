@@ -90,4 +90,4 @@ if __name__ == "__main__":
     main(
         in_dir, list_of_functions, save_list,
         args_fn=run, do_batch_setup=True, sort_container_fn=sort_fn,
-        verbose_batch_params=True, load_all=True)
+        verbose_batch_params=True, load_all=False)
