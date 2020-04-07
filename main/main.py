@@ -57,7 +57,7 @@ if __name__ == "__main__":
 
     # Example sorting
     def sort_fn(x):
-        comp = x.source_file[len(rc.base_dir + os.sep) + 1:]
+        comp = x.source_file[len(in_dir + os.sep) + 1:]
         order = int(comp.split("_")[0])
         return order
 
