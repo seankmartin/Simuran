@@ -165,14 +165,16 @@ class RecordingContainer(AbstractContainer):
         self.last_loaded_idx = None
         self.base_dir = None
 
-    def auto_setup(self, start_dir, recursive=True, re_filter=None):
+    def auto_setup(
+            self, start_dir, param_name="simuran_params.py",
+            recursive=True, re_filter=None):
         param_files = []
         fnames = get_all_files_in_dir(
             start_dir, ext=".py", return_absolute=True,
             recursive=recursive, case_sensitive_ext=True,
             re_filter=re_filter)
         for fname in fnames:
-            if os.path.basename(fname) == "simuran_params.py":
+            if os.path.basename(fname) == param_name:
                 param_files.append(fname)
         should_load = not self.load_on_fly
         out_str_load = "Loading" if should_load else "Parsing"

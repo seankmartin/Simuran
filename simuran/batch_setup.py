@@ -29,8 +29,8 @@ class BatchSetup(object):
             self._bad_file = (not os.path.isfile(self.ph["mapping_file"]))
         if self.ph["mapping"] == {} and self._bad_file:
             raise ValueError(
-                "Please pass either a valid mapping file" +
-                "or a parameter mapping" +
+                "Please pass either a valid mapping file " +
+                "or a parameter mapping, " +
                 "currently:\n {} and {} respectively\n".format(
                     self.ph["mapping_file"], self.ph["mapping"]))
         if self.ph["interactive"]:
@@ -71,17 +71,18 @@ class BatchSetup(object):
                 new_ph = ParamHandler(params=self.ph["mapping"])
             else:
                 new_ph = ParamHandler(in_loc=self.ph["mapping_file"])
-            new_ph.batch_write(
-                self.in_dir, re_filters=re_filts,
+            dirs = new_ph.batch_write(
+                self.in_dir, re_filters=re_filts, fname=self.ph["out_basename"],
                 check_only=check_only, overwrite=overwrite)
         else:
             fname = self.ph["mapping_file"]
             if self._bad_file:
                 raise ValueError(
                     "Can't copy non-existant file {}".format(fname))
-            self.ph.batch_write(
-                self.in_dir, re_filters=re_filts,
+            dirs = self.ph.batch_write(
+                self.in_dir, re_filters=re_filts, fname=self.ph["out_basename"],
                 check_only=check_only, overwrite=overwrite, exact_file=fname)
+        return dirs
 
     def __repr__(self):
         return ("{} with parameters {} from {}".format(

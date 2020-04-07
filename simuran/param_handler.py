@@ -96,13 +96,14 @@ class ParamHandler:
                 print("Copying from {} to {}".format(
                     exact_file, write_loc))
                 shutil.copy(exact_file, write_loc)
+        return dirs
 
     @staticmethod
-    def clear_params(start_dir, recursive=True):
+    def clear_params(start_dir, to_remove="simuran_params.py", recursive=True):
         fnames = get_all_files_in_dir(
             start_dir, ext=".py", recursive=recursive)
         for fname in fnames:
-            if os.path.basename(fname) == "simuran_params.py":
+            if os.path.basename(fname) == to_remove:
                 print("Removing {}".format(fname))
                 os.remove(fname)
 
