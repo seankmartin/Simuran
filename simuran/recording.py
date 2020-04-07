@@ -1,5 +1,5 @@
 """This module holds single experiment related information."""
-from copy import copy
+from copy import deepcopy
 import os
 
 from simuran.base_class import BaseSimuran
@@ -193,8 +193,9 @@ class RecordingContainer(AbstractContainer):
         """This loads the data if not loaded."""
         if self.load_on_fly:
             if self.last_loaded_idx != idx:
-                self.last_loaded = copy(self[idx])
+                self.last_loaded = deepcopy(self[idx])
                 self.last_loaded.load()
+                self.last_loaded_idx = idx
             return self.last_loaded
         else:
             return self[idx]

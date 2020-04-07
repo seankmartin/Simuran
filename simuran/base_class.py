@@ -61,8 +61,9 @@ class BaseSimuran(ABC):
                 "Set a loader in {} before calling load.".format(
                     self.__class__.__name__))
         if self.loaded():
-            print("Already loaded {} from {}".format(
-                self.__class__.__name__, self.source_file))
+            return
+            # print("Already loaded {} from {}".format(
+            #     self.__class__.__name__, self.source_file))
 
     def loaded(self):
         loaded = (
