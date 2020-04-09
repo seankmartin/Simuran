@@ -5,22 +5,24 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 from skm_pyutils.py_path import make_path_if_not_exists
+import simuran.plotting.plot
 
 
-def get_normalised_diff(s1, s2):
-    # MSE of one divided by MSE of main - Normalized squared differnce
+def get_normalised_diff(s1, s2, s1_sq=None, s2_sq=None):
+    # MSE of one divided by MSE of main - Normalized squared difference
     # Symmetric
-    return (
-        np.sum(np.square(s1 - s2)) /
-        (np.sum(np.square(s1) + np.square(s2)) / 2)
-    )
-    # return np.sum(np.square(s1 - s2)) / np.sum(np.square(s1))  # Non-symmetric
+    s1_sq = np.square(s1) if s1_sq is None else s1_sq
+    s2_sq = np.square(s2) if s2_sq is None else s2_sq
+    return np.sum(np.square(s1 - s2)) / (np.sum(s1_sq + s2_sq) / 2)
+    # return np.sum(np.square(s1 - s2)) / s1_sq)  # Non-symmetric
 
 
 def compare_lfp(
         recording, out_base_dir=None, ch_to_use="all",
         save_result=True, plot=False):
     '''
+    TODO support different ch_to_use.
+
     Parameters
     ----------
     recording : simuran.Recording
@@ -41,11 +43,16 @@ def compare_lfp(
     pairs = stacked.reshape(-1, 2)
     result_a = np.zeros(shape=pairs.shape[0], dtype=np.float32)
 
+    cached_sum_squares = [np.sum(np.square(signal.samples))
+                          for signal in recording.signals]
     for i, pair in enumerate(pairs):
         signal1 = recording.signals[pair[0]]
         signal2 = recording.signals[pair[1]]
+        sq1 = cached_sum_squares[pair[0]]
+        sq2 = cached_sum_squares[pair[1]]
         res = get_normalised_diff(
-            signal1.samples, signal2.samples)
+            signal1.samples, signal2.samples,
+            s1_sq=sq1, s2_sq=sq2)
         result_a[i] = res
 
     # Save out a csv and do plotting
@@ -75,33 +82,8 @@ def compare_lfp(
     if plot:
         out_name = base_name_part + "_LFP_Comp.png"
         out_loc = os.path.join(out_base_dir, "plots", out_name)
-        fig = plot_compare_lfp(
-            result_a, ch, ch_labels, save=True, save_loc=out_loc)
+        fig = simuran.plotting.plot.plot_compare_lfp(
+            result_a, ch, save=True, save_loc=out_loc)
         return result_a, fig
 
     return result_a
-
-# TODO create general things for plots such as titles, labels etc.
-# So plot functions all set up default things, but these can be changed
-# Probably a class to handle this is best
-# So any plot function can take the same set of kwargs
-
-
-def plot_compare_lfp(matrix_data, chans, chan_labels, save=True, save_loc=None):
-    ch = len(chans)
-    reshaped = np.reshape(matrix_data, newshape=[ch, ch])
-    fig, ax = plt.subplots()
-    sns.heatmap(reshaped, ax=ax)
-    plt.xticks(np.arange(0.5, ch + 0.5), labels=chan_labels, fontsize=8)
-    plt.xlabel('LFP Channels')
-    plt.yticks(np.arange(0.5, ch + 0.5), labels=chan_labels, fontsize=8)
-    plt.ylabel('LFP Channels')
-    plt.title('Raw LFP Similarity Index')
-
-    if save:
-        save_loc = "lfp_comp.png" if save_loc is None else save_loc
-        print("Saving figure to {}".format(save_loc))
-        make_path_if_not_exists(save_loc)
-        fig.savefig(save_loc, dpi=200,
-                    bbox_inches='tight', pad_inches=0.1)
-    return fig

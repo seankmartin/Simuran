@@ -200,6 +200,9 @@ class RecordingContainer(AbstractContainer):
         else:
             return self[idx]
 
+    def get_results(self, idx):
+        return self.data_from_attr_list([("results", None)], idx=idx)
+
     def _create_new(self, params):
         recording = Recording(params=params)
         return recording

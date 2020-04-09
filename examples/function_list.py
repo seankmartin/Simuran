@@ -1,3 +1,5 @@
+import simuran.analysis.lfp_analysis
+
 
 def nc_power(recording, lfp_channel):
     signal = recording.signals[lfp_channel]
@@ -9,5 +11,5 @@ def nc_power(recording, lfp_channel):
 
 
 functions = [
-    nc_power,
+    nc_power, simuran.analysis.lfp_analysis.compare_lfp
 ]

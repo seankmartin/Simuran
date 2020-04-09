@@ -14,7 +14,8 @@ def main(
         args_fn=None, do_batch_setup=False, friendly_names=None,
         sort_container_fn=None, reverse_sort=False,
         param_name="simuran_params.py", batch_name="simuran_batch_params.py",
-        verbose_batch_params=False, load_all=False):
+        verbose_batch_params=False, load_all=False,
+        to_load=["signals, spatial, units"]):
 
     # Do batch setup if requested.
     if do_batch_setup:
@@ -53,13 +54,14 @@ def main(
     pbar = tqdm(range(len(recording_container)))
     for i in pbar:
         if args_fn is not None:
-            function_args = args_fn(recording_container[i])
+            function_args = args_fn(recording_container, i)
         disp_name = recording_container[i].source_file[
             len(recording_container.base_dir + os.sep):]
         pbar.set_description(
-            "Running {} on {} with arguments {}".format(
-                [fn.__name__ for fn in functions], disp_name, function_args))
+            "Running {} on {}".format(
+                [fn.__name__ for fn in functions], disp_name))
         if load_all:
+            recording_container[i].available = to_load
             recording = recording_container.get(i)
         else:
             recording = recording_container[i]
@@ -67,7 +69,7 @@ def main(
             fn_args = function_args.get(fn.__name__, [])
             analysis_handler.add_fn(fn, recording, *fn_args)
         analysis_handler.run_all_fns()
-        recording.results = copy(analysis_handler.results)
+        recording_container[i].results = copy(analysis_handler.results)
         analysis_handler.reset()
     out_loc = os.path.join(recording_container.base_dir,
                            "sim_results", "results.csv")
@@ -90,4 +92,4 @@ if __name__ == "__main__":
     main(
         in_dir, list_of_functions, save_list,
         args_fn=run, do_batch_setup=True, sort_container_fn=sort_fn,
-        verbose_batch_params=True, load_all=False)
+        verbose_batch_params=True, load_all=True, to_load=["signals"])
