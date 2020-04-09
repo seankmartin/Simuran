@@ -129,3 +129,5 @@ dmypy.json
 .pyre/
 
 large_test_resources/
+
+profile.out
