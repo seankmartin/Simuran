@@ -21,7 +21,7 @@ class BaseSimuran(ABC):
         self.results = {}
         super().__init__()
 
-    def add_info(self, key, info, name):
+    def add_info(self, key, name, info):
         if self.info is None:
             self.info = {}
         if not key in self.info.keys():

@@ -20,3 +20,15 @@ class AbstractSignal(BaseSimuran):
             load_result = self.loader.load_signal(self.source_file, **kwargs)
             self.save_attrs(load_result)
             self.last_loaded_source = self.source_file
+
+    def get_duration(self):
+        return (self.timestamps[-1] - self.timestamps[0])
+
+    def get_sampling_rate(self):
+        return self.sampling_rate
+
+    def get_timestamps(self):
+        return self.timestamps
+
+    def get_samples(self):
+        return self.samples

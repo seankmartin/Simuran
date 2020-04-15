@@ -5,7 +5,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 from skm_pyutils.py_path import make_path_if_not_exists
-import simuran.plotting.plot
+import simuran.plot.lfp_plot
 
 
 def get_normalised_diff(s1, s2, s1_sq=None, s2_sq=None):
@@ -82,7 +82,7 @@ def compare_lfp(
     if plot:
         out_name = base_name_part + "_LFP_Comp.png"
         out_loc = os.path.join(out_base_dir, "plots", out_name)
-        fig = simuran.plotting.plot.plot_compare_lfp(
+        fig = simuran.plot.lfp_plot.plot_compare_lfp(
             result_a, ch, save=True, save_loc=out_loc)
         return result_a, fig
 
