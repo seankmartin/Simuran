@@ -15,7 +15,8 @@ def main(
         sort_container_fn=None, reverse_sort=False,
         param_name="simuran_params.py", batch_name="simuran_batch_params.py",
         verbose_batch_params=False, load_all=False,
-        to_load=["signals, spatial, units"]):
+        to_load=["signals, spatial, units"],
+        select_recordings=None):
 
     # Do batch setup if requested.
     if do_batch_setup:
@@ -47,8 +48,30 @@ def main(
     else:
         raise ValueError(
             "Please provide a valid location, entered {}".format(location))
+
     if sort_container_fn is not None:
         recording_container.sort(sort_container_fn, reverse=reverse_sort)
+
+    if select_recordings is not None:
+        if select_recordings == True:
+            select_location = os.path.join(
+                recording_container.base_dir, "file_list.txt")
+            if not os.path.isfile(select_location):
+                idx_list = recording_container.subsample(interactive=True)
+                print("Selected {} for processing, saved to {}".format(
+                    recording_container.get_property("source_file"),
+                    select_location))
+                with open(select_location, "w") as f:
+                    out_str = ""
+                    for val in idx_list:
+                        out_str = "{} {}".format(out_str, val)
+                    f.write(out_str[2:])
+            else:
+                with open(select_location, "r") as f:
+                    idx_list = [int(x) for x in f.read().strip().split(" ")]
+                    recording_container.subsample(idx_list=idx_list)
+        else:
+            recording_container.subsample(idx_list=select_recordings)
 
     analysis_handler = simuran.analysis.analysis_handler.AnalysisHandler()
     pbar = tqdm(range(len(recording_container)))
@@ -92,4 +115,5 @@ if __name__ == "__main__":
     main(
         in_dir, list_of_functions, save_list,
         args_fn=run, do_batch_setup=True, sort_container_fn=sort_fn,
-        verbose_batch_params=True, load_all=True, to_load=["signals"])
+        verbose_batch_params=True, load_all=True, to_load=["signals"],
+        select_recordings=True)

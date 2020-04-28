@@ -59,6 +59,11 @@ class RecordingContainer(AbstractContainer):
     def get_results(self, idx):
         return self.data_from_attr_list([("results", None)], idx=idx)
 
+    def subsample(self, idx_list=None, interactive=False, prop=None):
+        if prop is None:
+            prop = "source_file"
+        return super().subsample(idx_list, interactive, prop)
+
     def _create_new(self, params):
         recording = Recording(params=params)
         return recording

@@ -27,6 +27,9 @@ class AbstractContainer(ABC):
                 indices.append(i)
         return group, indices
 
+    def get_property(self, prop):
+        return [getattr(val, prop) for val in self.container]
+
     def __getitem__(self, idx):
         return self.container[idx]
 
@@ -107,6 +110,25 @@ class AbstractContainer(ABC):
     def sort(self, sort_fn, reverse=False):
         self.container = sorted(
             self.container, key=sort_fn, reverse=reverse)
+
+    def subsample(self, idx_list=None, interactive=False, prop=None):
+        if interactive:
+            if prop is None:
+                full_list = self.container
+            else:
+                full_list = self.get_property(prop)
+            print("Items to sample from:")
+            for i, item in enumerate(full_list):
+                print("{}: {}".format(i + 1, item))
+            indices = input(
+                "Please enter the number of the items you want to " +
+                "keep seperated by spaces. Enter empty to keep all.\n")
+            if indices == "":
+                return [i for i in range(len(self))]
+            indices = indices.split(" ")
+            idx_list = [int(i) - 1 for i in indices]
+        self.container = [self.container[i] for i in idx_list]
+        return idx_list
 
     @abstractmethod
     def _create_new(self, params):
