@@ -4,7 +4,7 @@ from copy import copy
 
 from tqdm import tqdm
 import simuran.batch_setup
-import simuran.recording
+import simuran.recording_container
 import simuran.analysis.analysis_handler
 import simuran.param_handler
 
@@ -33,10 +33,10 @@ def main(
             verbose_params=verbose_batch_params)
         if param_handler["only_check"]:
             print("Was only checking params so exiting.")
-            exit(-1)
+            return
 
     # Setup the recording_container
-    recording_container = simuran.recording.RecordingContainer()
+    recording_container = simuran.recording_container.RecordingContainer()
     if os.path.isdir(location):
         recording_container.auto_setup(
             location, param_name=param_name, recursive=True)

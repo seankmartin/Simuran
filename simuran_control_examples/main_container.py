@@ -2,7 +2,7 @@ import os
 import numpy as np
 from copy import copy
 
-from simuran.recording import RecordingContainer
+from simuran.recording_container import RecordingContainer
 from simuran.param_handler import ParamHandler
 from simuran.analysis.analysis_handler import AnalysisHandler
 from simuran.analysis.lfp_analysis import compare_lfp

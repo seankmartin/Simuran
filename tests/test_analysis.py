@@ -1,8 +1,13 @@
 import os
 import numpy as np
 import csv
-from simuran.recording import RecordingContainer
+from simuran.recording_container import RecordingContainer
 from simuran.param_handler import ParamHandler
+from simuran.batch_setup import BatchSetup
+
+here = os.path.dirname(__file__)
+# resource_dir = os.path.join(here, "..", "large_test_resources")
+resource_dir = "D:"
 
 
 def time_resolved_check(recording_container):
@@ -19,8 +24,8 @@ def time_resolved_check(recording_container):
 
 
 def one_time_setup(in_dir):
-    ph = ParamHandler(
-        in_loc=r"E:\Repos\SIMURAN\examples\musc_params.py")
+    in_loc = os.path.join(here, "..", "examples", "musc_params.py")
+    ph = ParamHandler(in_loc=in_loc)
     re_filts = ['^t(?:(?!\\\\nc).)+$',
                 '^t(?:(?!\\\\final).)+$', '^t(?:(?!\\\\data).)+$']
     ph.batch_write(
@@ -29,9 +34,11 @@ def one_time_setup(in_dir):
 
 
 def test_analysis():
-    in_dir = r"D:\SubRet_recordings_imaging\muscimol_data\CanCSR7_muscimol\2_03082018"
+    in_dir = os.path.join(
+        resource_dir, "SubRet_recordings_imaging",
+        "muscimol_data", "CanCSR7_muscimol", "2_03082018")
     one_time_setup(in_dir)
-    ParamHandler.clear_params(os.path.join(in_dir, "t6_tmaze"))
+    BatchSetup.clear_params(os.path.join(in_dir, "t6_tmaze"))
     rc = RecordingContainer()
     rc.auto_setup(in_dir, recursive=True)
 
