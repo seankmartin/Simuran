@@ -36,9 +36,10 @@ def save_simuran_plot(fig, save_location, **kwargs):
     bbox_inches = kwargs.get('bbox_inches', 'tight')
     pad_inches = kwargs.get('pad_inches', 0.1)
     verbose = kwargs.get('verbose', False)
-    out_format = kwargs.get('format', "png")
+    out_format = kwargs.get('format', None)
 
-    save_location = os.path.splitext()[0] + "." + out_format
+    if out_format is not None:
+        save_location = os.path.splitext(save_location)[0] + "." + out_format
 
     if verbose:
         print("Saving figure to {}".format(save_location))

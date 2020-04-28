@@ -65,7 +65,7 @@ def main(
                     out_str = ""
                     for val in idx_list:
                         out_str = "{} {}".format(out_str, val)
-                    f.write(out_str[2:])
+                    f.write(out_str[1:])
             else:
                 with open(select_location, "r") as f:
                     idx_list = [int(x) for x in f.read().strip().split(" ")]
