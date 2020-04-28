@@ -90,6 +90,12 @@ def main(
             recording = recording_container[i]
         for fn in functions:
             fn_args = function_args.get(fn.__name__, [])
+
+            # This allows for multiple runs of the same function
+            if isinstance(fn_args, dict):
+                for key, value in fn_args.items():
+                    analysis_handler.add_fn(fn, recording, *value)
+            else:
             analysis_handler.add_fn(fn, recording, *fn_args)
         analysis_handler.run_all_fns()
         recording_container[i].results = copy(analysis_handler.results)
