@@ -8,6 +8,10 @@ import simuran.recording_container
 import simuran.analysis.analysis_handler
 import simuran.param_handler
 
+# TODO this is only on my PC
+import matplotlib
+matplotlib.use('Qt4agg')
+
 
 def main(
         location, functions, attributes_to_save,
@@ -16,7 +20,7 @@ def main(
         param_name="simuran_params.py", batch_name="simuran_batch_params.py",
         verbose_batch_params=False, load_all=False,
         to_load=["signals, spatial, units"],
-        select_recordings=None):
+        select_recordings=None, figures=[], figure_names=[]):
 
     # Do batch setup if requested.
     if do_batch_setup:
@@ -77,7 +81,7 @@ def main(
     pbar = tqdm(range(len(recording_container)))
     for i in pbar:
         if args_fn is not None:
-            function_args = args_fn(recording_container, i)
+            function_args = args_fn(recording_container, i, figures)
         disp_name = recording_container[i].source_file[
             len(recording_container.base_dir + os.sep):]
         pbar.set_description(
@@ -104,14 +108,19 @@ def main(
     current_time = now.strftime("%H-%M-%S")
     out_name = "sim_results_" + current_time + ".csv"
     whole_time = now.strftime("%Y-%m-%d--%H-%M-%S")
-    out_loc = os.path.join(recording_container.base_dir,
-                           "sim_results", whole_time, out_name)
+    out_dir = os.path.join(recording_container.base_dir,
+                           "sim_results", whole_time)
+    out_loc = os.path.join(out_dir, out_name)
     recording_container.save_summary_data(
         out_loc, attr_list=attributes_to_save, friendly_names=friendly_names)
 
+    for f, name in zip(figures, figure_names):
+        f.savefig(os.path.join(out_dir, "plots", name))
+
 
 if __name__ == "__main__":
-    in_dir = r"D:\SubRet_recordings_imaging\muscimol_data\CanCSR7_muscimol\2_03082018"
+    # in_dir = r"D:\SubRet_recordings_imaging\muscimol_data\CanCSR7_muscimol\2_03082018"
+    in_dir = r"D:\SubRet_recordings_imaging\muscimol_data\CanCSR8_muscimol\05102018"
 
     # Example sorting
     def sort_fn(x):
@@ -131,9 +140,12 @@ if __name__ == "__main__":
     args_fn = setup_ph["args"]
     save_list = setup_ph["save"]
     friendly_names = setup_ph["names"]
+    figures = setup_ph["figs"]
+    figure_names = setup_ph["fignames"]
 
     main(
         in_dir, list_of_functions, save_list,
         args_fn=args_fn, do_batch_setup=True, sort_container_fn=sort_fn,
         verbose_batch_params=True, load_all=True, to_load=[],
-        select_recordings=True, friendly_names=friendly_names)
+        select_recordings=True, friendly_names=friendly_names,
+        figures=figures, figure_names=figure_names)
