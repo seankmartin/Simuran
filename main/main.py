@@ -34,8 +34,8 @@ def main(
             in_loc=os.path.join(location, batch_name), name="params")
         if param_handler["overwrite"] and (not param_handler["only_check"]):
             batch_setup.clear_params(location, to_remove=param_name)
-        dirs = batch_setup.write_batch_params(
-            verbose_params=verbose_batch_params)
+            dirs = batch_setup.write_batch_params(
+                verbose_params=verbose_batch_params)
         if param_handler["only_check"]:
             print("Was only checking params so exiting.")
             return
@@ -122,7 +122,7 @@ if __name__ == "__main__":
     # in_dir = r"D:\SubRet_recordings_imaging\muscimol_data\CanCSR7_muscimol\2_03082018"
     in_dir = r"D:\SubRet_recordings_imaging\muscimol_data\CanCSR8_muscimol\05102018"
 
-    # Example sorting
+    # Example sorting TODO also put this with the data
     def sort_fn(x):
         comp = x.source_file[len(in_dir + os.sep) + 1:]
         order = int(comp.split("_")[0])
