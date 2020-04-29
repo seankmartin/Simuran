@@ -1,6 +1,6 @@
 import os
 from copy import copy
-
+from datetime import datetime
 
 from tqdm import tqdm
 import simuran.batch_setup
@@ -100,8 +100,12 @@ def main(
         analysis_handler.run_all_fns()
         recording_container[i].results = copy(analysis_handler.results)
         analysis_handler.reset()
+    now = datetime.now()
+    current_time = now.strftime("%H-%M-%S")
+    out_name = "sim_results_" + current_time + ".csv"
+    whole_time = now.strftime("%Y-%m-%d--%H-%M-%S")
     out_loc = os.path.join(recording_container.base_dir,
-                           "sim_results", "sim_results.csv")
+                           "sim_results", whole_time, out_name)
     recording_container.save_summary_data(
         out_loc, attr_list=attributes_to_save, friendly_names=friendly_names)
 
