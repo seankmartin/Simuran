@@ -96,7 +96,7 @@ def main(
                 for key, value in fn_args.items():
                     analysis_handler.add_fn(fn, recording, *value)
             else:
-            analysis_handler.add_fn(fn, recording, *fn_args)
+                analysis_handler.add_fn(fn, recording, *fn_args)
         analysis_handler.run_all_fns()
         recording_container[i].results = copy(analysis_handler.results)
         analysis_handler.reset()
