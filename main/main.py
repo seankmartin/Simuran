@@ -101,7 +101,7 @@ def main(
         recording_container[i].results = copy(analysis_handler.results)
         analysis_handler.reset()
     out_loc = os.path.join(recording_container.base_dir,
-                           "sim_results", "results.csv")
+                           "sim_results", "sim_results.csv")
     recording_container.save_summary_data(
         out_loc, attr_list=attributes_to_save, friendly_names=friendly_names)
 
@@ -115,11 +115,21 @@ if __name__ == "__main__":
         order = int(comp.split("_")[0])
         return order
 
-    from examples.function_args import run
-    from examples.function_list import functions as list_of_functions
-    from examples.attrs_to_save import save_list
+    # Quick fix for these needs to be expanded upon
+    fn_param_loc = os.path.join(in_dir, "simuran_fn_params.py")
+    if not os.path.isfile(fn_param_loc):
+        raise ValueError(
+            "Please create a file listing params at {}".format(
+                fn_param_loc))
+    setup_ph = simuran.param_handler.ParamHandler(
+        in_loc=fn_param_loc, name="fn_params")
+    list_of_functions = setup_ph["run"]
+    args_fn = setup_ph["args"]
+    save_list = setup_ph["save"]
+    friendly_names = setup_ph["names"]
+
     main(
         in_dir, list_of_functions, save_list,
-        args_fn=run, do_batch_setup=True, sort_container_fn=sort_fn,
-        verbose_batch_params=True, load_all=True, to_load=["signals"],
-        select_recordings=True)
+        args_fn=args_fn, do_batch_setup=True, sort_container_fn=sort_fn,
+        verbose_batch_params=True, load_all=True, to_load=[],
+        select_recordings=True, friendly_names=friendly_names)

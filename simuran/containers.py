@@ -65,11 +65,11 @@ class AbstractContainer(ABC):
             idx_list = [i for i in range(len(self))]
 
         if name_list == None:
-            name_list = ["results" + str(i) + ".csv" for i in idx_list]
+            name_list = ["sim_results" + str(i) + ".csv" for i in idx_list]
 
         if out_dir_list == None:
             out_dir_list = [
-                os.path.join(os.getcwd(), "results_simuran")
+                os.path.join(os.getcwd(), "sim_results")
                 for i in range(len(idx_list))]
         elif isinstance(out_dir_list, "str"):
             out_dir_list = [out_dir_list] * len(idx_list)
