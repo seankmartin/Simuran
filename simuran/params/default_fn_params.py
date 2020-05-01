@@ -1,4 +1,5 @@
 from skm_pyutils.py_plot import GridFig
+import os
 
 grid_fig1 = GridFig(rows=3, cols=6, traverse_rows=False)
 grid_fig2 = GridFig(rows=3, cols=6, traverse_rows=False)
@@ -39,11 +40,20 @@ output_names = ["3_1_rate", "11_1_rate"]
 figs = [grid_fig1, grid_fig2]
 fig_names = ["3_1_ratemap.png", "11_1_ratemap.png"]
 
+
+def sort_fn(x):
+    in_dir = r"dirname"
+    comp = x.source_file[len(in_dir + os.sep) + 1:]
+    order = int(comp.split("_")[0])
+    return order
+
+
 fn_params = {
     "run": functions,
     "args": run,
     "save": save_list,
     "names": output_names,
     "figs": figs,
-    "fignames": fig_names
+    "fignames": fig_names,
+    "sorting": sort_fn
 }

@@ -120,13 +120,16 @@ def main(
 
 if __name__ == "__main__":
     # in_dir = r"D:\SubRet_recordings_imaging\muscimol_data\CanCSR7_muscimol\2_03082018"
-    in_dir = r"D:\SubRet_recordings_imaging\muscimol_data\CanCSR8_muscimol\05102018"
+    # in_dir = r"D:\SubRet_recordings_imaging\muscimol_data\CanCSR8_muscimol\05102018"
+    in_dir = r"D:\ATNx_CA1"
 
-    # Example sorting TODO also put this with the data
-    def sort_fn(x):
-        comp = x.source_file[len(in_dir + os.sep) + 1:]
-        order = int(comp.split("_")[0])
-        return order
+    # temp
+    # from skm_pyutils.py_path import get_all_files_in_dir
+    # files = get_all_files_in_dir(in_dir, recursive=True, ext=".txt")
+    # print(len(files))
+    # files = get_all_files_in_dir(in_dir, recursive=True, ext=".set")
+    # print(len(files))
+    # exit(-1)
 
     # Quick fix for these needs to be expanded upon
     fn_param_loc = os.path.join(in_dir, "simuran_fn_params.py")
@@ -137,15 +140,16 @@ if __name__ == "__main__":
     setup_ph = simuran.param_handler.ParamHandler(
         in_loc=fn_param_loc, name="fn_params")
     list_of_functions = setup_ph["run"]
-    args_fn = setup_ph["args"]
     save_list = setup_ph["save"]
-    friendly_names = setup_ph["names"]
-    figures = setup_ph["figs"]
-    figure_names = setup_ph["fignames"]
+    args_fn = setup_ph.get("args", None)
+    friendly_names = setup_ph.get("names", None)
+    figures = setup_ph.get("figs", [])
+    figure_names = setup_ph.get("fignames", [])
+    sort_fn = setup_ph.get("sorting", None)
 
     main(
         in_dir, list_of_functions, save_list,
-        args_fn=args_fn, do_batch_setup=True, sort_container_fn=sort_fn,
-        verbose_batch_params=True, load_all=True, to_load=[],
+        args_fn=args_fn, do_batch_setup=True, sort_container_fn=None,
+        verbose_batch_params=True, load_all=True, to_load=["units"],
         select_recordings=True, friendly_names=friendly_names,
         figures=figures, figure_names=figure_names)
