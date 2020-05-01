@@ -1,4 +1,6 @@
 import os
+import shutil
+import subprocess
 from copy import copy
 from datetime import datetime
 
@@ -54,28 +56,43 @@ def main(
             "Please provide a valid location, entered {}".format(location))
 
     if sort_container_fn is not None:
+        print("Sorting the container")
         recording_container.sort(sort_container_fn, reverse=reverse_sort)
 
     if select_recordings is not None:
+        if not os.path.isdir(location):
+            raise ValueError("Can't select recordings with only one")
         if select_recordings == True:
             select_location = os.path.join(
                 recording_container.base_dir, "file_list.txt")
             if not os.path.isfile(select_location):
                 idx_list = recording_container.subsample(interactive=True)
+                print(idx_list)
                 print("Selected {} for processing, saved to {}".format(
                     recording_container.get_property("source_file"),
                     select_location))
                 with open(select_location, "w") as f:
                     out_str = ""
-                    for val in idx_list:
-                        out_str = "{} {}".format(out_str, val)
-                    f.write(out_str[1:])
+                    for recording in recording_container:
+                        name = recording.source_file
+                        name = name[len(location + os.sep):]
+                        out_str = "{}\n".format(name)
+                        f.write(out_str)
             else:
                 with open(select_location, "r") as f:
-                    idx_list = [int(x) for x in f.read().strip().split(" ")]
-                    recording_container.subsample(idx_list=idx_list)
+                    name_list = [x.strip() for x in f.readlines()]
+                    recording_container.subsample_by_name(name_list)
         else:
-            recording_container.subsample(idx_list=select_recordings)
+            all_idx = True
+            for val in select_recordings:
+                if isinstance(val, str):
+                    all_idx = False
+            if all_idx:
+                recording_container.subsample(idx_list=select_recordings)
+            else:
+                recording_container.subsample_by_name(select_recordings)
+
+    # TODO cell picking helper
 
     analysis_handler = simuran.analysis.analysis_handler.AnalysisHandler()
     pbar = tqdm(range(len(recording_container)))
@@ -120,16 +137,41 @@ def main(
 
 if __name__ == "__main__":
     # in_dir = r"D:\SubRet_recordings_imaging\muscimol_data\CanCSR7_muscimol\2_03082018"
-    # in_dir = r"D:\SubRet_recordings_imaging\muscimol_data\CanCSR8_muscimol\05102018"
-    in_dir = r"D:\ATNx_CA1"
+    in_dir = r"D:\SubRet_recordings_imaging\muscimol_data\CanCSR8_muscimol\05102018"
+    # in_dir = r"D:\ATNx_CA1"
 
-    # temp
-    # from skm_pyutils.py_path import get_all_files_in_dir
-    # files = get_all_files_in_dir(in_dir, recursive=True, ext=".txt")
-    # print(len(files))
-    # files = get_all_files_in_dir(in_dir, recursive=True, ext=".set")
-    # print(len(files))
-    # exit(-1)
+    # TODO extract this into another function
+    here = os.path.dirname(__file__)
+
+    # TODO get different defaults. EG for NC.
+    default_param_names = {
+        "fn": os.path.join(here, "..", "params", "default_fn_params.py"),
+        "base": os.path.join(here, "..", "params", "default_params.py"),
+        "batch": os.path.join(here, "..", "params", "default_batch_params.py")}
+
+    param_names = {
+        "fn": "simuran_fn_params.py",
+        "base": "simuran_base_params.py",
+        "batch": "simuran_batch_params.py"}
+    check_params = False
+    t_editor = "notepad++"
+    if check_params:
+        for key, value in param_names.items():
+            full_name = os.path.join(in_dir, value)
+            if not os.path.isfile(full_name):
+                sim_p = default_param_names[key]
+                shutil.copy(sim_p, full_name)
+            args = [t_editor, full_name]
+            print("Running {}".format(args))
+            subprocess.run(args)
+        full_name = os.path.join(in_dir, "file_list.txt")
+        if os.path.isfile(full_name):
+            args = [t_editor, full_name]
+            print("Running {}".format(args))
+            subprocess.run(args)
+        cont = input("Do you wish to continue with this setup? (y/n)")
+        if cont.lower() == "n":
+            exit(0)
 
     # Quick fix for these needs to be expanded upon
     fn_param_loc = os.path.join(in_dir, "simuran_fn_params.py")
@@ -149,7 +191,7 @@ if __name__ == "__main__":
 
     main(
         in_dir, list_of_functions, save_list,
-        args_fn=args_fn, do_batch_setup=True, sort_container_fn=None,
+        args_fn=args_fn, do_batch_setup=True, sort_container_fn=sort_fn,
         verbose_batch_params=True, load_all=True, to_load=["units"],
         select_recordings=True, friendly_names=friendly_names,
         figures=figures, figure_names=figure_names)

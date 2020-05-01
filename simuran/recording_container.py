@@ -64,6 +64,25 @@ class RecordingContainer(AbstractContainer):
             prop = "source_file"
         return super().subsample(idx_list, interactive, prop)
 
+    def find_recording_with_source(self, source_file):
+        found = False
+        for i, recording in enumerate(self):
+            compare = recording.source_file[-len(source_file):]
+            if source_file == compare:
+                if not found:
+                    found = True
+                    location = i
+                else:
+                    raise ValueError(
+                        "Found two recordings with the same source")
+        if found:
+            return location
+        return None
+
+    def subsample_by_name(self, source_files):
+        indexes = [self.find_recording_with_source(s) for s in source_files]
+        self.subsample(idx_list=indexes, interactive=False, prop="source_file")
+
     def _create_new(self, params):
         recording = Recording(params=params)
         return recording
