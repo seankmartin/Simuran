@@ -61,8 +61,11 @@ class Recording(BaseSimuran):
     def get_available_units(self):
         l = []
         for i, unit in enumerate(self.units):
-            l.append([unit.group, unit.available_units])
+            l.append([unit.group, unit.get_available_units()])
         return l
+
+    def get_set_units(self):
+        return [unit.units_to_use for unit in self.units]
 
     def _parse_source_files(self):
         source_files = {}

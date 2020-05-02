@@ -109,7 +109,7 @@ def main(
                 os.path.basename(recording.source_file)))
             for l in available_units:
                 if len(l[1]) != 0:
-                    print("\t{}: Group {} with Units {}".format(
+                    print("    {}: Group {} with Units {}".format(
                         total, l[0], l[1]))
                     ok.append([i, l])
                     total += 1
