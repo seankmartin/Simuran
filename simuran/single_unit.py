@@ -8,6 +8,8 @@ class SingleUnit(BaseSimuran):
         self.timestamps = None
         self.unit_tags = None
         self.waveforms = None
+        self.available_units = []
+        self.units_to_use = []
 
     def load(self, *args, **kwargs):
         super().load(*args, **kwargs)
@@ -16,3 +18,6 @@ class SingleUnit(BaseSimuran):
                 self.source_file["Spike"], self.source_file["Clusters"], **kwargs)
             self.save_attrs(load_result)
             self.last_loaded_source = self.source_file
+
+    def get_available_units(self):
+        return self.available_units

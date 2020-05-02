@@ -43,7 +43,8 @@ class NCLoader(BaseLoader):
                 "unit_tags": self.single_unit.get_unit_tags(),
                 "waveforms": self.single_unit.get_waveform(),
                 "date": self.single_unit.get_date(),
-                "time": self.single_unit.get_time()
+                "time": self.single_unit.get_time(),
+                "available_units": self.single_unit.get_unit_list(),
             }
         else:
             return None

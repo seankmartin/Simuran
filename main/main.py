@@ -1,6 +1,7 @@
 import os
 import shutil
 import subprocess
+import csv
 from copy import copy
 from datetime import datetime
 
@@ -43,6 +44,7 @@ def main(
             return
 
     # Setup the recording_container
+    # TODO only parse things to be selected
     recording_container = simuran.recording_container.RecordingContainer()
     if os.path.isdir(location):
         recording_container.auto_setup(
@@ -92,7 +94,69 @@ def main(
             else:
                 recording_container.subsample_by_name(select_recordings)
 
-    # TODO cell picking helper
+    # TODO move cell picking helper
+    # TODO provide loaders with get list of cell only methods
+    cell_location = os.path.join(in_dir, "cell_list.txt")
+    if not os.path.isfile(cell_location):
+        print("Start unit select helper")
+        total = 0
+        ok = []
+        for i in range(len(recording_container)):
+            recording_container[i].available = ["units"]
+            recording = recording_container.get(i)
+            available_units = recording.get_available_units()
+            print("--------{}--------".format(
+                os.path.basename(recording.source_file)))
+            for l in available_units:
+                if len(l[1]) != 0:
+                    print("\t{}: Group {} with Units {}".format(
+                        total, l[0], l[1]))
+                    ok.append([i, l])
+                    total += 1
+        user_inp = input(
+            "Please enter the units to analyse or enter the word all\n" +
+            "Format: Idx: Unit, Unit, Unit | Idx: Unit, Unit, Unit\n")
+        if user_inp == "":
+            raise ValueError("No user input entered")
+        if user_inp != "all":
+            unit_spec_list = []
+            final_units = []
+            unit_specifications = user_inp.split("|")
+            for u in unit_specifications:
+                parts = u.split(":")
+                idx = int(parts[0].strip())
+                units = [int(x.strip()) for x in parts[1].split(",")]
+                unit_spec_list.append([idx, units])
+            for u in unit_spec_list:
+                for val in u[1]:
+                    if val not in ok[u[0]][1][1]:
+                        raise ValueError("{}: {} not in {}".format(
+                            u[0], val, ok[u[0]][1][1]))
+                final_units.append([ok[u[0]][0], ok[u[0]][1][0], u[1]])
+        with open(cell_location, "w") as f:
+            max_num = max([len(u[2]) for u in final_units])
+            unit_as_string = ["Unit_{}".format(i) for i in range(max_num)]
+            unit_str = ",".join(unit_as_string)
+            f.write("Recording,Group,{}\n".format(unit_str))
+            for u in final_units:
+                units_as_str = [str(val) for val in u[2]]
+                unit_str = ",".join(units_as_str)
+                f.write("{},{},{}\n".format(u[0], u[1], unit_str))
+                recording = recording_container[u[0]]
+                record_unit_idx = recording.units.group_by_property(
+                    "group", u[1])[1][0]
+                recording.units[record_unit_idx].units_to_use = u[2]
+    else:
+        print("Loading cells from {}".format(cell_location))
+        with open(cell_location, "r") as f:
+            reader = csv.reader(f, delimiter=",")
+            next(reader)
+            for row in reader:
+                row = [int(x.strip()) for x in row]
+                recording = recording_container[row[0]]
+                record_unit_idx = recording.units.group_by_property(
+                    "group", row[1])[1][0]
+                recording.units[record_unit_idx].units_to_use = row[2:]
 
     analysis_handler = simuran.analysis.analysis_handler.AnalysisHandler()
     pbar = tqdm(range(len(recording_container)))

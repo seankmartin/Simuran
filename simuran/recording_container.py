@@ -59,6 +59,15 @@ class RecordingContainer(AbstractContainer):
     def get_results(self, idx):
         return self.data_from_attr_list([("results", None)], idx=idx)
 
+    def get_set_units(self):
+        l = []
+        for r in self:
+            unit_l = []
+            for u in r.units:
+                unit_l.append(u.units_to_use)
+            l.append(unit_l)
+        return l
+
     def subsample(self, idx_list=None, interactive=False, prop=None):
         if prop is None:
             prop = "source_file"

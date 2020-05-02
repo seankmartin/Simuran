@@ -58,6 +58,12 @@ class Recording(BaseSimuran):
             base_name_part = base_name_part.replace(os.sep, "--")
         return base_name_part
 
+    def get_available_units(self):
+        l = []
+        for i, unit in enumerate(self.units):
+            l.append([unit.group, unit.available_units])
+        return l
+
     def _parse_source_files(self):
         source_files = {}
         for item, name in zip(self.get_available(), self.available):
