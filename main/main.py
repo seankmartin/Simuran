@@ -199,25 +199,28 @@ def main(
         f.savefig(os.path.join(out_dir, "plots", name))
 
 
-if __name__ == "__main__":
-    # in_dir = r"D:\SubRet_recordings_imaging\muscimol_data\CanCSR7_muscimol\2_03082018"
-    in_dir = r"D:\SubRet_recordings_imaging\muscimol_data\CanCSR8_muscimol\05102018"
-    # in_dir = r"D:\ATNx_CA1"
+def run(
+        in_dir, file_list_name="file_list.txt", cell_list_name="cell_list.txt",
+        fn_param_name="simuran_fn_params.py",
+        base_param_name="simuran_base_params.py",
+        batch_param_name="simuran_batch_params.py",
+        batch_find_name="simuran_params.py"):
 
     # TODO extract this into another function
-    here = os.path.dirname(__file__)
-
     # TODO get different defaults. EG for NC.
+    here = os.path.dirname(__file__)
     default_param_names = {
         "fn": os.path.join(here, "..", "params", "default_fn_params.py"),
         "base": os.path.join(here, "..", "params", "default_params.py"),
         "batch": os.path.join(here, "..", "params", "default_batch_params.py")}
 
     param_names = {
-        "fn": "simuran_fn_params.py",
-        "base": "simuran_base_params.py",
-        "batch": "simuran_batch_params.py"}
+        "fn": fn_param_name,
+        "base": base_param_name,
+        "batch": batch_param_name}
     check_params = False
+
+    # TODO put this in another file
     t_editor = "notepad++"
     if check_params:
         for key, value in param_names.items():
@@ -228,7 +231,7 @@ if __name__ == "__main__":
             args = [t_editor, full_name]
             print("Running {}".format(args))
             subprocess.run(args)
-        full_name = os.path.join(in_dir, "file_list.txt")
+        full_name = os.path.join(in_dir, file_list_name)
         if os.path.isfile(full_name):
             args = [t_editor, full_name]
             print("Running {}".format(args))
@@ -237,8 +240,8 @@ if __name__ == "__main__":
         if cont.lower() == "n":
             exit(0)
 
-    # Quick fix for these needs to be expanded upon
-    fn_param_loc = os.path.join(in_dir, "simuran_fn_params.py")
+    # TODO probably put this in main
+    fn_param_loc = os.path.join(in_dir, fn_param_name)
     if not os.path.isfile(fn_param_loc):
         raise ValueError(
             "Please create a file listing params at {}".format(
@@ -258,4 +261,12 @@ if __name__ == "__main__":
         args_fn=args_fn, do_batch_setup=True, sort_container_fn=sort_fn,
         verbose_batch_params=True, load_all=True, to_load=["units"],
         select_recordings=True, friendly_names=friendly_names,
-        figures=figures, figure_names=figure_names)
+        figures=figures, figure_names=figure_names,
+        param_name=batch_find_name, batch_name=batch_param_name)
+
+
+if __name__ == "__main__":
+    # in_dir = r"D:\SubRet_recordings_imaging\muscimol_data\CanCSR7_muscimol\2_03082018"
+    in_dir = r"D:\SubRet_recordings_imaging\muscimol_data\CanCSR8_muscimol\05102018"
+    # in_dir = r"D:\ATNx_CA1"
+    run(in_dir)
