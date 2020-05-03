@@ -96,7 +96,9 @@ def main(
 
     # TODO move cell picking helper
     # TODO provide loaders with get list of cell only methods
+    in_dir = location if os.path.isdir(location) else os.path.dirname(location)
     cell_location = os.path.join(in_dir, "cell_list.txt")
+    print(cell_location)
     if not os.path.isfile(cell_location):
         print("Start unit select helper")
         total = 0
