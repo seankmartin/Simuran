@@ -396,10 +396,10 @@ def compare_place(recording1, recording2):
     nspike2 = get_nc_unit(recording2)
 
     nspat1.place(nspike1.get_unit_stamp())
-    results["A_Coh"] = nspat1["Spatial Coherence"]
+    results["A_Coh"] = nspat1.get_results()["Spatial Coherence"]
     nspat1._results.clear()
     nspat2.place(nspike2.get_unit_stamp())
-    results["B_Coh"] = nspat2["Spatial Coherence"]
+    results["B_Coh"] = nspat2.get_results()["Spatial Coherence"]
     nspat2._results.clear()
     results["A_A_Coh"] = random_down(nspat1, nspike1, nspat1, nspike1)
     results["B_B_Coh"] = random_down(nspat2, nspike2, nspat2, nspike2)
