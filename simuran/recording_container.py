@@ -19,14 +19,17 @@ class RecordingContainer(AbstractContainer):
 
     def auto_setup(
             self, start_dir, param_name="simuran_params.py",
-            recursive=True, re_filter=None, subset=None):
+            recursive=True, re_filter=None, subset=None,
+            verbose=False):
         fnames = get_all_files_in_dir(
             start_dir, ext=".py", return_absolute=True,
             recursive=recursive, case_sensitive_ext=True,
             re_filter=re_filter)
         return self.setup(fnames, start_dir, param_name=param_name)
 
-    def setup(self, filenames, start_dir, param_name="simuran_params.py"):
+    def setup(
+            self, filenames, start_dir,
+            param_name="simuran_params.py", verbose=False):
         param_files = []
         for fname in filenames:
             if os.path.basename(fname) == param_name:
@@ -34,12 +37,14 @@ class RecordingContainer(AbstractContainer):
         should_load = not self.load_on_fly
         out_str_load = "Loading" if should_load else "Parsing"
         for i, param_file in enumerate(param_files):
-            print("{} recording {} of {} at {}".format(
-                out_str_load, i + 1, len(param_files), param_file))
+            if verbose:
+                print("{} recording {} of {} at {}".format(
+                    out_str_load, i + 1, len(param_files), param_file))
             recording = Recording(
                 param_file=param_file, load=should_load)
             if not recording.valid:
-                print("Last recording was invalid, not adding to container")
+                if verbose:
+                    print("Last recording was invalid, not adding to container")
             else:
                 self.append(recording)
         self.base_dir = start_dir
