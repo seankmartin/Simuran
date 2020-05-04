@@ -23,7 +23,10 @@ def main(
         param_name="simuran_params.py", batch_name="simuran_batch_params.py",
         verbose_batch_params=False, load_all=False,
         to_load=["signals, spatial, units"],
-        select_recordings=None, figures=[], figure_names=[]):
+        select_recordings=None, figures=[], figure_names=[],
+        cell_list_name="cell_list.txt",
+        file_list_name="file_list.txt",
+        print_all_cells=True):
 
     # Do batch setup if requested.
     if do_batch_setup:
@@ -61,12 +64,34 @@ def main(
         print("Sorting the container")
         recording_container.sort(sort_container_fn, reverse=reverse_sort)
 
+    in_dir = location if os.path.isdir(location) else os.path.dirname(location)
+    if print_all_cells:
+        help_out_loc = os.path.join(in_dir, "all_cells.txt")
+        if not os.path.isfile(help_out_loc):
+            print("Printing all units to {}".format(help_out_loc))
+            total = 0
+            with open(help_out_loc, "w") as f:
+                for i in range(len(recording_container)):
+                    recording_container[i].available = ["units"]
+                    recording = recording_container.get(i)
+                    available_units = recording.get_available_units()
+                    f.write("----{}----\n".format(
+                        os.path.basename(recording.source_file)))
+                    for l in available_units:
+                        if len(l[1]) != 0:
+                            f.write("        " +
+                                    "{}: Group {} with Units {}\n".format(
+                                        total, l[0], l[1]))
+                            total += 1
+        else:
+            print("All units already available at {}".format(help_out_loc))
+
     if select_recordings is not None:
         if not os.path.isdir(location):
             raise ValueError("Can't select recordings with only one")
         if select_recordings == True:
             select_location = os.path.join(
-                recording_container.base_dir, "file_list.txt")
+                recording_container.base_dir, file_list_name)
             if not os.path.isfile(select_location):
                 idx_list = recording_container.subsample(interactive=True)
                 print(idx_list)
@@ -96,9 +121,8 @@ def main(
 
     # TODO move cell picking helper
     # TODO provide loaders with get list of cell only methods
-    in_dir = location if os.path.isdir(location) else os.path.dirname(location)
-    cell_location = os.path.join(in_dir, "cell_list.txt")
-    print(cell_location)
+    # TODO get this to work from saved list of cells
+    cell_location = os.path.join(in_dir, cell_list_name)
     if not os.path.isfile(cell_location):
         print("Start unit select helper")
         total = 0
@@ -167,9 +191,8 @@ def main(
             function_args = args_fn(recording_container, i, figures)
         disp_name = recording_container[i].source_file[
             len(recording_container.base_dir + os.sep):]
-        pbar.set_description(
-            "Running {} on {}".format(
-                [fn.__name__ for fn in functions], disp_name))
+        # Can include [fn.__name__ for fn in functions] below
+        pbar.set_description("Running on {}".format(disp_name))
         if load_all:
             recording_container[i].available = to_load
             recording = recording_container.get(i)
@@ -206,21 +229,25 @@ def run(
         fn_param_name="simuran_fn_params.py",
         base_param_name="simuran_base_params.py",
         batch_param_name="simuran_batch_params.py",
-        batch_find_name="simuran_params.py"):
+        batch_find_name="simuran_params.py",
+        default_param_folder=None,
+        check_params=False):
 
     # TODO extract this into another function
     # TODO get different defaults. EG for NC.
     here = os.path.dirname(__file__)
+    if default_param_folder is None:
+        default_param_folder = os.path.join(here, "..", "params")
     default_param_names = {
-        "fn": os.path.join(here, "..", "params", "default_fn_params.py"),
-        "base": os.path.join(here, "..", "params", "default_params.py"),
-        "batch": os.path.join(here, "..", "params", "default_batch_params.py")}
+        "fn": os.path.join(default_param_folder, "simuran_fn_params.py"),
+        "base": os.path.join(default_param_folder, "simuran_base_params.py"),
+        "batch": os.path.join(default_param_folder, "simuran_batch_params.py")
+    }
 
     param_names = {
         "fn": fn_param_name,
         "base": base_param_name,
         "batch": batch_param_name}
-    check_params = False
 
     # TODO put this in another file
     t_editor = "notepad++"
@@ -238,7 +265,7 @@ def run(
             args = [t_editor, full_name]
             print("Running {}".format(args))
             subprocess.run(args)
-        cont = input("Do you wish to continue with this setup? (y/n)")
+        cont = input("Do you wish to continue with this setup? (y/n)\n")
         if cont.lower() == "n":
             exit(0)
 
@@ -264,7 +291,9 @@ def run(
         verbose_batch_params=True, load_all=True, to_load=["units"],
         select_recordings=True, friendly_names=friendly_names,
         figures=figures, figure_names=figure_names,
-        param_name=batch_find_name, batch_name=batch_param_name)
+        param_name=batch_find_name, batch_name=batch_param_name,
+        cell_list_name=cell_list_name,
+        file_list_name=file_list_name)
 
 
 if __name__ == "__main__":

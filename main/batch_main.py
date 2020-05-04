@@ -1,25 +1,41 @@
 from main import run
+from simuran.param_handler import ParamHandler
 
 
-def make_default_dict():
+def make_default_dict(add=""):
     param_names = {
-        "file_list_name": "file_list.txt",
-        "cell_list_name": "cell_list.txt",
-        "fn_param_name": "simuran_fn_params.py",
-        "base_param_name": "simuran_base_params.py",
-        "batch_param_name": "simuran_batch_params.py",
-        "batch_find_name": "simuran_params.py",
+        "file_list_name": "file_list{}.txt".format(add),
+        "cell_list_name": "cell_list{}.txt".format(add),
+        "fn_param_name": "simuran_fn_params{}.py".format(add),
+        "base_param_name": "simuran_base_params{}.py".format(add),
+        "batch_param_name": "simuran_batch_params{}.py".format(add),
+        "batch_find_name": "simuran_params{}.py".format(add),
     }
     return param_names
 
 
-def main(run_dict_list, directory_list):
+def main(
+        run_dict_list, directory_list,
+        default_param_folder=None, check_params=False, idx=None):
+    if idx is not None:
+        directory = directory_list[idx]
+        run_dict = run_dict_list[idx]
+        run(
+            directory, check_params=check_params,
+            default_param_folder=default_param_folder, **run_dict)
+        return
     for directory, run_dict in zip(directory_list, run_dict_list):
-        run(directory, **run_dict)
+        run(
+            directory, check_params=check_params,
+            default_param_folder=default_param_folder, **run_dict)
 
 
 if __name__ == "__main__":
-    in_dir = r"D:\SubRet_recordings_imaging\muscimol_data\CanCSR8_muscimol\05102018"
-    dict_l = [make_default_dict(), ]
-    dir_l = [in_dir, ]
-    main(dict_l, dir_l)
+    param_file = r"D:\SubRet_recordings_imaging\muscimol_data\batch.py"
+    ph = ParamHandler(in_loc=param_file, name="params")
+    dict_l = ph["param_list"]
+    dir_l = ph["directory_list"]
+    default_param_folder = ph["default_param_folder"]
+    check_params = ph["check_params"]
+    main(dict_l, dir_l, default_param_folder=default_param_folder,
+         check_params=check_params, idx=0)

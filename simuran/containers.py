@@ -125,7 +125,7 @@ class AbstractContainer(ABC):
                 "keep seperated by spaces. Enter empty to keep all.\n")
             if indices == "":
                 return [i for i in range(len(self))]
-            indices = indices.split(" ")
+            indices = indices.strip().split(" ")
             idx_list = [int(i) - 1 for i in indices]
         self.container = [self.container[i] for i in idx_list]
         return idx_list
