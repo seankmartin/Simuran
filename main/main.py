@@ -38,13 +38,11 @@ def main(
         print("Running batch setup {}".format(batch_setup))
         param_handler = simuran.param_handler.ParamHandler(
             in_loc=os.path.join(location, batch_name), name="params")
+        # TODO this does not work properly at the moment
         if param_handler["overwrite"] and (not param_handler["only_check"]):
             batch_setup.clear_params(location, to_remove=param_name)
             dirs = batch_setup.write_batch_params(
                 verbose_params=verbose_batch_params)
-        if param_handler["only_check"]:
-            print("Was only checking params so exiting.")
-            return
 
     # Setup the recording_container
     # TODO only parse things to be selected
@@ -64,6 +62,7 @@ def main(
         print("Sorting the container")
         recording_container.sort(sort_container_fn, reverse=reverse_sort)
 
+    # TODO if file is empty run again
     in_dir = location if os.path.isdir(location) else os.path.dirname(location)
     if print_all_cells:
         help_out_loc = os.path.join(in_dir, "all_cells.txt")
@@ -94,7 +93,6 @@ def main(
                 recording_container.base_dir, file_list_name)
             if not os.path.isfile(select_location):
                 idx_list = recording_container.subsample(interactive=True)
-                print(idx_list)
                 print("Selected {} for processing, saved to {}".format(
                     recording_container.get_property("source_file"),
                     select_location))
@@ -140,19 +138,33 @@ def main(
                     ok.append([i, l])
                     total += 1
         user_inp = input(
-            "Please enter the units to analyse or enter the word all\n" +
+            "Please enter the units to analyse or enter the word all or num\n" +
             "Format: Idx: Unit, Unit, Unit | Idx: Unit, Unit, Unit\n")
         if user_inp == "":
             raise ValueError("No user input entered")
         if user_inp != "all":
-            unit_spec_list = []
             final_units = []
-            unit_specifications = user_inp.split("|")
-            for u in unit_specifications:
-                parts = u.split(":")
-                idx = int(parts[0].strip())
-                units = [int(x.strip()) for x in parts[1].split(",")]
-                unit_spec_list.append([idx, units])
+            try:
+                parts = user_inp.strip().split("_")
+                if len(parts) == 2:
+                    group, unit_number = parts
+                    group = int(group.strip())
+                    unit_number = int(unit_number.strip())
+                    unit_spec_list = [
+                        [i, [unit_number, ]]
+                        for i in range(total)
+                        if ok[i][1][0] == group]
+                else:
+                    value = int(user_inp.strip())
+                    unit_spec_list = [[i, [value, ]] for i in range(total)]
+            except:
+                unit_spec_list = []
+                unit_specifications = user_inp.split("|")
+                for u in unit_specifications:
+                    parts = u.split(":")
+                    idx = int(parts[0].strip())
+                    units = [int(x.strip()) for x in parts[1].split(",")]
+                    unit_spec_list.append([idx, units])
             for u in unit_spec_list:
                 for val in u[1]:
                     if val not in ok[u[0]][1][1]:
@@ -172,6 +184,7 @@ def main(
                 record_unit_idx = recording.units.group_by_property(
                     "group", u[1])[1][0]
                 recording.units[record_unit_idx].units_to_use = u[2]
+        print("Saved cells to {}".format(cell_location))
     else:
         print("Loading cells from {}".format(cell_location))
         with open(cell_location, "r") as f:
@@ -251,20 +264,28 @@ def run(
 
     # TODO put this in another file
     t_editor = "notepad++"
-    if check_params:
-        for key, value in param_names.items():
-            full_name = os.path.join(in_dir, value)
-            if not os.path.isfile(full_name):
-                sim_p = default_param_names[key]
-                shutil.copy(sim_p, full_name)
+    # t_editor = "code"
+    new = False
+    for key, value in param_names.items():
+        full_name = os.path.join(in_dir, value)
+        if not os.path.isfile(full_name):
+            sim_p = default_param_names[key]
+            shutil.copy(sim_p, full_name)
             args = [t_editor, full_name]
             print("Running {}".format(args))
             subprocess.run(args)
+            new = True
+        elif check_params:
+            args = [t_editor, full_name]
+            print("Running {}".format(args))
+            subprocess.run(args)
+    if check_params:
         full_name = os.path.join(in_dir, file_list_name)
         if os.path.isfile(full_name):
             args = [t_editor, full_name]
             print("Running {}".format(args))
             subprocess.run(args)
+    if new or check_params:
         cont = input("Do you wish to continue with this setup? (y/n)\n")
         if cont.lower() == "n":
             exit(0)
@@ -288,7 +309,7 @@ def run(
     main(
         in_dir, list_of_functions, save_list,
         args_fn=args_fn, do_batch_setup=True, sort_container_fn=sort_fn,
-        verbose_batch_params=True, load_all=True, to_load=["units"],
+        verbose_batch_params=False, load_all=True, to_load=["units"],
         select_recordings=True, friendly_names=friendly_names,
         figures=figures, figure_names=figure_names,
         param_name=batch_find_name, batch_name=batch_param_name,
