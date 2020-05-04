@@ -1,6 +1,8 @@
 import neurochat.nc_plot as ncplot
 import matplotlib.pyplot as plt
 
+from copy import deepcopy
+
 # TODO log these exceptions - also maybe build them into analysis handler?? Nah prob not
 
 
@@ -11,6 +13,14 @@ def frate(recording, tetrode_num, unit_num):
         unit.load()
         spike = unit.underlying
         spike.set_unit_no(unit_num)
+        return (spike.get_unit_spikes_count() / spike.get_duration())
+    except:
+        return -1
+
+
+def frate_file(recording):
+    try:
+        spike = get_nc_unit(recording)
         return (spike.get_unit_spikes_count() / spike.get_duration())
     except:
         return -1
@@ -258,7 +268,9 @@ def downsample_place(self, ftimes, other_spatial, other_ftimes, **kwargs):
 
     fmap = np.divide(spike_count, tmap, out=np.zeros_like(
         spike_count), where=tmap != 0)
-
+    if fmap.max() == 0:
+        print("No firing information!")
+        return -1
     if brAdjust:
         nfmap = fmap / fmap.max()
         if np.sum(np.logical_and(nfmap >= 0.2, tmap != 0)) >= 0.8 * nfmap[tmap != 0].flatten().shape[0]:
@@ -349,9 +361,38 @@ def downsample_place(self, ftimes, other_spatial, other_ftimes, **kwargs):
     return graph_data
 
 
+def chop_map(self, chop_edges, ftimes):
+    """This is x_l, x_r, y_t, y_b."""
+    x_l, x_r, y_t, y_b = np.array(chop_edges)
+    x_r = max(self._pos_x) - x_r
+    y_t = max(self._pos_y) - y_t
+    in_range_x = np.logical_and(self._pos_x >= x_l, self._pos_x <= x_r)
+    in_range_y = np.logical_and(self._pos_y >= y_b, self._pos_y <= y_t)
+
+    spikeLoc = self.get_event_loc(ftimes)[1]
+    spike_idxs = spikeLoc[0]
+    spike_idxs_to_use = []
+
+    sample_spatial_idx = np.where(np.logical_and(in_range_y, in_range_x))
+    for i, val in enumerate(spike_idxs):
+        if not np.any(sample_spatial_idx == val):
+            spike_idxs_to_use.append(i)
+    ftimes = ftimes[np.array(spike_idxs_to_use)]
+
+    self._set_time(self._time[sample_spatial_idx])
+    self._set_pos_x(self._pos_x[sample_spatial_idx] - x_l)
+    self._set_pos_y(self._pos_y[sample_spatial_idx] - y_b)
+    self._set_direction(self._direction[sample_spatial_idx])
+    self._set_speed(self._speed[sample_spatial_idx])
+    self.set_ang_vel(self._ang_vel[sample_spatial_idx])
+
+    return ftimes
+
+
 NSpatial.bin_downsample = bin_downsample
 NSpatial.downsample_place = downsample_place
 NSpatial.reverse_downsample = reverse_downsample
+NSpatial.chop_map = chop_map
 
 
 def get_nc_unit(recording):
@@ -375,35 +416,50 @@ def get_nc_unit(recording):
     return spike
 
 
-def random_down(spat1, spike1, spat2, spike2, num_iters=50):
+def random_down(spat1, ftimes1, spat2, ftimes2, num_iters=50):
     # TODO get multiple key values
     skaggs = np.zeros(shape=(num_iters))
     for i in range(num_iters):
-        p_down_data = spat1.downsample_place(
-            spike1.get_unit_stamp(), spat2, spike2.get_unit_stamp())
+        p_down_data = spat1.downsample_place(ftimes1, spat2, ftimes2)
+        while p_down_data == -1:
+            p_down_data = spat1.downsample_place(ftimes1, spat2, ftimes2)
         skaggs[i] = spat1.get_results()['Spatial Coherence']
         spat1._results.clear()
-    return np.mean(skaggs)
+    return np.nanmean(skaggs), p_down_data
 
 
-def compare_place(recording1, recording2):
+def compare_place(recording1, recording2, grid_fig, chop_bound1, chop_bound2):
     results = {}
     recording1.spatial.load()
     nspat1 = recording1.spatial.underlying
     nspike1 = get_nc_unit(recording1)
+    ftimes1 = nspike1.get_unit_stamp()
     recording2.spatial.load()
     nspat2 = recording2.spatial.underlying
     nspike2 = get_nc_unit(recording2)
+    ftimes2 = nspike2.get_unit_stamp()
 
-    nspat1.place(nspike1.get_unit_stamp())
+    if chop_bound1 != None:
+        ftimes1 = deepcopy(ftimes1)
+        nspat1 = deepcopy(nspat1)
+        ftimes1 = nspat1.chop_map(chop_bound1, ftimes1)
+    if chop_bound2 != None:
+        ftimes2 = deepcopy(ftimes2)
+        nspat2 = deepcopy(nspat2)
+        ftimes2 = nspat2.chop_map(chop_bound2, ftimes2)
+
+    place_data = nspat1.place(ftimes1)
+    ncplot.loc_rate(place_data, ax=grid_fig.get_next())
     results["A_Coh"] = nspat1.get_results()["Spatial Coherence"]
     nspat1._results.clear()
-    nspat2.place(nspike2.get_unit_stamp())
+    nspat2.place(ftimes2)
     results["B_Coh"] = nspat2.get_results()["Spatial Coherence"]
     nspat2._results.clear()
-    results["A_A_Coh"] = random_down(nspat1, nspike1, nspat1, nspike1)
-    results["B_B_Coh"] = random_down(nspat2, nspike2, nspat2, nspike2)
-    results["A_B_Coh"] = random_down(nspat1, nspike1, nspat2, nspike2)
-    results["B_A_Coh"] = random_down(nspat2, nspike2, nspat1, nspike1)
+    results["A_A_Coh"], _ = random_down(nspat1, ftimes1, nspat1, ftimes1)
+    results["B_B_Coh"], _ = random_down(nspat2, ftimes2, nspat2, ftimes2)
+    results["B_A_Coh"], pd = random_down(nspat2, ftimes2, nspat1, ftimes1)
+    ncplot.loc_rate(pd, ax=grid_fig.get_next())
+    results["A_B_Coh"], pd = random_down(nspat1, ftimes1, nspat2, ftimes2)
+    ncplot.loc_rate(pd, ax=grid_fig.get_next())
 
     return results
