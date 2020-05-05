@@ -13,6 +13,7 @@ def make_default_dict(add=""):
     return param_names
 
 
+# TODO provide script to auto update based on file location.
 main_dir = r"D:\SubRet_recordings_imaging\muscimol_data"
 can8_05 = os.path.join(main_dir, "CanCSR8_muscimol", "05102018")
 can8_12 = os.path.join(main_dir, "CanCSR8_muscimol", "12112018")
