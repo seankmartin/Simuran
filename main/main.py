@@ -104,8 +104,10 @@ def main(
                         out_str = "{}\n".format(name)
                         f.write(out_str)
             else:
+                print("Loading recordings from {}".format(select_location))
                 with open(select_location, "r") as f:
-                    name_list = [x.strip() for x in f.readlines()]
+                    name_list = [x.strip()
+                                 for x in f.readlines() if x.strip() != ""]
                     recording_container.subsample_by_name(name_list)
         else:
             all_idx = True
