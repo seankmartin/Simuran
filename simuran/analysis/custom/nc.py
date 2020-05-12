@@ -79,8 +79,8 @@ def place_field_file(recording, grid_fig):
     plt.close()
     ncplot.loc_spike(place_data, ax=grid_fig.get_next())
     plt.close()
-    wave_data = spike.wave_property()
-    ncplot.largest_waveform(wave_data, ax=grid_fig.get_next())
+    hd_data = spatial.underlying.hd_rate(spike.get_unit_stamp())
+    ncplot.hd_rate(hd_data, ax=grid_fig.get_next(circular=True), title=None)
     plt.close()
 
 
@@ -120,8 +120,8 @@ import neurochat.nc_plot as nc_plot
 
 def bin_downsample(
         self, ftimes, other_spatial, other_ftimes, final_bins,
-        initial_bin_size=30):
-    bin_size = initial_bin_size
+        sample_bin_amt=[30, 30]):
+    bin_size = sample_bin_amt
     set_array = np.zeros(shape=(len(self._pos_x), 4), dtype=np.float64)
     set_array[:, 0] = self._pos_x
     set_array[:, 1] = self._pos_y
@@ -238,6 +238,8 @@ def downsample_place(self, ftimes, other_spatial, other_ftimes, **kwargs):
 
     xedges = self._xbound
     yedges = self._ybound
+    xedges2 = other_spatial._xbound
+    yedges2 = other_spatial._ybound
 
     spikeLoc = self.get_event_loc(ftimes, **kwargs)[1]
     posX = self._pos_x[np.logical_and(
@@ -249,8 +251,8 @@ def downsample_place(self, ftimes, other_spatial, other_ftimes, **kwargs):
         ftimes, other_spatial, other_ftimes,
         final_bins=[
             np.append(yedges, yedges[-1] + np.mean(np.diff(yedges))),
-            np.append(xedges, xedges[-1] + np.mean(np.diff(xedges)))]
-    )
+            np.append(xedges, xedges[-1] + np.mean(np.diff(xedges)))],
+        sample_bin_amt=[len(xedges2) + 1, len(yedges2) + 1])
     posY = new_set[:, 1]
     posX = new_set[:, 0]
 
@@ -416,16 +418,24 @@ def get_nc_unit(recording):
     return spike
 
 
-def random_down(spat1, ftimes1, spat2, ftimes2, num_iters=50):
-    # TODO get multiple key values
-    skaggs = np.zeros(shape=(num_iters))
+def random_down(
+        spat1, ftimes1, spat2, ftimes2, keys,
+        num_iters=200):
+    results = {}
+    output_dict = {}
+    for key in keys:
+        results[key] = np.zeros(shape=(num_iters))
     for i in range(num_iters):
         p_down_data = spat1.downsample_place(ftimes1, spat2, ftimes2)
         while p_down_data == -1:
             p_down_data = spat1.downsample_place(ftimes1, spat2, ftimes2)
-        skaggs[i] = spat1.get_results()['Spatial Coherence']
+        for key in keys:
+            results[key][i] = spat1.get_results()[key]
         spat1._results.clear()
-    return np.nanmean(skaggs), p_down_data
+    output_dict = {}
+    for key in keys:
+        output_dict[key] = np.nanmean(results[key])
+    return output_dict, p_down_data
 
 
 def compare_place(recording1, recording2, grid_fig, chop_bound1, chop_bound2):
@@ -448,18 +458,45 @@ def compare_place(recording1, recording2, grid_fig, chop_bound1, chop_bound2):
         nspat2 = deepcopy(nspat2)
         ftimes2 = nspat2.chop_map(chop_bound2, ftimes2)
 
+    # Normal HD is here since it matters less
+    hd_data = nspat1.hd_rate(ftimes1)
+    results["HD_Result"] = nspat1.get_results()["HD Res Vect"]
+
+    try:
+        grid_data = nspat1.grid(ftimes1)
+        results["Is_Grid"] = nspat1.get_results()["Is Grid"]
+    except:
+        results["Is_Grid"] = False
+
+    # Do the downsampling
+    keys = ["Spatial Coherence", "Spatial Skaggs", "Spatial Sparsity"]
+    short_keys = ["Coh", "Skagg", "Spar"]
+    names = ["A_A", "B_B", "B_A", "A_B"]
     place_data = nspat1.place(ftimes1)
     ncplot.loc_rate(place_data, ax=grid_fig.get_next())
     results["A_Coh"] = nspat1.get_results()["Spatial Coherence"]
+	results["A_Skagg"] = nspat1.get_results()["Spatial Skaggs"]
+	results["A_Spar"] = nspat1.get_results()["Spatial Sparsity"]
     nspat1._results.clear()
     nspat2.place(ftimes2)
     results["B_Coh"] = nspat2.get_results()["Spatial Coherence"]
+	results["B_Skagg"] = nspat2.get_results()["Spatial Skaggs"]
+	results["B_Spar"] = nspat2.get_results()["Spatial Sparsity"]
     nspat2._results.clear()
-    results["A_A_Coh"], _ = random_down(nspat1, ftimes1, nspat1, ftimes1)
-    results["B_B_Coh"], _ = random_down(nspat2, ftimes2, nspat2, ftimes2)
-    results["B_A_Coh"], pd = random_down(nspat2, ftimes2, nspat1, ftimes1)
+    results_aa, _ = random_down(nspat1, ftimes1, nspat1, ftimes1, keys)
+    results_bb, _ = random_down(nspat2, ftimes2, nspat2, ftimes2, keys)
+    results_ba, pd = random_down(
+        nspat2, ftimes2, nspat1, ftimes1, keys)
     ncplot.loc_rate(pd, ax=grid_fig.get_next())
-    results["A_B_Coh"], pd = random_down(nspat1, ftimes1, nspat2, ftimes2)
+    results_ab, pd = random_down(
+        nspat1, ftimes1, nspat2, ftimes2, keys)
     ncplot.loc_rate(pd, ax=grid_fig.get_next())
+    all_results = [results_aa, results_bb, results_ba, results_ab]
+
+    # Save out the results
+    for (name, res) in zip(names, all_results):
+        for key, short_key in zip(keys, short_keys):
+            out_key = name + "_" + short_key
+            results[out_key] = res[key]
 
     return results
