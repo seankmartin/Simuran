@@ -91,7 +91,8 @@ class RecordingContainer(AbstractContainer):
                         "Found two recordings with the same source")
         if found:
             return location
-        return None
+        raise ValueError(
+            "Could not find a recording with the source {}".format(source_file))
 
     def subsample_by_name(self, source_files):
         indexes = [self.find_recording_with_source(s) for s in source_files]
