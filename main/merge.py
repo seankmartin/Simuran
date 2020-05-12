@@ -57,9 +57,14 @@ def csv_merge(
                                 for line in lines[1:]]
                     data = np.zeros(shape=(len(split_up), len(split_up[0])))
                     for i, row in enumerate(split_up):
-                        data[i] = np.array([float(val.strip()) for val in row])
-                    avg = np.mean(data, axis=0)
-                    std = np.std(data, axis=0)
+                        for j, val in enumerate(row):
+                            try:
+                                to_write = float(val.strip())
+                            except:
+                                to_write = np.nan
+                            data[i, j] = to_write
+                    avg = np.nanmean(data, axis=0)
+                    std = np.nanstd(data, axis=0)
                     avg_str = (
                         "Average," +
                         ",".join(str(val) for val in avg)[:-1] + "\n")
