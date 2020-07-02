@@ -15,30 +15,43 @@ def make_default_dict(add=""):
 
 
 def main(
-        run_dict_list, directory_list,
-        default_param_folder=None, check_params=False, idx=None,
-        handle_errors=False):
+    run_dict_list,
+    directory_list,
+    default_param_folder=None,
+    check_params=False,
+    idx=None,
+    handle_errors=False,
+):
     with open("output_log.txt", "w") as f:
         if idx is not None:
             directory = directory_list[idx]
             run_dict = run_dict_list[idx]
             run(
-                directory, check_params=check_params,
-                default_param_folder=default_param_folder, **run_dict)
+                directory,
+                check_params=check_params,
+                default_param_folder=default_param_folder,
+                **run_dict
+            )
             return
         for i, (directory, run_dict) in enumerate(zip(directory_list, run_dict_list)):
             if handle_errors:
                 try:
                     run(
-                        directory, check_params=check_params,
-                        default_param_folder=default_param_folder, **run_dict)
+                        directory,
+                        check_params=check_params,
+                        default_param_folder=default_param_folder,
+                        **run_dict
+                    )
                 except Exception as e:
                     print("ERROR: check output_log.txt for details")
                     f.write("Error on {} was {}\n".format(i, e))
             else:
                 run(
-                    directory, check_params=check_params,
-                    default_param_folder=default_param_folder, **run_dict)
+                    directory,
+                    check_params=check_params,
+                    default_param_folder=default_param_folder,
+                    **run_dict
+                )
 
 
 if __name__ == "__main__":
@@ -48,5 +61,11 @@ if __name__ == "__main__":
     dir_l = ph["directory_list"]
     default_param_folder = ph["default_param_folder"]
     check_params = ph["check_params"]
-    main(dict_l, dir_l, default_param_folder=default_param_folder,
-         check_params=check_params, idx=None, handle_errors=True)
+    main(
+        dict_l,
+        dir_l,
+        default_param_folder=default_param_folder,
+        check_params=check_params,
+        idx=None,
+        handle_errors=True,
+    )

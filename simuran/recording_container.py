@@ -9,7 +9,6 @@ from skm_pyutils.py_path import get_all_files_in_dir
 
 
 class RecordingContainer(AbstractContainer):
-
     def __init__(self, load_on_fly=True, **kwargs):
         super().__init__()
         self.load_on_fly = load_on_fly
@@ -18,18 +17,27 @@ class RecordingContainer(AbstractContainer):
         self.base_dir = None
 
     def auto_setup(
-            self, start_dir, param_name="simuran_params.py",
-            recursive=True, re_filter=None, subset=None,
-            verbose=False):
+        self,
+        start_dir,
+        param_name="simuran_params.py",
+        recursive=True,
+        re_filter=None,
+        subset=None,
+        verbose=False,
+    ):
         fnames = get_all_files_in_dir(
-            start_dir, ext=".py", return_absolute=True,
-            recursive=recursive, case_sensitive_ext=True,
-            re_filter=re_filter)
+            start_dir,
+            ext=".py",
+            return_absolute=True,
+            recursive=recursive,
+            case_sensitive_ext=True,
+            re_filter=re_filter,
+        )
         return self.setup(fnames, start_dir, param_name=param_name)
 
     def setup(
-            self, filenames, start_dir,
-            param_name="simuran_params.py", verbose=False):
+        self, filenames, start_dir, param_name="simuran_params.py", verbose=False
+    ):
         param_files = []
         for fname in filenames:
             if os.path.basename(fname) == param_name:
@@ -38,10 +46,12 @@ class RecordingContainer(AbstractContainer):
         out_str_load = "Loading" if should_load else "Parsing"
         for i, param_file in enumerate(param_files):
             if verbose:
-                print("{} recording {} of {} at {}".format(
-                    out_str_load, i + 1, len(param_files), param_file))
-            recording = Recording(
-                param_file=param_file, load=should_load)
+                print(
+                    "{} recording {} of {} at {}".format(
+                        out_str_load, i + 1, len(param_files), param_file
+                    )
+                )
+            recording = Recording(param_file=param_file, load=should_load)
             if not recording.valid:
                 if verbose:
                     print("Last recording was invalid, not adding to container")
@@ -81,18 +91,18 @@ class RecordingContainer(AbstractContainer):
     def find_recording_with_source(self, source_file):
         found = False
         for i, recording in enumerate(self):
-            compare = recording.source_file[-len(source_file):]
+            compare = recording.source_file[-len(source_file) :]
             if source_file == compare:
                 if not found:
                     found = True
                     location = i
                 else:
-                    raise ValueError(
-                        "Found two recordings with the same source")
+                    raise ValueError("Found two recordings with the same source")
         if found:
             return location
         raise ValueError(
-            "Could not find a recording with the source {}".format(source_file))
+            "Could not find a recording with the source {}".format(source_file)
+        )
 
     def subsample_by_name(self, source_files):
         indexes = [self.find_recording_with_source(s) for s in source_files]
@@ -105,5 +115,5 @@ class RecordingContainer(AbstractContainer):
     def __repr__(self):
         s_files = "\n".join([r.source_file for r in self])
         return "{} with {} elements picked from {}:\n{}".format(
-            self.__class__.__name__, len(self), self.base_dir,
-            s_files)
+            self.__class__.__name__, len(self), self.base_dir, s_files
+        )

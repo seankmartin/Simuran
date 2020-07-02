@@ -9,8 +9,7 @@ class AnalysisHandler:
         self.results = IndexedOrderedDict()
 
     def run_all_fns(self):
-        fn_zipped = zip(
-            self.fns_to_run, self.fn_params_list, self.fn_kwargs_list)
+        fn_zipped = zip(self.fns_to_run, self.fn_params_list, self.fn_kwargs_list)
         for (fn, fn_params, fn_kwargs) in fn_zipped:
             self._run_fn(fn, *fn_params, **fn_kwargs)
 
@@ -45,5 +44,8 @@ class AnalysisHandler:
 
     def __repr__(self):
         return "{} with functions:\n {}, args:\n {}, kwargs:\n {}".format(
-            self.__class__.__name__, self.fns_to_run,
-            self.fn_params_list, self.fn_kwargs_list)
+            self.__class__.__name__,
+            self.fns_to_run,
+            self.fn_params_list,
+            self.fn_kwargs_list,
+        )

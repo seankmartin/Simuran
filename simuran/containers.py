@@ -41,7 +41,8 @@ class AbstractContainer(ABC):
 
     def __repr__(self):
         return "{} with {} elements:\n{}".format(
-            self.__class__.__name__, len(self), self.container)
+            self.__class__.__name__, len(self), self.container
+        )
 
     def load(self):
         for item in self:
@@ -55,7 +56,13 @@ class AbstractContainer(ABC):
         self.append(to_add)
 
     def save_single_data(
-            self, attr_list, friendly_names=None, idx_list=None, out_dir_list=None, name_list=None):
+        self,
+        attr_list,
+        friendly_names=None,
+        idx_list=None,
+        out_dir_list=None,
+        name_list=None,
+    ):
         """
         This saves one file per object in the container.
 
@@ -69,14 +76,15 @@ class AbstractContainer(ABC):
 
         if out_dir_list == None:
             out_dir_list = [
-                os.path.join(os.getcwd(), "sim_results")
-                for i in range(len(idx_list))]
+                os.path.join(os.getcwd(), "sim_results") for i in range(len(idx_list))
+            ]
         elif isinstance(out_dir_list, "str"):
             out_dir_list = [out_dir_list] * len(idx_list)
 
         for i in idx_list:
             data = self.data_from_attr_list(
-                attr_list, idx=i, friendly_names=friendly_names)
+                attr_list, idx=i, friendly_names=friendly_names
+            )
             save_mixed_dict_to_csv(data, out_dir_list[i], name_list[i])
 
     def save_summary_data(self, location, attr_list, friendly_names=None):
@@ -85,9 +93,8 @@ class AbstractContainer(ABC):
         """
         attr_list = [("source_file",)] + attr_list
         if friendly_names is not None:
-            friendly_names = ["Recording file", ] + friendly_names
-        data_list = self.data_from_attr_list(
-            attr_list, friendly_names=friendly_names)
+            friendly_names = ["Recording file",] + friendly_names
+        data_list = self.data_from_attr_list(attr_list, friendly_names=friendly_names)
         save_dicts_to_csv(location, data_list)
 
     def data_from_attr_list(self, attr_list, friendly_names=None, idx=None):
@@ -96,7 +103,8 @@ class AbstractContainer(ABC):
                 data = item.data_dict_from_attr_list(attr_list, friendly_names)
             else:
                 raise ValueError(
-                    "data_from_attr_list is only called on BaseSimuran objects")
+                    "data_from_attr_list is only called on BaseSimuran objects"
+                )
             return data
 
         if idx is None:
@@ -108,8 +116,7 @@ class AbstractContainer(ABC):
         return data_out
 
     def sort(self, sort_fn, reverse=False):
-        self.container = sorted(
-            self.container, key=sort_fn, reverse=reverse)
+        self.container = sorted(self.container, key=sort_fn, reverse=reverse)
 
     def subsample(self, idx_list=None, interactive=False, prop=None):
         if interactive:
@@ -121,8 +128,9 @@ class AbstractContainer(ABC):
             for i, item in enumerate(full_list):
                 print("{}: {}".format(i + 1, item))
             indices = input(
-                "Please enter the number of the items you want to " +
-                "keep seperated by spaces. Enter empty to keep all.\n")
+                "Please enter the number of the items you want to "
+                + "keep seperated by spaces. Enter empty to keep all.\n"
+            )
             if indices == "":
                 return [i for i in range(len(self))]
             indices = indices.strip().split(" ")
@@ -136,7 +144,6 @@ class AbstractContainer(ABC):
 
 
 class GenericContainer(AbstractContainer):
-
     def __init__(self, cls):
         self.cls = cls
         super().__init__()

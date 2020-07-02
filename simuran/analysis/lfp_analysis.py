@@ -18,9 +18,9 @@ def get_normalised_diff(s1, s2, s1_sq=None, s2_sq=None):
 
 
 def compare_lfp(
-        recording, out_base_dir=None, ch_to_use="all",
-        save_result=True, plot=False):
-    '''
+    recording, out_base_dir=None, ch_to_use="all", save_result=True, plot=False
+):
+    """
     TODO support different ch_to_use.
 
     Parameters
@@ -31,28 +31,29 @@ def compare_lfp(
         Path for desired output location. Default - Saves output to folder named !LFP in base directory.
     ch: int
         Number of LFP channels in session
-    '''
+    """
 
     # Do the actual calcualtion
     if ch_to_use == "all":
         ch_labels = recording.get_signal_channels()
     ch = [i for i in range(len(ch_labels))]
 
-    grid = np.meshgrid(ch, ch, indexing='ij')
+    grid = np.meshgrid(ch, ch, indexing="ij")
     stacked = np.stack(grid, 2)
     pairs = stacked.reshape(-1, 2)
     result_a = np.zeros(shape=pairs.shape[0], dtype=np.float32)
 
-    cached_sum_squares = [np.sum(np.square(signal.samples))
-                          for signal in recording.signals]
+    cached_sum_squares = [
+        np.sum(np.square(signal.samples)) for signal in recording.signals
+    ]
     for i, pair in enumerate(pairs):
         signal1 = recording.signals[pair[0]]
         signal2 = recording.signals[pair[1]]
         sq1 = cached_sum_squares[pair[0]]
         sq2 = cached_sum_squares[pair[1]]
         res = get_normalised_diff(
-            signal1.samples, signal2.samples,
-            s1_sq=sq1, s2_sq=sq2)
+            signal1.samples, signal2.samples, s1_sq=sq1, s2_sq=sq2
+        )
         result_a[i] = res
 
     # Save out a csv and do plotting
@@ -83,7 +84,8 @@ def compare_lfp(
         out_name = base_name_part + "_LFP_Comp.png"
         out_loc = os.path.join(out_base_dir, "plots", out_name)
         fig = simuran.plot.lfp_plot.plot_compare_lfp(
-            result_a, ch, save=True, save_loc=out_loc)
+            result_a, ch, save=True, save_loc=out_loc
+        )
         return result_a, fig
 
     return result_a

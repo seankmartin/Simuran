@@ -25,19 +25,19 @@ class ParamHandler:
         if self.params is None:
             raise ValueError()
         out_str = ""
-        out_str += ("mapping = {\n")
+        out_str += "mapping = {\n"
         for k, v in self.params.items():
-            out_str += ("\t{}:".format(self._val_to_str(str(k))))
+            out_str += "\t{}:".format(self._val_to_str(str(k)))
             if isinstance(v, dict):
-                out_str += ("\n\t\t{\n")
+                out_str += "\n\t\t{\n"
                 for k2, v2 in v.items():
-                    out_str += ("\t\t {}: {},\n".format(
-                        self._val_to_str(str(k2)), self._val_to_str(v2)))
-                out_str += ("\t\t},\n")
+                    out_str += "\t\t {}: {},\n".format(
+                        self._val_to_str(str(k2)), self._val_to_str(v2)
+                    )
+                out_str += "\t\t},\n"
             else:
-                out_str += (" {},\n".format(
-                    self._val_to_str(v)))
-        out_str += ("\t}")
+                out_str += " {},\n".format(self._val_to_str(v))
+        out_str += "\t}"
         return out_str
 
     def write(self, out_loc, out_str=None):
@@ -57,15 +57,24 @@ class ParamHandler:
 
     def set_default_params(self):
         self.location = os.path.join(
-            os.path.dirname(__file__), "params", "default_params.py")
+            os.path.dirname(__file__), "params", "default_params.py"
+        )
         self.read(self.location)
 
     def batch_write(
-            self, start_dir, re_filters=None, fname="simuran_params.py",
-            overwrite=True, check_only=False, return_absolute=True,
-            exact_file=None, verbose=False):
+        self,
+        start_dir,
+        re_filters=None,
+        fname="simuran_params.py",
+        overwrite=True,
+        check_only=False,
+        return_absolute=True,
+        exact_file=None,
+        verbose=False,
+    ):
         dirs = get_dirs_matching_regex(
-            start_dir, re_filters=re_filters, return_absolute=return_absolute)
+            start_dir, re_filters=re_filters, return_absolute=return_absolute
+        )
         dirs = [d for d in dirs if not "__pycache__" in d]
 
         if check_only:
@@ -94,7 +103,8 @@ class ParamHandler:
             else:
                 if not os.path.isfile(exact_file):
                     raise ValueError(
-                        "{} is not a valid file location".format(exact_file))
+                        "{} is not a valid file location".format(exact_file)
+                    )
                 if verbose:
                     print("Copying from {} to {}".format(exact_file, write_loc))
                 shutil.copy(exact_file, write_loc)
@@ -105,10 +115,9 @@ class ParamHandler:
         dirs = []
         while True:
             this_re_filt = input(
-                "Please enter the regexes seperated by SIM_SEP to test or quit / qt to move on:\n")
-            done = (
-                (this_re_filt.lower() == "quit") or
-                (this_re_filt.lower() == "qt"))
+                "Please enter the regexes seperated by SIM_SEP to test or quit / qt to move on:\n"
+            )
+            done = (this_re_filt.lower() == "quit") or (this_re_filt.lower() == "qt")
             if done:
                 break
             if this_re_filt == "":
@@ -116,8 +125,8 @@ class ParamHandler:
             else:
                 re_filt = this_re_filt.split(" SIM_SEP ")
             dirs = self.batch_write(
-                start_dir, re_filters=re_filt, check_only=True,
-                return_absolute=False)
+                start_dir, re_filters=re_filt, check_only=True, return_absolute=False
+            )
         if re_filt == "":
             re_filt = []
         print("The final regex was: {}".format(re_filt))
@@ -139,13 +148,13 @@ class ParamHandler:
         return self.params[key]
 
     def __repr__(self):
-        return ("{} from {} with params:\n{}".format(
-            self.__class__.__name__, self.location,
-            pformat(self.params, width=200)))
+        return "{} from {} with params:\n{}".format(
+            self.__class__.__name__, self.location, pformat(self.params, width=200)
+        )
 
     @staticmethod
     def _val_to_str(val):
         if isinstance(val, str):
-            return "\'{}\'".format(val)
+            return "'{}'".format(val)
         else:
             return val

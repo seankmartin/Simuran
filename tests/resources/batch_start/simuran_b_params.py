@@ -1,8 +1,7 @@
 import os
 
 # regex_filters should be a list of regex patterns to match against.
-regex_filters = ['^test_this(?:(?!plz_ignore).)+$',
-                 '^test_this(?:(?!temp).)+$']
+regex_filters = ["^test_this(?:(?!plz_ignore).)+$", "^test_this(?:(?!temp).)+$"]
 
 # Overwrites existing parameter files (simuran_params.py) if they exist.
 overwrite = True

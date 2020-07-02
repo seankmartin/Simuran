@@ -9,7 +9,7 @@ def setup_params():
         "units": {},
         "loader": "nc_loader",
         "loader_kwargs": {"system": "Axona"},
-        "base_fname": r"D:\Ham\Batch_3\A13_CAR-SA5\CAR-SA5_20200212\CAR-SA5_2020-02-12.set"
+        "base_fname": r"D:\Ham\Batch_3\A13_CAR-SA5\CAR-SA5_20200212\CAR-SA5_2020-02-12.set",
     }
 
     # Setting up the signals
@@ -44,6 +44,6 @@ def main(r):
     print([s.region for s in r.signals])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     r = simuran.recording.Recording(params=setup_params(), load=True)
     main(r)

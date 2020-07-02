@@ -20,7 +20,7 @@ def my_burst(recording, tetrode_idx, unit_num):
     unit.load()
     unit_stamps = unit.timestamps[np.where(unit.unit_tags == unit_num)]
     isi = np.diff(unit_stamps)
-    below_thresh = (isi < 0.005)
+    below_thresh = isi < 0.005
     in_burst = False
     num_bursts = 0
     for val in below_thresh:
@@ -47,23 +47,25 @@ def time_resolved_check(recording_container):
     attr_list = [("results", "values", 0, "Propensity to burst")]
     attr_list.append(("results", "values", 1))
     recording_container.save_summary_data(
-        os.path.join(recording_container.base_dir,
-                     "nc_results", "results.csv"),
-        attr_list=attr_list, friendly_names=[
-            "Tetrode 3 Unit 1 PtB", "My burst"])
+        os.path.join(recording_container.base_dir, "nc_results", "results.csv"),
+        attr_list=attr_list,
+        friendly_names=["Tetrode 3 Unit 1 PtB", "My burst"],
+    )
 
 
 def one_time_setup(in_dir):
-    ph = ParamHandler(
-        in_loc=r"E:\Repos\SIMURAN\examples\musc_params.py")
+    ph = ParamHandler(in_loc=r"E:\Repos\SIMURAN\examples\musc_params.py")
     # re_filts = ['.*\\\\(?:(?!nc).)+$',
     #             '.*\\\\(?:(?!final).)+$', '.*\\\\(?:(?!data).)+$']
-    re_filts = ['^t(?:(?!\\\\nc).)+$',
-                '^t(?:(?!\\\\final).)+$', '^t(?:(?!\\\\data).)+$']
+    re_filts = [
+        "^t(?:(?!\\\\nc).)+$",
+        "^t(?:(?!\\\\final).)+$",
+        "^t(?:(?!\\\\data).)+$",
+    ]
     # ph.interactive_refilt(in_dir)
     ph.batch_write(
-        os.path.join(in_dir), re_filters=re_filts,
-        check_only=False, overwrite=True)
+        os.path.join(in_dir), re_filters=re_filts, check_only=False, overwrite=True
+    )
 
 
 if __name__ == "__main__":
@@ -75,7 +77,7 @@ if __name__ == "__main__":
     rc.auto_setup(in_dir, recursive=True)
 
     def sort_fn(x):
-        comp = x.source_file[len(rc.base_dir + os.sep) + 1:]
+        comp = x.source_file[len(rc.base_dir + os.sep) + 1 :]
         order = int(comp.split("_")[0])
         return order
 

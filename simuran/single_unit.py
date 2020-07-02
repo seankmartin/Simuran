@@ -2,7 +2,6 @@ from simuran.base_class import BaseSimuran
 
 
 class SingleUnit(BaseSimuran):
-
     def __init__(self):
         super().__init__()
         self.timestamps = None
@@ -15,7 +14,8 @@ class SingleUnit(BaseSimuran):
         super().load(*args, **kwargs)
         if not self.loaded():
             load_result = self.loader.load_single_unit(
-                self.source_file["Spike"], self.source_file["Clusters"], **kwargs)
+                self.source_file["Spike"], self.source_file["Clusters"], **kwargs
+            )
             self.save_attrs(load_result)
             self.last_loaded_source = self.source_file
 

@@ -25,16 +25,19 @@ class BatchSetup(object):
         self.ph = ParamHandler(in_loc=self.file_loc, name="params")
         if os.path.dirname(self.ph["mapping_file"]) == "":
             self.ph.params["mapping_file"] = os.path.join(
-                self.in_dir, self.ph["mapping_file"])
-        self._bad_file = ((self.ph["mapping_file"] is None))
+                self.in_dir, self.ph["mapping_file"]
+            )
+        self._bad_file = self.ph["mapping_file"] is None
         if not self._bad_file:
-            self._bad_file = (not os.path.isfile(self.ph["mapping_file"]))
+            self._bad_file = not os.path.isfile(self.ph["mapping_file"])
         if self.ph["mapping"] == {} and self._bad_file:
             raise ValueError(
-                "Please pass either a valid mapping file " +
-                "or a parameter mapping, " +
-                "currently:\n {} and {} respectively\n".format(
-                    self.ph["mapping_file"], self.ph["mapping"]))
+                "Please pass either a valid mapping file "
+                + "or a parameter mapping, "
+                + "currently:\n {} and {} respectively\n".format(
+                    self.ph["mapping_file"], self.ph["mapping"]
+                )
+            )
         if self.ph["interactive"]:
             print("Interactive mode selected")
             self.interactive_refilt()
@@ -74,25 +77,35 @@ class BatchSetup(object):
             else:
                 new_ph = ParamHandler(in_loc=self.ph["mapping_file"])
             dirs = new_ph.batch_write(
-                self.in_dir, re_filters=re_filts, fname=self.ph["out_basename"],
-                check_only=check_only, overwrite=overwrite,
-                verbose=verbose)
+                self.in_dir,
+                re_filters=re_filts,
+                fname=self.ph["out_basename"],
+                check_only=check_only,
+                overwrite=overwrite,
+                verbose=verbose,
+            )
         else:
             fname = self.ph["mapping_file"]
             if self._bad_file:
-                raise ValueError(
-                    "Can't copy non-existant file {}".format(fname))
+                raise ValueError("Can't copy non-existant file {}".format(fname))
             dirs = self.ph.batch_write(
-                self.in_dir, re_filters=re_filts, fname=self.ph["out_basename"],
-                check_only=check_only, overwrite=overwrite, exact_file=fname,
-                verbose=verbose)
+                self.in_dir,
+                re_filters=re_filts,
+                fname=self.ph["out_basename"],
+                check_only=check_only,
+                overwrite=overwrite,
+                exact_file=fname,
+                verbose=verbose,
+            )
         return dirs
 
     @staticmethod
     def clear_params(
-            start_dir, to_remove="simuran_params.py", recursive=True, verbose=False):
+        start_dir, to_remove="simuran_params.py", recursive=True, verbose=False
+    ):
         fnames = BatchSetup.get_param_locations(
-            start_dir, to_find=to_remove, recursive=recursive)
+            start_dir, to_find=to_remove, recursive=recursive
+        )
         for fname in fnames:
             if os.path.basename(fname) == to_remove:
                 if verbose:
@@ -101,18 +114,16 @@ class BatchSetup(object):
 
     @staticmethod
     def get_param_locations(start_dir, to_find="simuran_params.py", recursive=True):
-        fnames = get_all_files_in_dir(
-            start_dir, ext=".py", recursive=recursive)
+        fnames = get_all_files_in_dir(start_dir, ext=".py", recursive=recursive)
 
         def keep_file(filename):
-            return (
-                (not "__pycache__"  in filename) and
-                (os.path.basename(filename) == to_find))
-        
+            return (not "__pycache__" in filename) and (
+                os.path.basename(filename) == to_find
+            )
+
         return [fname for fname in fnames if keep_file(fname)]
 
-
     def __repr__(self):
-        return ("{} from {} with parameters:\n {} ".format(
-            self.__class__.__name__, self.file_loc,
-            pformat(self.ph.params, width=200)))
+        return "{} from {} with parameters:\n {} ".format(
+            self.__class__.__name__, self.file_loc, pformat(self.ph.params, width=200)
+        )

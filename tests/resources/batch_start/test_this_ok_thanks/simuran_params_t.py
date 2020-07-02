@@ -5,7 +5,7 @@ mapping = {
     "units": {},
     "spatial": {},
     "loader": "params_only",
-    "loader_kwargs": {}
+    "loader_kwargs": {},
 }
 
 # Setting up the signals

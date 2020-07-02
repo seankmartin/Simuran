@@ -20,7 +20,7 @@ class NCLoader(BaseLoader):
             "timestamps": self.signal.get_timestamp(),
             "samples": self.signal.get_samples(),
             "date": self.signal.get_date(),
-            "time": self.signal.get_time()
+            "time": self.signal.get_time(),
         }
 
     def load_spatial(self, *args, **kwargs):
@@ -29,7 +29,7 @@ class NCLoader(BaseLoader):
         return {
             "underlying": self.spatial,
             "date": self.spatial.get_date(),
-            "time": self.spatial.get_time()
+            "time": self.spatial.get_time(),
         }
 
     def load_single_unit(self, *args, **kwargs):
@@ -57,17 +57,15 @@ class NCLoader(BaseLoader):
             if os.path.isdir(base):
                 set_files = get_all_files_in_dir(base, ext="set")
                 if len(set_files) == 0:
-                    print("WARNING: No set files found in {}, skipping".format(
-                        base))
+                    print("WARNING: No set files found in {}, skipping".format(base))
                     return None, None
                 elif len(set_files) > 1:
                     raise ValueError(
-                        "Found more than one set file, found {}".format(
-                            len(set_files)))
+                        "Found more than one set file, found {}".format(len(set_files))
+                    )
                 base = set_files[0]
             elif not os.path.isfile(base):
-                raise ValueError(
-                    "{} is not a file or directory".format(base))
+                raise ValueError("{} is not a file or directory".format(base))
 
             cluster_extension = kwargs.get("cluster_extension", ".cut")
             clu_extension = kwargs.get("clu_extension", ".clu.X")
@@ -84,13 +82,14 @@ class NCLoader(BaseLoader):
             spike_names_all = []
             cluster_names_all = []
             for tetrode in tet_groups:
-                spike_name = filename + '.' + str(tetrode)
+                spike_name = filename + "." + str(tetrode)
                 if not os.path.isfile(spike_name):
                     raise ValueError(
-                        "Axona data is not available for {}".format(spike_name))
+                        "Axona data is not available for {}".format(spike_name)
+                    )
                 spike_names_all.append(spike_name)
 
-                cut_name = filename + '_' + str(tetrode) + cluster_extension
+                cut_name = filename + "_" + str(tetrode) + cluster_extension
                 clu_name = filename + clu_extension[:-1] + str(tetrode)
                 if os.path.isfile(cut_name):
                     cluster_name = cut_name
@@ -104,9 +103,12 @@ class NCLoader(BaseLoader):
             output_list = [None, None]
             for i, ext in enumerate([pos_extension, stm_extension]):
                 for fname in get_all_files_in_dir(
-                        os.path.dirname(base), ext=ext,
-                        return_absolute=False, case_sensitive_ext=True):
-                    if fname[:(len(base_filename) + 1)] == base_filename + "_":
+                    os.path.dirname(base),
+                    ext=ext,
+                    return_absolute=False,
+                    case_sensitive_ext=True,
+                ):
+                    if fname[: (len(base_filename) + 1)] == base_filename + "_":
                         name = os.path.join(os.path.dirname(base), fname)
                         output_list[i] = name
                         break
@@ -119,14 +121,14 @@ class NCLoader(BaseLoader):
                     if os.path.exists(base_sig_name + str(c)):
                         signal_names.append(base_sig_name + str(c))
                     else:
-                        raise ValueError("{} does not exist".format(
-                            base_sig_name + str(c)))
+                        raise ValueError(
+                            "{} does not exist".format(base_sig_name + str(c))
+                        )
                 else:
                     if os.path.exists(base_sig_name):
                         signal_names.append(base_sig_name)
                     else:
-                        raise ValueError("{} does not exist".format(
-                            base_sig_name))
+                        raise ValueError("{} does not exist".format(base_sig_name))
 
             file_locs = {
                 "Spike": spike_names_all,
@@ -137,5 +139,4 @@ class NCLoader(BaseLoader):
             }
             return file_locs, base
         else:
-            raise ValueError(
-                "auto_fname_extraction only implemented for Axona")
+            raise ValueError("auto_fname_extraction only implemented for Axona")

@@ -2,7 +2,6 @@ from simuran.base_class import BaseSimuran
 
 
 class Spatial(BaseSimuran):
-
     def __init__(self):
         super().__init__()
 

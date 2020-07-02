@@ -22,7 +22,7 @@ class AbstractSignal(BaseSimuran):
             self.last_loaded_source = self.source_file
 
     def get_duration(self):
-        return (self.timestamps[-1] - self.timestamps[0])
+        return self.timestamps[-1] - self.timestamps[0]
 
     def get_sampling_rate(self):
         return self.sampling_rate

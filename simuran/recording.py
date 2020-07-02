@@ -12,9 +12,7 @@ from skm_pyutils.py_config import split_dict
 
 
 class Recording(BaseSimuran):
-
-    def __init__(
-            self, params=None, param_file=None, base_file=None, load=True):
+    def __init__(self, params=None, param_file=None, base_file=None, load=True):
         super().__init__()
         self.signals = None
         self.units = None
@@ -44,16 +42,14 @@ class Recording(BaseSimuran):
         if as_idx:
             return [i for i in range(num_sigs)]
         default_chans = [i + 1 for i in range(num_sigs)]
-        chans = self.param_handler["signals"].get(
-            "channels", default_chans)
+        chans = self.param_handler["signals"].get("channels", default_chans)
         return chans
 
     def get_name_for_save(self, rel_dir=None):
         if rel_dir is None:
-            base_name_part, _ = os.path.splitext(
-                os.path.basename(self.source_file))
+            base_name_part, _ = os.path.splitext(os.path.basename(self.source_file))
         else:
-            name_up_to_rel = self.source_file[len(rel_dir + os.sep):]
+            name_up_to_rel = self.source_file[len(rel_dir + os.sep) :]
             base_name_part, _ = os.path.splitext(name_up_to_rel)
             base_name_part = base_name_part.replace(os.sep, "--")
         return base_name_part
@@ -96,13 +92,13 @@ class Recording(BaseSimuran):
         else:
             base = self.source_file
 
-        data_loader_cls = loaders_dict.get(
-            self.param_handler.get("loader", None), None)
+        data_loader_cls = loaders_dict.get(self.param_handler.get("loader", None), None)
         if data_loader_cls is None:
             raise ValueError(
                 "Unrecognised loader {}, options are {}".format(
-                    self.param_handler.get("loader", None),
-                    list(loaders_dict.keys())))
+                    self.param_handler.get("loader", None), list(loaders_dict.keys())
+                )
+            )
         elif data_loader_cls == "params_only_no_cls":
             data_loader = None
             load = False
@@ -111,7 +107,8 @@ class Recording(BaseSimuran):
             chans = self.get_signal_channels()
             groups = self.param_handler["units"]["group"]
             fnames, base = data_loader.auto_fname_extraction(
-                base, sig_channels=chans, unit_groups=groups)
+                base, sig_channels=chans, unit_groups=groups
+            )
             if fnames is None:
                 self.valid = False
                 return
@@ -137,9 +134,8 @@ class Recording(BaseSimuran):
                 self.units.append_new(params)
                 if data_loader is not None:
                     self.units[-1].set_source_file(
-                        {"Spike": fnames["Spike"][i],
-                         "Clusters": fnames["Clusters"][i]
-                         })
+                        {"Spike": fnames["Spike"][i], "Clusters": fnames["Clusters"][i]}
+                    )
                     self.units[-1].set_loader(data_loader)
 
         if "spatial" in self.param_handler.keys():
@@ -157,6 +153,6 @@ class Recording(BaseSimuran):
         self.valid = True
 
     def __repr__(self):
-        return ("{} with params {} and source files {}".format(
-            self.__class__.__name__, self.param_handler.params,
-            self.source_files))
+        return "{} with params {} and source files {}".format(
+            self.__class__.__name__, self.param_handler.params, self.source_files
+        )

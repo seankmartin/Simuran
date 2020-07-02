@@ -31,7 +31,7 @@ directory_list = [
     can7_03,
     can7_03,
     can7_03,
-    can1_09
+    can1_09,
 ]
 
 param_list = [
@@ -50,8 +50,7 @@ param_list = [
 ]
 
 if len(param_list) != len(directory_list):
-    raise ValueError(
-        "Parameter list and directory list must be the same length")
+    raise ValueError("Parameter list and directory list must be the same length")
 
 default_param_folder = os.path.join(main_dir, "simuran_default")
 check_params = True

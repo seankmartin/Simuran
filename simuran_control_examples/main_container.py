@@ -15,16 +15,18 @@ def main(rc):
 
 
 def one_time_setup(in_dir):
-    ph = ParamHandler(
-        in_loc=r"E:\Repos\SIMURAN\examples\musc_params.py")
+    ph = ParamHandler(in_loc=r"E:\Repos\SIMURAN\examples\musc_params.py")
     # re_filts = ['.*\\\\(?:(?!nc).)+$',
     #             '.*\\\\(?:(?!final).)+$', '.*\\\\(?:(?!data).)+$']
-    re_filts = ['^t(?:(?!\\\\nc).)+$',
-                '^t(?:(?!\\\\final).)+$', '^t(?:(?!\\\\data).)+$']
+    re_filts = [
+        "^t(?:(?!\\\\nc).)+$",
+        "^t(?:(?!\\\\final).)+$",
+        "^t(?:(?!\\\\data).)+$",
+    ]
     # ph.interactive_refilt(in_dir)
     ph.batch_write(
-        os.path.join(in_dir), re_filters=re_filts,
-        check_only=False, overwrite=True)
+        os.path.join(in_dir), re_filters=re_filts, check_only=False, overwrite=True
+    )
 
 
 if __name__ == "__main__":
@@ -36,7 +38,7 @@ if __name__ == "__main__":
     rc.auto_setup(in_dir, recursive=True)
 
     def sort_fn(x):
-        comp = x.source_file[len(rc.base_dir + os.sep) + 1:]
+        comp = x.source_file[len(rc.base_dir + os.sep) + 1 :]
         order = int(comp.split("_")[0])
         return order
 

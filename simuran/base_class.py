@@ -30,8 +30,7 @@ class BaseSimuran(ABC):
 
     def get_info(self, key, name):
         if self.info is None:
-            raise ValueError(
-                "info has not been initialised in {}".format(self))
+            raise ValueError("info has not been initialised in {}".format(self))
         return self.info[key][name]
 
     def does_info_exist(self, name):
@@ -47,8 +46,9 @@ class BaseSimuran(ABC):
     def set_loader(self, loader):
         if not isinstance(loader, BaseLoader):
             raise ValueError(
-                "Loader set in set_loader should be derived from BaseLoader" +
-                " actual class is {}".format(loader.__class__.__name__))
+                "Loader set in set_loader should be derived from BaseLoader"
+                + " actual class is {}".format(loader.__class__.__name__)
+            )
         self.loader = loader
 
     def set_source_file(self, file):
@@ -59,16 +59,18 @@ class BaseSimuran(ABC):
         if self.loader is None:
             raise ValueError(
                 "Set a loader in {} before calling load.".format(
-                    self.__class__.__name__))
+                    self.__class__.__name__
+                )
+            )
         if self.loaded():
             return
             # print("Already loaded {} from {}".format(
             #     self.__class__.__name__, self.source_file))
 
     def loaded(self):
-        loaded = (
-            (self.last_loaded_source is not None) and
-            (self.last_loaded_source == self.source_file))
+        loaded = (self.last_loaded_source is not None) and (
+            self.last_loaded_source == self.source_file
+        )
         return loaded
 
     def data_dict_from_attr_list(self, attr_list, friendly_names=None):
@@ -106,5 +108,4 @@ class BaseSimuran(ABC):
 
     def __repr__(self):
         """Called on print."""
-        return "{} with attributes {}".format(
-            self.__class__.__name__, self.__dict__)
+        return "{} with attributes {}".format(self.__class__.__name__, self.__dict__)
