@@ -91,13 +91,26 @@ class BatchSetup(object):
     @staticmethod
     def clear_params(
             start_dir, to_remove="simuran_params.py", recursive=True, verbose=False):
-        fnames = get_all_files_in_dir(
-            start_dir, ext=".py", recursive=recursive)
+        fnames = BatchSetup.get_param_locations(
+            start_dir, to_find=to_remove, recursive=recursive)
         for fname in fnames:
             if os.path.basename(fname) == to_remove:
                 if verbose:
                     print("Removing {}".format(fname))
                 os.remove(fname)
+
+    @staticmethod
+    def get_param_locations(start_dir, to_find="simuran_params.py", recursive=True):
+        fnames = get_all_files_in_dir(
+            start_dir, ext=".py", recursive=recursive)
+
+        def keep_file(filename):
+            return (
+                (not "__pycache__"  in filename) and
+                (os.path.basename(filename) == to_find))
+        
+        return [fname for fname in fnames if keep_file(fname)]
+
 
     def __repr__(self):
         return ("{} from {} with parameters:\n {} ".format(

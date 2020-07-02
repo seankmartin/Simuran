@@ -66,6 +66,7 @@ class ParamHandler:
             exact_file=None, verbose=False):
         dirs = get_dirs_matching_regex(
             start_dir, re_filters=re_filters, return_absolute=return_absolute)
+        dirs = [d for d in dirs if not "__pycache__" in d]
 
         if check_only:
             if exact_file is None:

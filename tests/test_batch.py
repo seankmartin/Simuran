@@ -13,14 +13,21 @@ def test_batch_setup():
         in_dir, "simuran_b_params.py")
     dirs = batch_setup.write_batch_params()
     names = ([os.path.basename(f) for f in dirs])
+
+    # Check if writing occurs to the correct directories.
     assert (["test_this1", "test_this_ok_thanks"] == names)
-    all_files = skm_pyutils.py_path.get_all_files_in_dir(
-        in_dir, ext=".py", return_absolute=False, recursive=True)[2:]
+
     ph = simuran.param_handler.ParamHandler(
-        in_loc=os.path.join(in_dir, "simuran_b_params.py"),
+        in_loc = os.path.join(in_dir, "simuran_b_params.py"),
         name="params")
-    assert (all_files ==
-            [os.path.join(name, ph["out_basename"]) for name in names])
+    out_name = ph["out_basename"]
+    write_files = [os.path.join(d, out_name) for d in dirs]
+
+    read_files = simuran.batch_setup.BatchSetup.get_param_locations(
+        in_dir, to_find=out_name, recursive=True)
+    
+    # Check if all files read are those written
+    assert (read_files == write_files)
 
 
 if __name__ == "__main__":
