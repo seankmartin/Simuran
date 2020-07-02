@@ -14,7 +14,7 @@ def test_batch_setup():
     names = [os.path.basename(f) for f in dirs]
 
     # Check if writing occurs to the correct directories.
-    assert ["test_this1", "test_this_ok_thanks"] == names
+    assert sorted(["test_this1", "test_this_ok_thanks"]) == sorted(names)
 
     ph = simuran.param_handler.ParamHandler(
         in_loc=os.path.join(in_dir, "simuran_b_params.py"), name="params"
@@ -27,7 +27,7 @@ def test_batch_setup():
     )
 
     # Check if all files read are those written
-    assert read_files == write_files
+    assert sorted(read_files) == sorted(write_files)
 
 
 if __name__ == "__main__":
