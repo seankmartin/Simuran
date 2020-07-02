@@ -38,8 +38,9 @@ Interface with other programs such as SpikeInterface to allow for many different
 10. Data type
 
 ## TODO
-1. Add build system using fbs build system
+1. Add build system.
 2. Add more unit test cases
+3. Make unit test cases with small data and store that data.
 
 ## Inspiration
 1. https://github.com/seankmartin/NeuroChaT

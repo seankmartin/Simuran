@@ -1,2 +1,4 @@
 numpy
 skm_pyutils
+seaborn
+matplotlib
