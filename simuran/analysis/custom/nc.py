@@ -475,13 +475,13 @@ def compare_place(recording1, recording2, grid_fig, chop_bound1, chop_bound2):
     place_data = nspat1.place(ftimes1)
     ncplot.loc_rate(place_data, ax=grid_fig.get_next())
     results["A_Coh"] = nspat1.get_results()["Spatial Coherence"]
-	results["A_Skagg"] = nspat1.get_results()["Spatial Skaggs"]
-	results["A_Spar"] = nspat1.get_results()["Spatial Sparsity"]
+    results["A_Skagg"] = nspat1.get_results()["Spatial Skaggs"]
+    results["A_Spar"] = nspat1.get_results()["Spatial Sparsity"]
     nspat1._results.clear()
     nspat2.place(ftimes2)
     results["B_Coh"] = nspat2.get_results()["Spatial Coherence"]
-	results["B_Skagg"] = nspat2.get_results()["Spatial Skaggs"]
-	results["B_Spar"] = nspat2.get_results()["Spatial Sparsity"]
+    results["B_Skagg"] = nspat2.get_results()["Spatial Skaggs"]
+    results["B_Spar"] = nspat2.get_results()["Spatial Sparsity"]
     nspat2._results.clear()
     results_aa, _ = random_down(nspat1, ftimes1, nspat1, ftimes1, keys)
     results_bb, _ = random_down(nspat2, ftimes2, nspat2, ftimes2, keys)
