@@ -131,3 +131,5 @@ dmypy.json
 large_test_resources/
 
 profile.out
+
+.vscode/
