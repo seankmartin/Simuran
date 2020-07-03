@@ -128,8 +128,13 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+# Custom
 large_test_resources/
 
-profile.out
+profiling/profile.out
 
 .vscode/
+
+# Sphinx documentation
+docs/_build/
+docs/reference/
