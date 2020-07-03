@@ -1,0 +1,1177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.8.3" />
+<title>simuran.analysis.custom.nc API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>simuran.analysis.custom.nc</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import neurochat.nc_plot as ncplot
+import matplotlib.pyplot as plt
+
+from copy import deepcopy
+
+# TODO log these exceptions - also maybe build them into analysis handler?? Nah prob not
+
+
+def frate(recording, tetrode_num, unit_num):
+    try:
+        units, _ = recording.units.group_by_property(&#34;group&#34;, tetrode_num)
+        unit = units[0]
+        unit.load()
+        spike = unit.underlying
+        spike.set_unit_no(unit_num)
+        return spike.get_unit_spikes_count() / spike.get_duration()
+    except:
+        return -1
+
+
+def frate_file(recording):
+    try:
+        spike = get_nc_unit(recording)
+        return spike.get_unit_spikes_count() / spike.get_duration()
+    except:
+        return -1
+
+
+def place_field(recording, grid_fig, tetrode_num, unit_num):
+    try:
+        units, _ = recording.units.group_by_property(&#34;group&#34;, tetrode_num)
+        unit = units[0]
+        unit.load()
+        spike = unit.underlying
+        spike.set_unit_no(unit_num)
+        spatial = recording.spatial
+        spatial.load()
+        place_data = spatial.underlying.place(spike.get_unit_stamp())
+        ncplot.loc_rate(place_data, ax=grid_fig.get_next())
+        plt.close()
+        ncplot.loc_spike(place_data, ax=grid_fig.get_next())
+        plt.close()
+        wave_data = spike.wave_property()
+        ncplot.largest_waveform(wave_data, ax=grid_fig.get_next())
+        plt.close()
+    except:
+        grid_fig.get_next()
+        grid_fig.get_next()
+        grid_fig.get_next()
+
+
+def place_field_file(recording, grid_fig):
+    try:
+        available_units = recording.get_set_units()
+        unit_num = -1
+        for i, a_unit in enumerate(available_units):
+            if len(a_unit) != 0:
+                if unit_num != -1:
+                    raise ValueError(
+                        &#34;There are two set units for {}, {}&#34;.format(recording, a_unit)
+                    )
+                unit = recording.units[i]
+                unit_num = a_unit[0]
+        if unit_num == -1:
+            print(&#34;Warning: no set units for {}&#34;.format(recording))
+            return
+        unit.load()
+        spike = unit.underlying
+        spike.set_unit_no(unit_num)
+        spatial = recording.spatial
+        spatial.load()
+    except:
+        grid_fig.get_next()
+        grid_fig.get_next()
+        grid_fig.get_next()
+        return
+    place_data = spatial.underlying.place(spike.get_unit_stamp())
+    ncplot.loc_rate(place_data, ax=grid_fig.get_next())
+    plt.close()
+    ncplot.loc_spike(place_data, ax=grid_fig.get_next())
+    plt.close()
+    hd_data = spatial.underlying.hd_rate(spike.get_unit_stamp())
+    ncplot.hd_rate(hd_data, ax=grid_fig.get_next(circular=True), title=None)
+    plt.close()
+
+
+def count_cells(recording):
+    output = {}
+    for val in [1, 2, 3, 4, 9, 10, 11, 12]:
+        output[str(val)] = 0
+
+    try:
+        for unit in recording.units:
+            spike = unit.underlying
+            if spike is None:
+                continue
+            num = len(spike.get_unit_list())
+            output[str(unit.group)] = num
+        return output
+
+    except Exception as e:
+        print(&#34;Error on {} was {}&#34;.format(recording, e))
+        return output
+
+
+from collections import OrderedDict as oDict
+
+from neurochat.nc_utils import (
+    chop_edges,
+    corr_coeff,
+    extrema,
+    find,
+    find2d,
+    find_chunk,
+    histogram,
+    histogram2d,
+    linfit,
+    residual_stat,
+    rot_2d,
+    smooth_1d,
+    smooth_2d,
+    centre_of_mass,
+    find_true_ranges,
+)
+
+import numpy as np
+
+from neurochat.nc_spatial import NSpatial
+from neurochat.nc_spike import NSpike
+from neurochat.nc_utils import histogram
+import neurochat.nc_plot as nc_plot
+
+
+def bin_downsample(
+    self, ftimes, other_spatial, other_ftimes, final_bins, sample_bin_amt=[30, 30]
+):
+    bin_size = sample_bin_amt
+    set_array = np.zeros(shape=(len(self._pos_x), 4), dtype=np.float64)
+    set_array[:, 0] = self._pos_x
+    set_array[:, 1] = self._pos_y
+    spikes_in_bins = histogram(ftimes, bins=self.get_time())[0]
+    set_array[:, 2] = spikes_in_bins
+    set_array[:, 3] = self._time
+
+    pos_hist = np.histogram2d(set_array[:, 0], set_array[:, 1], bin_size)
+    pos_locs_x = np.searchsorted(pos_hist[1][1:], set_array[:, 0], side=&#34;left&#34;)
+    pos_locs_y = np.searchsorted(pos_hist[2][1:], set_array[:, 1], side=&#34;left&#34;)
+
+    set_array1 = np.zeros(shape=(len(other_spatial._pos_x), 2))
+    set_array1[:, 0] = other_spatial._pos_x
+    set_array1[:, 1] = other_spatial._pos_y
+    # spikes_in_bins = histogram(other_ftimes, bins=other_spatial.get_time())[0]
+    # set_array1[:, 2] = spikes_in_bins
+    # set_array1[:, 3] = other_spatial._time
+    pos_hist1 = np.histogram2d(set_array1[:, 0], set_array1[:, 1], bin_size)
+    # pos_locs_x1 = np.searchsorted(
+    #     pos_hist1[1][1:], set_array1[:, 0], side=&#39;left&#39;)
+    # pos_locs_y1 = np.searchsorted(
+    #     pos_hist1[2][1:], set_array1[:, 1], side=&#39;left&#39;)
+
+    new_set = np.zeros(shape=(int(np.sum(pos_hist1[0])), 4))
+    count = 0
+
+    for i in range(pos_hist[0].shape[0]):
+        for j in range(pos_hist[0].shape[1]):
+            amount1 = int(pos_hist1[0][i, j])
+            amount2 = int(pos_hist[0][i, j])
+            amount = min(amount1, amount2)
+            subset = np.nonzero(np.logical_and(pos_locs_x == i, pos_locs_y == j))[0]
+            if len(subset) &gt; amount2:
+                subset = subset[:amount2]
+            elif len(subset) == 0:
+                continue
+            new_sample_idxs = np.random.choice(subset, amount)
+            new_samples = set_array[new_sample_idxs]
+            new_set[count : count + amount] = new_samples
+            count += amount
+    # print(np.histogram2d(
+    #     new_set[:, 0], new_set[:, 1], [pos_hist[1], pos_hist[2]])[0])
+    spike_count = np.histogram2d(
+        new_set[:, 1],
+        new_set[:, 0],
+        [final_bins[0], final_bins[1]],
+        weights=new_set[:, 2],
+    )[0]
+    return new_set, spike_count
+
+
+def reverse_downsample(self, ftimes, other_spatial, other_ftimes, **kwargs):
+    return other_spatial.downsample_place(other_ftimes, self, ftimes, **kwargs)
+
+
+def downsample_place(self, ftimes, other_spatial, other_ftimes, **kwargs):
+    &#34;&#34;&#34;
+    Calculates the two-dimensional firing rate of the unit with respect to
+    the location of the animal in the environment. This is called Firing map.
+
+    Specificity indices are measured to assess the quality of location-specific firing of the unit.
+
+    This method also plot the events of spike occurring superimposed on the
+    trace of the animal in the arena, commonly known as Spike Plot.
+
+    Parameters
+    ----------
+    ftimes : ndarray
+        Timestamps of the spiking activity of a unit
+    **kwargs
+        Keyword arguments
+
+    Returns
+    -------
+    dict
+        Graphical data of the analysis
+    &#34;&#34;&#34;
+
+    _results = oDict()
+    graph_data = {}
+    update = kwargs.get(&#34;update&#34;, True)
+    pixel = kwargs.get(&#34;pixel&#34;, 3)
+    chop_bound = kwargs.get(&#34;chop_bound&#34;, 5)
+    filttype, filtsize = kwargs.get(&#34;filter&#34;, [&#34;b&#34;, 5])
+    lim = kwargs.get(&#34;range&#34;, [0, self.get_duration()])
+    brAdjust = kwargs.get(&#34;brAdjust&#34;, True)
+    thresh = kwargs.get(&#34;fieldThresh&#34;, 0.2)
+    required_neighbours = kwargs.get(&#34;minPlaceFieldNeighbours&#34;, 9)
+    smooth_place = kwargs.get(&#34;smoothPlace&#34;, False)
+    # Can pass another NData object to estimate the border from
+    # Can be useful in some cases, such as when the animal
+    # only explores a subset of the arena.
+    separate_border_data = kwargs.get(&#34;separateBorderData&#34;, None)
+
+    # xedges = np.arange(0, np.ceil(np.max(self._pos_x)), pixel)
+    # yedges = np.arange(0, np.ceil(np.max(self._pos_y)), pixel)
+
+    # Update the border to match the requested pixel size
+    if separate_border_data is not None:
+        self.set_border(separate_border_data.calc_border(**kwargs))
+        times = self._time
+        lower, upper = (times.min(), times.max())
+        new_times = separate_border_data._time
+        sample_spatial_idx = ((new_times &lt;= upper) &amp; (new_times &gt;= lower)).nonzero()
+        self._border_dist = self._border_dist[sample_spatial_idx]
+    else:
+        self.set_border(self.calc_border(**kwargs))
+
+    xedges = self._xbound
+    yedges = self._ybound
+    xedges2 = other_spatial._xbound
+    yedges2 = other_spatial._ybound
+
+    spikeLoc = self.get_event_loc(ftimes, **kwargs)[1]
+    posX = self._pos_x[
+        np.logical_and(self.get_time() &gt;= lim[0], self.get_time() &lt;= lim[1])
+    ]
+    posY = self._pos_y[
+        np.logical_and(self.get_time() &gt;= lim[0], self.get_time() &lt;= lim[1])
+    ]
+
+    new_set, spike_count = self.bin_downsample(
+        ftimes,
+        other_spatial,
+        other_ftimes,
+        final_bins=[
+            np.append(yedges, yedges[-1] + np.mean(np.diff(yedges))),
+            np.append(xedges, xedges[-1] + np.mean(np.diff(xedges))),
+        ],
+        sample_bin_amt=[len(xedges2) + 1, len(yedges2) + 1],
+    )
+    posY = new_set[:, 1]
+    posX = new_set[:, 0]
+
+    tmap, yedges, xedges = histogram2d(posY, posX, yedges, xedges)
+    if tmap.shape != spike_count.shape:
+        print(tmap.shape)
+        print(spike_count.shape)
+        raise ValueError(&#34;Time map does not match firing map&#34;)
+
+    tmap /= self.get_sampling_rate()
+
+    ybin, xbin = tmap.shape
+    xedges = np.arange(xbin) * pixel
+    yedges = np.arange(ybin) * pixel
+
+    fmap = np.divide(spike_count, tmap, out=np.zeros_like(spike_count), where=tmap != 0)
+    if fmap.max() == 0:
+        print(&#34;No firing information!&#34;)
+        return -1
+    if brAdjust:
+        nfmap = fmap / fmap.max()
+        if (
+            np.sum(np.logical_and(nfmap &gt;= 0.2, tmap != 0))
+            &gt;= 0.8 * nfmap[tmap != 0].flatten().shape[0]
+        ):
+            back_rate = np.mean(fmap[np.logical_and(nfmap &gt;= 0.2, nfmap &lt; 0.4)])
+            fmap -= back_rate
+            fmap[fmap &lt; 0] = 0
+
+    if filttype is not None:
+        smoothMap = smooth_2d(fmap, filttype, filtsize)
+    else:
+        smoothMap = fmap
+
+    if smooth_place:
+        pmap = smoothMap
+    else:
+        pmap = fmap
+
+    pmap[tmap == 0] = None
+    pfield, largest_group = NSpatial.place_field(pmap, thresh, required_neighbours)
+    # if largest_group == 0:
+    #     if smooth_place:
+    #         info = &#34;where the place field was calculated from smoothed data&#34;
+    #     else:
+    #         info = &#34;where the place field was calculated from raw data&#34;
+    #     logging.info(
+    #         &#34;Lack of high firing neighbours to identify place field &#34; +
+    #         info)
+    centroid = NSpatial.place_field_centroid(pfield, pmap, largest_group)
+    # centroid is currently in co-ordinates, convert to pixels
+    centroid = centroid * pixel + (pixel * 0.5)
+    # flip x and y
+    centroid = centroid[::-1]
+
+    p_shape = pfield.shape
+    maxes = [xedges.max(), yedges.max()]
+    scales = (maxes[0] / p_shape[1], maxes[1] / p_shape[0])
+    co_ords = np.array(np.where(pfield == largest_group))
+    boundary = [[None, None], [None, None]]
+    for i in range(2):
+        j = (i + 1) % 2
+        boundary[i] = (
+            co_ords[j].min() * scales[i],
+            np.clip((co_ords[j].max() + 1) * scales[i], 0, maxes[i]),
+        )
+    inside_x = (boundary[0][0] &lt;= spikeLoc[0]) &amp; (spikeLoc[0] &lt;= boundary[0][1])
+    inside_y = (boundary[1][0] &lt;= spikeLoc[1]) &amp; (spikeLoc[1] &lt;= boundary[1][1])
+    co_ords = np.nonzero(np.logical_and(inside_x, inside_y))
+
+    if update:
+        _results[&#34;Spatial Skaggs&#34;] = self.skaggs_info(fmap, tmap)
+        _results[&#34;Spatial Sparsity&#34;] = self.spatial_sparsity(fmap, tmap)
+        _results[&#34;Spatial Coherence&#34;] = np.corrcoef(
+            fmap[tmap != 0].flatten(), smoothMap[tmap != 0].flatten()
+        )[0, 1]
+        _results[&#34;Found strong place field&#34;] = largest_group != 0
+        _results[&#34;Place field Centroid x&#34;] = centroid[0]
+        _results[&#34;Place field Centroid y&#34;] = centroid[1]
+        _results[&#34;Place field Boundary x&#34;] = boundary[0]
+        _results[&#34;Place field Boundary y&#34;] = boundary[1]
+        _results[&#34;Number of Spikes in Place Field&#34;] = co_ords[0].size
+        _results[&#34;Percentage of Spikes in Place Field&#34;] = (
+            co_ords[0].size * 100 / ftimes.size
+        )
+        self.update_result(_results)
+
+    smoothMap[tmap == 0] = None
+
+    graph_data[&#34;posX&#34;] = posX
+    graph_data[&#34;posY&#34;] = posY
+    graph_data[&#34;fmap&#34;] = fmap
+    graph_data[&#34;smoothMap&#34;] = smoothMap
+    graph_data[&#34;firingMap&#34;] = fmap
+    graph_data[&#34;tmap&#34;] = tmap
+    graph_data[&#34;xedges&#34;] = xedges
+    graph_data[&#34;yedges&#34;] = yedges
+    graph_data[&#34;spikeLoc&#34;] = spikeLoc
+    graph_data[&#34;placeField&#34;] = pfield
+    graph_data[&#34;largestPlaceGroup&#34;] = largest_group
+    graph_data[&#34;placeBoundary&#34;] = boundary
+    graph_data[&#34;indicesInPlaceField&#34;] = co_ords
+    graph_data[&#34;centroid&#34;] = centroid
+
+    return graph_data
+
+
+def chop_map(self, chop_edges, ftimes):
+    &#34;&#34;&#34;This is x_l, x_r, y_t, y_b.&#34;&#34;&#34;
+    x_l, x_r, y_t, y_b = np.array(chop_edges)
+    x_r = max(self._pos_x) - x_r
+    y_t = max(self._pos_y) - y_t
+    in_range_x = np.logical_and(self._pos_x &gt;= x_l, self._pos_x &lt;= x_r)
+    in_range_y = np.logical_and(self._pos_y &gt;= y_b, self._pos_y &lt;= y_t)
+
+    spikeLoc = self.get_event_loc(ftimes)[1]
+    spike_idxs = spikeLoc[0]
+    spike_idxs_to_use = []
+
+    sample_spatial_idx = np.where(np.logical_and(in_range_y, in_range_x))
+    for i, val in enumerate(spike_idxs):
+        if not np.any(sample_spatial_idx == val):
+            spike_idxs_to_use.append(i)
+    ftimes = ftimes[np.array(spike_idxs_to_use)]
+
+    self._set_time(self._time[sample_spatial_idx])
+    self._set_pos_x(self._pos_x[sample_spatial_idx] - x_l)
+    self._set_pos_y(self._pos_y[sample_spatial_idx] - y_b)
+    self._set_direction(self._direction[sample_spatial_idx])
+    self._set_speed(self._speed[sample_spatial_idx])
+    self.set_ang_vel(self._ang_vel[sample_spatial_idx])
+
+    return ftimes
+
+
+NSpatial.bin_downsample = bin_downsample
+NSpatial.downsample_place = downsample_place
+NSpatial.reverse_downsample = reverse_downsample
+NSpatial.chop_map = chop_map
+
+
+def get_nc_unit(recording):
+    available_units = recording.get_set_units()
+    unit_num = -1
+    for i, a_unit in enumerate(available_units):
+        if len(a_unit) != 0:
+            if unit_num != -1:
+                raise ValueError(
+                    &#34;There are two set units for {}, {}&#34;.format(recording, a_unit)
+                )
+            unit = recording.units[i]
+            unit_num = a_unit[0]
+    if unit_num == -1:
+        print(&#34;Warning: no set units for {}&#34;.format(recording))
+        return
+    unit.load()
+    spike = unit.underlying
+    spike.set_unit_no(unit_num)
+
+    return spike
+
+
+def random_down(spat1, ftimes1, spat2, ftimes2, keys, num_iters=200):
+    results = {}
+    output_dict = {}
+    for key in keys:
+        results[key] = np.zeros(shape=(num_iters))
+    for i in range(num_iters):
+        p_down_data = spat1.downsample_place(ftimes1, spat2, ftimes2)
+        while p_down_data == -1:
+            p_down_data = spat1.downsample_place(ftimes1, spat2, ftimes2)
+        for key in keys:
+            results[key][i] = spat1.get_results()[key]
+        spat1._results.clear()
+    output_dict = {}
+    for key in keys:
+        output_dict[key] = np.nanmean(results[key])
+    return output_dict, p_down_data
+
+
+def compare_place(recording1, recording2, grid_fig, chop_bound1, chop_bound2):
+    results = {}
+    recording1.spatial.load()
+    nspat1 = recording1.spatial.underlying
+    nspike1 = get_nc_unit(recording1)
+    ftimes1 = nspike1.get_unit_stamp()
+    recording2.spatial.load()
+    nspat2 = recording2.spatial.underlying
+    nspike2 = get_nc_unit(recording2)
+    ftimes2 = nspike2.get_unit_stamp()
+
+    if chop_bound1 != None:
+        ftimes1 = deepcopy(ftimes1)
+        nspat1 = deepcopy(nspat1)
+        ftimes1 = nspat1.chop_map(chop_bound1, ftimes1)
+    if chop_bound2 != None:
+        ftimes2 = deepcopy(ftimes2)
+        nspat2 = deepcopy(nspat2)
+        ftimes2 = nspat2.chop_map(chop_bound2, ftimes2)
+
+    # Normal HD is here since it matters less
+    hd_data = nspat1.hd_rate(ftimes1)
+    results[&#34;HD_Result&#34;] = nspat1.get_results()[&#34;HD Res Vect&#34;]
+
+    try:
+        grid_data = nspat1.grid(ftimes1)
+        results[&#34;Is_Grid&#34;] = nspat1.get_results()[&#34;Is Grid&#34;]
+    except:
+        results[&#34;Is_Grid&#34;] = False
+
+    # Do the downsampling
+    keys = [&#34;Spatial Coherence&#34;, &#34;Spatial Skaggs&#34;, &#34;Spatial Sparsity&#34;]
+    short_keys = [&#34;Coh&#34;, &#34;Skagg&#34;, &#34;Spar&#34;]
+    names = [&#34;A_A&#34;, &#34;B_B&#34;, &#34;B_A&#34;, &#34;A_B&#34;]
+    place_data = nspat1.place(ftimes1)
+    ncplot.loc_rate(place_data, ax=grid_fig.get_next())
+    results[&#34;A_Coh&#34;] = nspat1.get_results()[&#34;Spatial Coherence&#34;]
+    results[&#34;A_Skagg&#34;] = nspat1.get_results()[&#34;Spatial Skaggs&#34;]
+    results[&#34;A_Spar&#34;] = nspat1.get_results()[&#34;Spatial Sparsity&#34;]
+    nspat1._results.clear()
+    nspat2.place(ftimes2)
+    results[&#34;B_Coh&#34;] = nspat2.get_results()[&#34;Spatial Coherence&#34;]
+    results[&#34;B_Skagg&#34;] = nspat2.get_results()[&#34;Spatial Skaggs&#34;]
+    results[&#34;B_Spar&#34;] = nspat2.get_results()[&#34;Spatial Sparsity&#34;]
+    nspat2._results.clear()
+    results_aa, _ = random_down(nspat1, ftimes1, nspat1, ftimes1, keys)
+    results_bb, _ = random_down(nspat2, ftimes2, nspat2, ftimes2, keys)
+    results_ba, pd = random_down(nspat2, ftimes2, nspat1, ftimes1, keys)
+    ncplot.loc_rate(pd, ax=grid_fig.get_next())
+    results_ab, pd = random_down(nspat1, ftimes1, nspat2, ftimes2, keys)
+    ncplot.loc_rate(pd, ax=grid_fig.get_next())
+    all_results = [results_aa, results_bb, results_ba, results_ab]
+
+    # Save out the results
+    for (name, res) in zip(names, all_results):
+        for key, short_key in zip(keys, short_keys):
+            out_key = name + &#34;_&#34; + short_key
+            results[out_key] = res[key]
+
+    return results</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="simuran.analysis.custom.nc.bin_downsample"><code class="name flex">
+<span>def <span class="ident">bin_downsample</span></span>(<span>self, ftimes, other_spatial, other_ftimes, final_bins, sample_bin_amt=[30, 30])</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def bin_downsample(
+    self, ftimes, other_spatial, other_ftimes, final_bins, sample_bin_amt=[30, 30]
+):
+    bin_size = sample_bin_amt
+    set_array = np.zeros(shape=(len(self._pos_x), 4), dtype=np.float64)
+    set_array[:, 0] = self._pos_x
+    set_array[:, 1] = self._pos_y
+    spikes_in_bins = histogram(ftimes, bins=self.get_time())[0]
+    set_array[:, 2] = spikes_in_bins
+    set_array[:, 3] = self._time
+
+    pos_hist = np.histogram2d(set_array[:, 0], set_array[:, 1], bin_size)
+    pos_locs_x = np.searchsorted(pos_hist[1][1:], set_array[:, 0], side=&#34;left&#34;)
+    pos_locs_y = np.searchsorted(pos_hist[2][1:], set_array[:, 1], side=&#34;left&#34;)
+
+    set_array1 = np.zeros(shape=(len(other_spatial._pos_x), 2))
+    set_array1[:, 0] = other_spatial._pos_x
+    set_array1[:, 1] = other_spatial._pos_y
+    # spikes_in_bins = histogram(other_ftimes, bins=other_spatial.get_time())[0]
+    # set_array1[:, 2] = spikes_in_bins
+    # set_array1[:, 3] = other_spatial._time
+    pos_hist1 = np.histogram2d(set_array1[:, 0], set_array1[:, 1], bin_size)
+    # pos_locs_x1 = np.searchsorted(
+    #     pos_hist1[1][1:], set_array1[:, 0], side=&#39;left&#39;)
+    # pos_locs_y1 = np.searchsorted(
+    #     pos_hist1[2][1:], set_array1[:, 1], side=&#39;left&#39;)
+
+    new_set = np.zeros(shape=(int(np.sum(pos_hist1[0])), 4))
+    count = 0
+
+    for i in range(pos_hist[0].shape[0]):
+        for j in range(pos_hist[0].shape[1]):
+            amount1 = int(pos_hist1[0][i, j])
+            amount2 = int(pos_hist[0][i, j])
+            amount = min(amount1, amount2)
+            subset = np.nonzero(np.logical_and(pos_locs_x == i, pos_locs_y == j))[0]
+            if len(subset) &gt; amount2:
+                subset = subset[:amount2]
+            elif len(subset) == 0:
+                continue
+            new_sample_idxs = np.random.choice(subset, amount)
+            new_samples = set_array[new_sample_idxs]
+            new_set[count : count + amount] = new_samples
+            count += amount
+    # print(np.histogram2d(
+    #     new_set[:, 0], new_set[:, 1], [pos_hist[1], pos_hist[2]])[0])
+    spike_count = np.histogram2d(
+        new_set[:, 1],
+        new_set[:, 0],
+        [final_bins[0], final_bins[1]],
+        weights=new_set[:, 2],
+    )[0]
+    return new_set, spike_count</code></pre>
+</details>
+</dd>
+<dt id="simuran.analysis.custom.nc.chop_map"><code class="name flex">
+<span>def <span class="ident">chop_map</span></span>(<span>self, chop_edges, ftimes)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>This is x_l, x_r, y_t, y_b.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def chop_map(self, chop_edges, ftimes):
+    &#34;&#34;&#34;This is x_l, x_r, y_t, y_b.&#34;&#34;&#34;
+    x_l, x_r, y_t, y_b = np.array(chop_edges)
+    x_r = max(self._pos_x) - x_r
+    y_t = max(self._pos_y) - y_t
+    in_range_x = np.logical_and(self._pos_x &gt;= x_l, self._pos_x &lt;= x_r)
+    in_range_y = np.logical_and(self._pos_y &gt;= y_b, self._pos_y &lt;= y_t)
+
+    spikeLoc = self.get_event_loc(ftimes)[1]
+    spike_idxs = spikeLoc[0]
+    spike_idxs_to_use = []
+
+    sample_spatial_idx = np.where(np.logical_and(in_range_y, in_range_x))
+    for i, val in enumerate(spike_idxs):
+        if not np.any(sample_spatial_idx == val):
+            spike_idxs_to_use.append(i)
+    ftimes = ftimes[np.array(spike_idxs_to_use)]
+
+    self._set_time(self._time[sample_spatial_idx])
+    self._set_pos_x(self._pos_x[sample_spatial_idx] - x_l)
+    self._set_pos_y(self._pos_y[sample_spatial_idx] - y_b)
+    self._set_direction(self._direction[sample_spatial_idx])
+    self._set_speed(self._speed[sample_spatial_idx])
+    self.set_ang_vel(self._ang_vel[sample_spatial_idx])
+
+    return ftimes</code></pre>
+</details>
+</dd>
+<dt id="simuran.analysis.custom.nc.compare_place"><code class="name flex">
+<span>def <span class="ident">compare_place</span></span>(<span>recording1, recording2, grid_fig, chop_bound1, chop_bound2)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def compare_place(recording1, recording2, grid_fig, chop_bound1, chop_bound2):
+    results = {}
+    recording1.spatial.load()
+    nspat1 = recording1.spatial.underlying
+    nspike1 = get_nc_unit(recording1)
+    ftimes1 = nspike1.get_unit_stamp()
+    recording2.spatial.load()
+    nspat2 = recording2.spatial.underlying
+    nspike2 = get_nc_unit(recording2)
+    ftimes2 = nspike2.get_unit_stamp()
+
+    if chop_bound1 != None:
+        ftimes1 = deepcopy(ftimes1)
+        nspat1 = deepcopy(nspat1)
+        ftimes1 = nspat1.chop_map(chop_bound1, ftimes1)
+    if chop_bound2 != None:
+        ftimes2 = deepcopy(ftimes2)
+        nspat2 = deepcopy(nspat2)
+        ftimes2 = nspat2.chop_map(chop_bound2, ftimes2)
+
+    # Normal HD is here since it matters less
+    hd_data = nspat1.hd_rate(ftimes1)
+    results[&#34;HD_Result&#34;] = nspat1.get_results()[&#34;HD Res Vect&#34;]
+
+    try:
+        grid_data = nspat1.grid(ftimes1)
+        results[&#34;Is_Grid&#34;] = nspat1.get_results()[&#34;Is Grid&#34;]
+    except:
+        results[&#34;Is_Grid&#34;] = False
+
+    # Do the downsampling
+    keys = [&#34;Spatial Coherence&#34;, &#34;Spatial Skaggs&#34;, &#34;Spatial Sparsity&#34;]
+    short_keys = [&#34;Coh&#34;, &#34;Skagg&#34;, &#34;Spar&#34;]
+    names = [&#34;A_A&#34;, &#34;B_B&#34;, &#34;B_A&#34;, &#34;A_B&#34;]
+    place_data = nspat1.place(ftimes1)
+    ncplot.loc_rate(place_data, ax=grid_fig.get_next())
+    results[&#34;A_Coh&#34;] = nspat1.get_results()[&#34;Spatial Coherence&#34;]
+    results[&#34;A_Skagg&#34;] = nspat1.get_results()[&#34;Spatial Skaggs&#34;]
+    results[&#34;A_Spar&#34;] = nspat1.get_results()[&#34;Spatial Sparsity&#34;]
+    nspat1._results.clear()
+    nspat2.place(ftimes2)
+    results[&#34;B_Coh&#34;] = nspat2.get_results()[&#34;Spatial Coherence&#34;]
+    results[&#34;B_Skagg&#34;] = nspat2.get_results()[&#34;Spatial Skaggs&#34;]
+    results[&#34;B_Spar&#34;] = nspat2.get_results()[&#34;Spatial Sparsity&#34;]
+    nspat2._results.clear()
+    results_aa, _ = random_down(nspat1, ftimes1, nspat1, ftimes1, keys)
+    results_bb, _ = random_down(nspat2, ftimes2, nspat2, ftimes2, keys)
+    results_ba, pd = random_down(nspat2, ftimes2, nspat1, ftimes1, keys)
+    ncplot.loc_rate(pd, ax=grid_fig.get_next())
+    results_ab, pd = random_down(nspat1, ftimes1, nspat2, ftimes2, keys)
+    ncplot.loc_rate(pd, ax=grid_fig.get_next())
+    all_results = [results_aa, results_bb, results_ba, results_ab]
+
+    # Save out the results
+    for (name, res) in zip(names, all_results):
+        for key, short_key in zip(keys, short_keys):
+            out_key = name + &#34;_&#34; + short_key
+            results[out_key] = res[key]
+
+    return results</code></pre>
+</details>
+</dd>
+<dt id="simuran.analysis.custom.nc.count_cells"><code class="name flex">
+<span>def <span class="ident">count_cells</span></span>(<span>recording)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def count_cells(recording):
+    output = {}
+    for val in [1, 2, 3, 4, 9, 10, 11, 12]:
+        output[str(val)] = 0
+
+    try:
+        for unit in recording.units:
+            spike = unit.underlying
+            if spike is None:
+                continue
+            num = len(spike.get_unit_list())
+            output[str(unit.group)] = num
+        return output
+
+    except Exception as e:
+        print(&#34;Error on {} was {}&#34;.format(recording, e))
+        return output</code></pre>
+</details>
+</dd>
+<dt id="simuran.analysis.custom.nc.downsample_place"><code class="name flex">
+<span>def <span class="ident">downsample_place</span></span>(<span>self, ftimes, other_spatial, other_ftimes, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Calculates the two-dimensional firing rate of the unit with respect to
+the location of the animal in the environment. This is called Firing map.</p>
+<p>Specificity indices are measured to assess the quality of location-specific firing of the unit.</p>
+<p>This method also plot the events of spike occurring superimposed on the
+trace of the animal in the arena, commonly known as Spike Plot.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>ftimes</code></strong> :&ensp;<code>ndarray</code></dt>
+<dd>Timestamps of the spiking activity of a unit</dd>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>Keyword arguments</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>dict</code></dt>
+<dd>Graphical data of the analysis</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def downsample_place(self, ftimes, other_spatial, other_ftimes, **kwargs):
+    &#34;&#34;&#34;
+    Calculates the two-dimensional firing rate of the unit with respect to
+    the location of the animal in the environment. This is called Firing map.
+
+    Specificity indices are measured to assess the quality of location-specific firing of the unit.
+
+    This method also plot the events of spike occurring superimposed on the
+    trace of the animal in the arena, commonly known as Spike Plot.
+
+    Parameters
+    ----------
+    ftimes : ndarray
+        Timestamps of the spiking activity of a unit
+    **kwargs
+        Keyword arguments
+
+    Returns
+    -------
+    dict
+        Graphical data of the analysis
+    &#34;&#34;&#34;
+
+    _results = oDict()
+    graph_data = {}
+    update = kwargs.get(&#34;update&#34;, True)
+    pixel = kwargs.get(&#34;pixel&#34;, 3)
+    chop_bound = kwargs.get(&#34;chop_bound&#34;, 5)
+    filttype, filtsize = kwargs.get(&#34;filter&#34;, [&#34;b&#34;, 5])
+    lim = kwargs.get(&#34;range&#34;, [0, self.get_duration()])
+    brAdjust = kwargs.get(&#34;brAdjust&#34;, True)
+    thresh = kwargs.get(&#34;fieldThresh&#34;, 0.2)
+    required_neighbours = kwargs.get(&#34;minPlaceFieldNeighbours&#34;, 9)
+    smooth_place = kwargs.get(&#34;smoothPlace&#34;, False)
+    # Can pass another NData object to estimate the border from
+    # Can be useful in some cases, such as when the animal
+    # only explores a subset of the arena.
+    separate_border_data = kwargs.get(&#34;separateBorderData&#34;, None)
+
+    # xedges = np.arange(0, np.ceil(np.max(self._pos_x)), pixel)
+    # yedges = np.arange(0, np.ceil(np.max(self._pos_y)), pixel)
+
+    # Update the border to match the requested pixel size
+    if separate_border_data is not None:
+        self.set_border(separate_border_data.calc_border(**kwargs))
+        times = self._time
+        lower, upper = (times.min(), times.max())
+        new_times = separate_border_data._time
+        sample_spatial_idx = ((new_times &lt;= upper) &amp; (new_times &gt;= lower)).nonzero()
+        self._border_dist = self._border_dist[sample_spatial_idx]
+    else:
+        self.set_border(self.calc_border(**kwargs))
+
+    xedges = self._xbound
+    yedges = self._ybound
+    xedges2 = other_spatial._xbound
+    yedges2 = other_spatial._ybound
+
+    spikeLoc = self.get_event_loc(ftimes, **kwargs)[1]
+    posX = self._pos_x[
+        np.logical_and(self.get_time() &gt;= lim[0], self.get_time() &lt;= lim[1])
+    ]
+    posY = self._pos_y[
+        np.logical_and(self.get_time() &gt;= lim[0], self.get_time() &lt;= lim[1])
+    ]
+
+    new_set, spike_count = self.bin_downsample(
+        ftimes,
+        other_spatial,
+        other_ftimes,
+        final_bins=[
+            np.append(yedges, yedges[-1] + np.mean(np.diff(yedges))),
+            np.append(xedges, xedges[-1] + np.mean(np.diff(xedges))),
+        ],
+        sample_bin_amt=[len(xedges2) + 1, len(yedges2) + 1],
+    )
+    posY = new_set[:, 1]
+    posX = new_set[:, 0]
+
+    tmap, yedges, xedges = histogram2d(posY, posX, yedges, xedges)
+    if tmap.shape != spike_count.shape:
+        print(tmap.shape)
+        print(spike_count.shape)
+        raise ValueError(&#34;Time map does not match firing map&#34;)
+
+    tmap /= self.get_sampling_rate()
+
+    ybin, xbin = tmap.shape
+    xedges = np.arange(xbin) * pixel
+    yedges = np.arange(ybin) * pixel
+
+    fmap = np.divide(spike_count, tmap, out=np.zeros_like(spike_count), where=tmap != 0)
+    if fmap.max() == 0:
+        print(&#34;No firing information!&#34;)
+        return -1
+    if brAdjust:
+        nfmap = fmap / fmap.max()
+        if (
+            np.sum(np.logical_and(nfmap &gt;= 0.2, tmap != 0))
+            &gt;= 0.8 * nfmap[tmap != 0].flatten().shape[0]
+        ):
+            back_rate = np.mean(fmap[np.logical_and(nfmap &gt;= 0.2, nfmap &lt; 0.4)])
+            fmap -= back_rate
+            fmap[fmap &lt; 0] = 0
+
+    if filttype is not None:
+        smoothMap = smooth_2d(fmap, filttype, filtsize)
+    else:
+        smoothMap = fmap
+
+    if smooth_place:
+        pmap = smoothMap
+    else:
+        pmap = fmap
+
+    pmap[tmap == 0] = None
+    pfield, largest_group = NSpatial.place_field(pmap, thresh, required_neighbours)
+    # if largest_group == 0:
+    #     if smooth_place:
+    #         info = &#34;where the place field was calculated from smoothed data&#34;
+    #     else:
+    #         info = &#34;where the place field was calculated from raw data&#34;
+    #     logging.info(
+    #         &#34;Lack of high firing neighbours to identify place field &#34; +
+    #         info)
+    centroid = NSpatial.place_field_centroid(pfield, pmap, largest_group)
+    # centroid is currently in co-ordinates, convert to pixels
+    centroid = centroid * pixel + (pixel * 0.5)
+    # flip x and y
+    centroid = centroid[::-1]
+
+    p_shape = pfield.shape
+    maxes = [xedges.max(), yedges.max()]
+    scales = (maxes[0] / p_shape[1], maxes[1] / p_shape[0])
+    co_ords = np.array(np.where(pfield == largest_group))
+    boundary = [[None, None], [None, None]]
+    for i in range(2):
+        j = (i + 1) % 2
+        boundary[i] = (
+            co_ords[j].min() * scales[i],
+            np.clip((co_ords[j].max() + 1) * scales[i], 0, maxes[i]),
+        )
+    inside_x = (boundary[0][0] &lt;= spikeLoc[0]) &amp; (spikeLoc[0] &lt;= boundary[0][1])
+    inside_y = (boundary[1][0] &lt;= spikeLoc[1]) &amp; (spikeLoc[1] &lt;= boundary[1][1])
+    co_ords = np.nonzero(np.logical_and(inside_x, inside_y))
+
+    if update:
+        _results[&#34;Spatial Skaggs&#34;] = self.skaggs_info(fmap, tmap)
+        _results[&#34;Spatial Sparsity&#34;] = self.spatial_sparsity(fmap, tmap)
+        _results[&#34;Spatial Coherence&#34;] = np.corrcoef(
+            fmap[tmap != 0].flatten(), smoothMap[tmap != 0].flatten()
+        )[0, 1]
+        _results[&#34;Found strong place field&#34;] = largest_group != 0
+        _results[&#34;Place field Centroid x&#34;] = centroid[0]
+        _results[&#34;Place field Centroid y&#34;] = centroid[1]
+        _results[&#34;Place field Boundary x&#34;] = boundary[0]
+        _results[&#34;Place field Boundary y&#34;] = boundary[1]
+        _results[&#34;Number of Spikes in Place Field&#34;] = co_ords[0].size
+        _results[&#34;Percentage of Spikes in Place Field&#34;] = (
+            co_ords[0].size * 100 / ftimes.size
+        )
+        self.update_result(_results)
+
+    smoothMap[tmap == 0] = None
+
+    graph_data[&#34;posX&#34;] = posX
+    graph_data[&#34;posY&#34;] = posY
+    graph_data[&#34;fmap&#34;] = fmap
+    graph_data[&#34;smoothMap&#34;] = smoothMap
+    graph_data[&#34;firingMap&#34;] = fmap
+    graph_data[&#34;tmap&#34;] = tmap
+    graph_data[&#34;xedges&#34;] = xedges
+    graph_data[&#34;yedges&#34;] = yedges
+    graph_data[&#34;spikeLoc&#34;] = spikeLoc
+    graph_data[&#34;placeField&#34;] = pfield
+    graph_data[&#34;largestPlaceGroup&#34;] = largest_group
+    graph_data[&#34;placeBoundary&#34;] = boundary
+    graph_data[&#34;indicesInPlaceField&#34;] = co_ords
+    graph_data[&#34;centroid&#34;] = centroid
+
+    return graph_data</code></pre>
+</details>
+</dd>
+<dt id="simuran.analysis.custom.nc.frate"><code class="name flex">
+<span>def <span class="ident">frate</span></span>(<span>recording, tetrode_num, unit_num)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def frate(recording, tetrode_num, unit_num):
+    try:
+        units, _ = recording.units.group_by_property(&#34;group&#34;, tetrode_num)
+        unit = units[0]
+        unit.load()
+        spike = unit.underlying
+        spike.set_unit_no(unit_num)
+        return spike.get_unit_spikes_count() / spike.get_duration()
+    except:
+        return -1</code></pre>
+</details>
+</dd>
+<dt id="simuran.analysis.custom.nc.frate_file"><code class="name flex">
+<span>def <span class="ident">frate_file</span></span>(<span>recording)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def frate_file(recording):
+    try:
+        spike = get_nc_unit(recording)
+        return spike.get_unit_spikes_count() / spike.get_duration()
+    except:
+        return -1</code></pre>
+</details>
+</dd>
+<dt id="simuran.analysis.custom.nc.get_nc_unit"><code class="name flex">
+<span>def <span class="ident">get_nc_unit</span></span>(<span>recording)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_nc_unit(recording):
+    available_units = recording.get_set_units()
+    unit_num = -1
+    for i, a_unit in enumerate(available_units):
+        if len(a_unit) != 0:
+            if unit_num != -1:
+                raise ValueError(
+                    &#34;There are two set units for {}, {}&#34;.format(recording, a_unit)
+                )
+            unit = recording.units[i]
+            unit_num = a_unit[0]
+    if unit_num == -1:
+        print(&#34;Warning: no set units for {}&#34;.format(recording))
+        return
+    unit.load()
+    spike = unit.underlying
+    spike.set_unit_no(unit_num)
+
+    return spike</code></pre>
+</details>
+</dd>
+<dt id="simuran.analysis.custom.nc.place_field"><code class="name flex">
+<span>def <span class="ident">place_field</span></span>(<span>recording, grid_fig, tetrode_num, unit_num)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def place_field(recording, grid_fig, tetrode_num, unit_num):
+    try:
+        units, _ = recording.units.group_by_property(&#34;group&#34;, tetrode_num)
+        unit = units[0]
+        unit.load()
+        spike = unit.underlying
+        spike.set_unit_no(unit_num)
+        spatial = recording.spatial
+        spatial.load()
+        place_data = spatial.underlying.place(spike.get_unit_stamp())
+        ncplot.loc_rate(place_data, ax=grid_fig.get_next())
+        plt.close()
+        ncplot.loc_spike(place_data, ax=grid_fig.get_next())
+        plt.close()
+        wave_data = spike.wave_property()
+        ncplot.largest_waveform(wave_data, ax=grid_fig.get_next())
+        plt.close()
+    except:
+        grid_fig.get_next()
+        grid_fig.get_next()
+        grid_fig.get_next()</code></pre>
+</details>
+</dd>
+<dt id="simuran.analysis.custom.nc.place_field_file"><code class="name flex">
+<span>def <span class="ident">place_field_file</span></span>(<span>recording, grid_fig)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def place_field_file(recording, grid_fig):
+    try:
+        available_units = recording.get_set_units()
+        unit_num = -1
+        for i, a_unit in enumerate(available_units):
+            if len(a_unit) != 0:
+                if unit_num != -1:
+                    raise ValueError(
+                        &#34;There are two set units for {}, {}&#34;.format(recording, a_unit)
+                    )
+                unit = recording.units[i]
+                unit_num = a_unit[0]
+        if unit_num == -1:
+            print(&#34;Warning: no set units for {}&#34;.format(recording))
+            return
+        unit.load()
+        spike = unit.underlying
+        spike.set_unit_no(unit_num)
+        spatial = recording.spatial
+        spatial.load()
+    except:
+        grid_fig.get_next()
+        grid_fig.get_next()
+        grid_fig.get_next()
+        return
+    place_data = spatial.underlying.place(spike.get_unit_stamp())
+    ncplot.loc_rate(place_data, ax=grid_fig.get_next())
+    plt.close()
+    ncplot.loc_spike(place_data, ax=grid_fig.get_next())
+    plt.close()
+    hd_data = spatial.underlying.hd_rate(spike.get_unit_stamp())
+    ncplot.hd_rate(hd_data, ax=grid_fig.get_next(circular=True), title=None)
+    plt.close()</code></pre>
+</details>
+</dd>
+<dt id="simuran.analysis.custom.nc.random_down"><code class="name flex">
+<span>def <span class="ident">random_down</span></span>(<span>spat1, ftimes1, spat2, ftimes2, keys, num_iters=200)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def random_down(spat1, ftimes1, spat2, ftimes2, keys, num_iters=200):
+    results = {}
+    output_dict = {}
+    for key in keys:
+        results[key] = np.zeros(shape=(num_iters))
+    for i in range(num_iters):
+        p_down_data = spat1.downsample_place(ftimes1, spat2, ftimes2)
+        while p_down_data == -1:
+            p_down_data = spat1.downsample_place(ftimes1, spat2, ftimes2)
+        for key in keys:
+            results[key][i] = spat1.get_results()[key]
+        spat1._results.clear()
+    output_dict = {}
+    for key in keys:
+        output_dict[key] = np.nanmean(results[key])
+    return output_dict, p_down_data</code></pre>
+</details>
+</dd>
+<dt id="simuran.analysis.custom.nc.reverse_downsample"><code class="name flex">
+<span>def <span class="ident">reverse_downsample</span></span>(<span>self, ftimes, other_spatial, other_ftimes, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def reverse_downsample(self, ftimes, other_spatial, other_ftimes, **kwargs):
+    return other_spatial.downsample_place(other_ftimes, self, ftimes, **kwargs)</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="simuran.analysis.custom" href="index.html">simuran.analysis.custom</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="two-column">
+<li><code><a title="simuran.analysis.custom.nc.bin_downsample" href="#simuran.analysis.custom.nc.bin_downsample">bin_downsample</a></code></li>
+<li><code><a title="simuran.analysis.custom.nc.chop_map" href="#simuran.analysis.custom.nc.chop_map">chop_map</a></code></li>
+<li><code><a title="simuran.analysis.custom.nc.compare_place" href="#simuran.analysis.custom.nc.compare_place">compare_place</a></code></li>
+<li><code><a title="simuran.analysis.custom.nc.count_cells" href="#simuran.analysis.custom.nc.count_cells">count_cells</a></code></li>
+<li><code><a title="simuran.analysis.custom.nc.downsample_place" href="#simuran.analysis.custom.nc.downsample_place">downsample_place</a></code></li>
+<li><code><a title="simuran.analysis.custom.nc.frate" href="#simuran.analysis.custom.nc.frate">frate</a></code></li>
+<li><code><a title="simuran.analysis.custom.nc.frate_file" href="#simuran.analysis.custom.nc.frate_file">frate_file</a></code></li>
+<li><code><a title="simuran.analysis.custom.nc.get_nc_unit" href="#simuran.analysis.custom.nc.get_nc_unit">get_nc_unit</a></code></li>
+<li><code><a title="simuran.analysis.custom.nc.place_field" href="#simuran.analysis.custom.nc.place_field">place_field</a></code></li>
+<li><code><a title="simuran.analysis.custom.nc.place_field_file" href="#simuran.analysis.custom.nc.place_field_file">place_field_file</a></code></li>
+<li><code><a title="simuran.analysis.custom.nc.random_down" href="#simuran.analysis.custom.nc.random_down">random_down</a></code></li>
+<li><code><a title="simuran.analysis.custom.nc.reverse_downsample" href="#simuran.analysis.custom.nc.reverse_downsample">reverse_downsample</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.3</a>.</p>
+</footer>
+</body>
+</html>
