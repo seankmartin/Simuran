@@ -29,6 +29,17 @@ def test_batch_setup():
     # Check if all files read are those written
     assert sorted(read_files) == sorted(write_files)
 
+    read_files = simuran.batch_setup.BatchSetup.get_params_matching_pattern(
+        in_dir, recursive=True
+    )
+    name_read = [os.path.basename(f) for f in read_files]
+    retrieved_files = [
+        "simuran_b_params.py",
+        "simuran_params_t.py",
+        "simuran_params_t.py",
+    ]
+    assert sorted(name_read) == sorted(retrieved_files)
+
 
 if __name__ == "__main__":
     test_batch_setup()

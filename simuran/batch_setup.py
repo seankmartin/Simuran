@@ -117,9 +117,22 @@ class BatchSetup(object):
         fnames = get_all_files_in_dir(start_dir, ext=".py", recursive=recursive)
 
         def keep_file(filename):
-            return (not "__pycache__" in filename) and (
+            return ("__pycache__" not in filename) and (
                 os.path.basename(filename) == to_find
             )
+
+        return [fname for fname in fnames if keep_file(fname)]
+
+    @staticmethod
+    def get_params_matching_pattern(
+        start_dir, re_filter=".*simuran.*params", recursive=True
+    ):
+        fnames = get_all_files_in_dir(
+            start_dir, ext=".py", recursive=recursive, re_filter=re_filter
+        )
+
+        def keep_file(filename):
+            return "__pycache__" not in filename
 
         return [fname for fname in fnames if keep_file(fname)]
 
