@@ -40,6 +40,10 @@ def test_batch_setup():
     ]
     assert sorted(name_read) == sorted(retrieved_files)
 
+    read_files = simuran.batch_setup.BatchSetup.copy_params(
+        in_dir, "here", recursive=True, test_only=True
+    )
+
 
 if __name__ == "__main__":
     test_batch_setup()

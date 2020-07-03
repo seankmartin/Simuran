@@ -136,6 +136,24 @@ class BatchSetup(object):
 
         return [fname for fname in fnames if keep_file(fname)]
 
+    @staticmethod
+    def copy_params(
+        from_dir, to_dir, re_filter=".*simuran.*params", recursive=True, test_only=False
+    ):
+        files = BatchSetup.get_params_matching_pattern(
+            from_dir, re_filter=re_filter, recursive=recursive
+        )
+
+        for f in files:
+            file_without_base = f[len(from_dir + os.sep) :]
+            dest = os.path.join(to_dir, file_without_base)
+
+            if test_only:
+                print("Would copy {} to {}".format(f, dest))
+            else:
+                os.makedirs(os.path.dirname(dest), exist_ok=True)
+                shutil.copy(f, dest)
+
     def __str__(self):
         return "{} from {} with parameters:\n {} ".format(
             self.__class__.__name__, self.file_loc, pformat(self.ph.params, width=200)
