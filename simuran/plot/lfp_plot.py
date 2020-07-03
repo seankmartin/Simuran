@@ -5,13 +5,10 @@ from copy import deepcopy
 
 import numpy as np
 import matplotlib.pyplot as plt
-import pycwt as wavelet
 import seaborn as sns
+import more_itertools as mit
 
 import simuran.plot.base_plot
-from bvmpc.bv_utils import make_dir_if_not_exists, find_in, ordered_set
-from bvmpc.bv_utils import find_ranges
-import bvmpc.bv_plot as bv_plot
 from neurochat.nc_lfp import NLfp
 from neurochat.nc_utils import butter_filter
 
@@ -137,6 +134,16 @@ def plot_lfp(
         None
 
     """
+
+    def find_ranges(iterable):
+        """Yield range of consecutive numbers."""
+        for group in mit.consecutive_groups(iterable):
+            group = list(group)
+            if len(group) == 1:
+                yield group[0], group[0]
+            else:
+                yield group[0], group[-1]
+
     lfp_dict_s = OrderedDict()
     for chan, signal in zip(channels, signals):
         lfp_dict_s[str(chan)] = signal
@@ -206,7 +213,8 @@ def plot_lfp(
             axes[i].tick_params(labelsize=12)
             axes[i].set_xlim(a, b)
 
-        bv_plot.savefig(fig, out_name)
+        print("Saving figure to {}".format(out_name))
+        fig.savefig(out_name, dpi=150, bbox_inches="tight", pad_inches=0.5)
         plt.close("all")
 
 
@@ -249,7 +257,7 @@ def lfp_csv(fname, out_dir, lfp_odict, sd, min_artf_freq, shuttles, filt=False):
                 compare.append(ex_thres[j])
         min_shut.append(min(compare))
 
-    truth = find_in(min_shut, ex_thres)
+    truth = [x in min_shut for x in ex_thres]
     for c in truth:
         if c:
             choose.append("C")
@@ -323,7 +331,7 @@ def plot_sample_of_signal(
     if name is None:
         name = "full_signal_filt.png"
 
-    make_dir_if_not_exists(out_dir)
+    os.makedirs(out_dir, exist_ok=True)
     out_name = os.path.join(out_dir, name)
     fs = lfp.get_sampling_rate()
     filt, lower, upper = filt_params
@@ -431,6 +439,10 @@ def calc_wPowerSpectrum(
     """
     Calculate wavelet power spectrum using pycwt.
 
+    Note
+    ----
+    This function is a work in progress.
+
     Parameters
     ----------
     dat : np.ndarray
@@ -449,6 +461,8 @@ def calc_wPowerSpectrum(
         How many wavelets should be at each level. Number of sub-octaves per octaves
 
     """
+    import pycwt as wavelet
+
     t = np.asarray(sample_times)
     dt = np.mean(np.diff(t))
     dj = resolution
@@ -479,7 +493,8 @@ def calc_wPowerSpectrum(
     period = 1 / freqs
 
     if c_sig:
-        # calculate the normalized wavelet and Fourier power spectra, and the Fourier equivalent periods for each wavelet scale.
+        # calculate the normalized wavelet and Fourier power spectra,
+        # and the Fourier equivalent periods for each wavelet scale.
         signif, fft_theor = wavelet.significance(
             1.0, dt, scales, 0, alpha, significance_level=0.95, wavelet=mother
         )

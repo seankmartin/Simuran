@@ -3,3 +3,5 @@ skm_pyutils
 seaborn
 matplotlib
 -e git+git://github.com/seankmartin/NeuroChaT.git#egg=neurochat
+more_itertools
+indexed

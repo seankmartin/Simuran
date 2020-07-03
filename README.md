@@ -1,12 +1,16 @@
 # SIMURAN
 [![Build Status](https://travis-ci.org/seankmartin/SIMURAN.svg?branch=master)](https://travis-ci.org/seankmartin/SIMURAN)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 Simultaneous Multi-Region Analysis.
 The general design is to have single objects with large amounts of information and an intuitive system to set this up.
 
-# Installation
+## Objective
+Describe what is in your data and facilitate batch processing.
+Provide some analysis methods and allow for easy creation of further analyses.
+
+## Installation
 ```
 git clone https://github.com/seankmartin/PythonUtils
 cd PythonUtils
@@ -18,8 +22,7 @@ pip install -e .
 ```
 
 ## Requirements
-Describe what is in your data and facilitate batch processing.
-Provide some analysis methods and allow for easy creation of further analyses.
+Listed in requirements.txt.
 
 ## Ideas
 Interface with other programs such as SpikeInterface to allow for many different systems and sorters to be used.

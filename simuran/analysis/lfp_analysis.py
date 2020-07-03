@@ -25,7 +25,7 @@ def compare_lfp(
 
     Parameters
     ----------
-    recording : simuran.Recording
+    recording : simuran.recording.Recording
         Recording holding data
     out_base_dir : str, None
         Path for desired output location. Default - Saves output to folder named !LFP in base directory.
@@ -33,7 +33,7 @@ def compare_lfp(
         Number of LFP channels in session
     """
 
-    # Do the actual calcualtion
+    # Do the actual calculation
     if ch_to_use == "all":
         ch_labels = recording.get_signal_channels()
     ch = [i for i in range(len(ch_labels))]
