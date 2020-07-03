@@ -152,7 +152,7 @@ class Recording(BaseSimuran):
 
         self.valid = True
 
-    def __repr__(self):
+    def __str__(self):
         return "{} with params {} and source files {}".format(
             self.__class__.__name__, self.param_handler.params, self.source_files
         )

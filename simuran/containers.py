@@ -39,7 +39,7 @@ class AbstractContainer(ABC):
     def __iter__(self):
         return iter(self.container)
 
-    def __repr__(self):
+    def __str__(self):
         return "{} with {} elements:\n{}".format(
             self.__class__.__name__, len(self), self.container
         )

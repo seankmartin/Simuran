@@ -106,6 +106,6 @@ class BaseSimuran(ABC):
                 for key, value in attr_dict.items():
                     setattr(self, key, value)
 
-    def __repr__(self):
+    def __str__(self):
         """Called on print."""
         return "{} with attributes {}".format(self.__class__.__name__, self.__dict__)

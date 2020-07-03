@@ -42,7 +42,7 @@ class AnalysisHandler:
             self.results[str(fn.__name__) + "_" + str(ctr)] = result
         return result
 
-    def __repr__(self):
+    def __str__(self):
         return "{} with functions:\n {}, args:\n {}, kwargs:\n {}".format(
             self.__class__.__name__,
             self.fns_to_run,

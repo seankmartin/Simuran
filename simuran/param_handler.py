@@ -147,7 +147,7 @@ class ParamHandler:
     def __getitem__(self, key):
         return self.params[key]
 
-    def __repr__(self):
+    def __str__(self):
         return "{} from {} with params:\n{}".format(
             self.__class__.__name__, self.location, pformat(self.params, width=200)
         )

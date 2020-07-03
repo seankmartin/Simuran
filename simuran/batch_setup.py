@@ -123,7 +123,7 @@ class BatchSetup(object):
 
         return [fname for fname in fnames if keep_file(fname)]
 
-    def __repr__(self):
+    def __str__(self):
         return "{} from {} with parameters:\n {} ".format(
             self.__class__.__name__, self.file_loc, pformat(self.ph.params, width=200)
         )
