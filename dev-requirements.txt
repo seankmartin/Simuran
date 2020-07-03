@@ -1,3 +1,0 @@
-numpy
-skm_pyutils
-pdoc3

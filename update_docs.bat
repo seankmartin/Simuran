@@ -1,1 +1,0 @@
-pdoc --html -o "docs\html" simuran --force
