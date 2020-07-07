@@ -1,3 +1,5 @@
+"""This is an example of a setup file to be passed to batch_main.py."""
+
 import os
 
 

@@ -1,11 +1,22 @@
-"""Module to hold the base class setting up information and methods held in most SIMURAN classes."""
+"""The base class sets up information and methods held in most SIMURAN classes."""
 
 from abc import ABC, abstractmethod
 from simuran.loaders.base_loader import BaseLoader
 
 
 class BaseSimuran(ABC):
-    """TODO Put the docstring here."""
+    """
+    An abstract class which is the base class for most SIMURAN classes.
+
+    Attributes
+    ----------
+    kwargs : dict
+        Any extra keyword arguments to store on this object.
+    info : dict
+        Store any extra information on this object.
+    date : TODO
+
+    """
 
     def __init__(self, **kwargs):
         """See help(BaseSimuran) for more info."""
@@ -24,7 +35,7 @@ class BaseSimuran(ABC):
     def add_info(self, key, name, info):
         if self.info is None:
             self.info = {}
-        if not key in self.info.keys():
+        if key not in self.info.keys():
             self.info[key] = {}
         self.info[key][name] = info
 

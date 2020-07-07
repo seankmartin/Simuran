@@ -11,7 +11,7 @@ import simuran.recording_container
 import simuran.analysis.analysis_handler
 import simuran.param_handler
 
-# TODO this is only on my PC
+# TODO I want to use pyqt5 here but ill check my later requirements.
 import matplotlib
 
 matplotlib.use("Qt4agg")
@@ -30,7 +30,7 @@ def main(
     batch_name="simuran_batch_params.py",
     verbose_batch_params=False,
     load_all=False,
-    to_load=["signals, spatial, units"],
+    to_load=["signals", "spatial", "units"],
     select_recordings=None,
     figures=[],
     figure_names=[],
@@ -38,8 +38,75 @@ def main(
     file_list_name="file_list.txt",
     print_all_cells=True,
 ):
+    """
+    Run the main control functionality.
 
-    # Do batch setup if requested.
+    Also helps to set up files.
+
+    Parameters
+    ----------
+    location : str
+        The path to the directory or file to consider for analysis.
+    functions : list
+        A list of functions to perform on each recording.
+    attributes_to_save : list
+        A list of attributes to save from the results.
+    args_fn : function, optional
+        A function which returns the arguments to use for each
+        function in functions for each recording.
+        The default value None indicates default parameters will be used.
+    do_batch_setup : bool, optional
+        Whether to write new parameter files (default False).
+    friendly_names : list of strings, optional
+        A list of names to save attributes_to_save under.
+    sort_container_fn : function, optional
+        A function to sort the recording container with.
+    reverse_sort : bool, optional
+        Reverses the sorting if sort_container_fn is provided.
+    param_name : str, optional
+        Which filename to look for which holds recording information.
+    batch_name : str, optional
+        Which filename to look for which holds batch information.
+    verbose_batch_params : bool, optional
+        Whether to print extra information about batch parameters (default False).
+    load_all : bool, optional
+        Whether to load information about each recording (default False).
+    to_load : list of strings, optional
+        Which items to load on the recording.
+        Should be a subset of ["signals", "spatial", "units"]
+    select_recordings : list of integers or strings, or bool, or None, optional
+        If None, all recordings are used (default option).
+        If True, an interactive console is launched to help pick recordings to consider.
+        These chosen recordings are saved to disk and will be used if True is passed.
+        If list, then the list of recordings used are the ones at those indices,
+        or strings matched.
+    figures : list, optional
+        A list of figures to plot recordings into.
+    figure_names : list of strings, optional
+        Plotting names for each figure.
+    cell_list_name : string, optional
+        The filename to look for that describes the cells to consider.
+        If this does not exist, an interactive prompt is shown to help make it.
+    file_list_name : string, optional
+        The filename to look for that describes the files to consider.
+    print_all_cells : bool, optional
+        Whether to save a file containing all the cells found (default True).
+
+    Returns
+    -------
+    None
+
+    Raises
+    ------
+    ValueError
+        If do_batch_setup is True, but location is not a directory.
+        If a valid location is not passed.
+        If select_recordings is not None, but location is not a directory.
+        If user input is not detected.
+        Non-existant cells are tried to be selected.
+
+    """
+    # Setup the parameters needed for running batch if requested.
     if do_batch_setup:
         if not os.path.isdir(location):
             raise ValueError("Please provide a directory, entered {}".format(location))
@@ -51,7 +118,7 @@ def main(
         # TODO this does not work properly at the moment
         if param_handler["overwrite"] and (not param_handler["only_check"]):
             batch_setup.clear_params(location, to_remove=param_name)
-            dirs = batch_setup.write_batch_params(verbose_params=verbose_batch_params)
+            batch_setup.write_batch_params(verbose_params=verbose_batch_params)
 
     # Setup the recording_container
     # TODO only parse things to be selected
@@ -69,6 +136,7 @@ def main(
         print("Sorting the container")
         recording_container.sort(sort_container_fn, reverse=reverse_sort)
 
+    # Save a list of all cells found
     # TODO if file is empty run again
     in_dir = location if os.path.isdir(location) else os.path.dirname(location)
     if print_all_cells:
@@ -84,18 +152,19 @@ def main(
                     f.write(
                         "----{}----\n".format(os.path.basename(recording.source_file))
                     )
-                    for l in available_units:
-                        if len(l[1]) != 0:
+                    for available_unit in available_units:
+                        if len(available_unit[1]) != 0:
                             f.write(
                                 "        "
                                 + "{}: Group {} with Units {}\n".format(
-                                    total, l[0], l[1]
+                                    total, available_unit[0], available_unit[1]
                                 )
                             )
                             total += 1
         else:
             print("All units already available at {}".format(help_out_loc))
 
+    # Select a subset of all recordings found for use
     if select_recordings is not None:
         if not os.path.isdir(location):
             raise ValueError("Can't select recordings with only one")
@@ -130,12 +199,14 @@ def main(
             else:
                 recording_container.subsample_by_name(select_recordings)
 
+    # Select which cells to consider
     # TODO move cell picking helper
     # TODO provide loaders with get list of cell only methods
     # TODO get this to work from saved list of cells
+    # TODO this makes no sense if only LFP needed.
     cell_location = os.path.join(in_dir, cell_list_name)
     if not os.path.isfile(cell_location):
-        print("Start unit select helper")
+        print("Starting unit select helper")
         total = 0
         ok = []
         for i in range(len(recording_container)):
@@ -143,10 +214,14 @@ def main(
             recording = recording_container.get(i)
             available_units = recording.get_available_units()
             print("--------{}--------".format(os.path.basename(recording.source_file)))
-            for l in available_units:
-                if len(l[1]) != 0:
-                    print("    {}: Group {} with Units {}".format(total, l[0], l[1]))
-                    ok.append([i, l])
+            for available_unit in available_units:
+                if len(available_unit[1]) != 0:
+                    print(
+                        "    {}: Group {} with Units {}".format(
+                            total, available_unit[0], available_unit[1]
+                        )
+                    )
+                    ok.append([i, available_unit])
                     total += 1
         user_inp = input(
             "Please enter the units to analyse or enter the word all or num\n"
@@ -163,14 +238,12 @@ def main(
                     group = int(group.strip())
                     unit_number = int(unit_number.strip())
                     unit_spec_list = [
-                        [i, [unit_number,]]
-                        for i in range(total)
-                        if ok[i][1][0] == group
+                        [i, [unit_number]] for i in range(total) if ok[i][1][0] == group
                     ]
                 else:
                     value = int(user_inp.strip())
-                    unit_spec_list = [[i, [value,]] for i in range(total)]
-            except:
+                    unit_spec_list = [[i, [value]] for i in range(total)]
+            except BaseException:
                 unit_spec_list = []
                 unit_specifications = user_inp.split("|")
                 for u in unit_specifications:
@@ -211,6 +284,7 @@ def main(
                 ]
                 recording.units[record_unit_idx].units_to_use = row[2:]
 
+    # Run the analysis on all the loaded recordings
     analysis_handler = simuran.analysis.analysis_handler.AnalysisHandler()
     pbar = tqdm(range(len(recording_container)))
     for i in pbar:
@@ -219,7 +293,7 @@ def main(
         disp_name = recording_container[i].source_file[
             len(recording_container.base_dir + os.sep) :
         ]
-        # Can include [fn.__name__ for fn in functions] below
+        # Can include [fn.__name__ for fn in functions] below if more info desired
         pbar.set_description("Running on {}".format(disp_name))
         if load_all:
             recording_container[i].available = to_load
@@ -263,7 +337,38 @@ def run(
     default_param_folder=None,
     check_params=False,
 ):
+    """
+    A helper function to assist in running main more readily.
 
+    Parameters
+    ----------
+    in_dir : str
+        The path to the directory or file to consider.
+        TODO consider renaming
+    file_list_name : str, optional
+        The name of the file listing the files to consider.
+    cell_list_name : str, optional
+        The name of the file listing the cells to consider.
+    fn_param_name : str, optional
+        The name of the file listing function parameters.
+    base_param_name : str, optional
+        The name of the file list base parameters.
+    batch_param_name : str, optional
+        The name of the file listing batch parameters.
+    batch_find_name : str, optional
+        The name of the file listing recording parameters.
+    default_param_folder : str or None, optional
+        The folder to look for default parameters in.
+        This is used for creating new parameter files, 
+        the defaults are used as a template.
+    check_params : bool, optional
+        Whether to print the selected parameters (default False).
+
+    Returns
+    -------
+    None
+
+    """
     # TODO extract this into another function
     # TODO get different defaults. EG for NC.
     here = os.path.dirname(__file__)
@@ -282,8 +387,8 @@ def run(
     }
 
     # TODO put this in another file
+    # TODO let the editor be configurable
     t_editor = "notepad++"
-    # t_editor = "code"
     new = False
     for key, value in param_names.items():
         full_name = os.path.join(in_dir, value)

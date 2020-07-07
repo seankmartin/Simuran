@@ -2,8 +2,6 @@ import os
 import shutil
 import numpy as np
 
-from main import run
-
 from simuran.param_handler import ParamHandler
 from skm_pyutils.py_path import get_all_files_in_dir
 
@@ -68,7 +66,7 @@ def csv_merge(
                         for j, val in enumerate(row):
                             try:
                                 to_write = float(val.strip())
-                            except:
+                            except BaseException:
                                 to_write = np.nan
                             data[i, j] = to_write
                     avg = np.nanmean(data, axis=0)

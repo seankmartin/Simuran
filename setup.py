@@ -1,4 +1,5 @@
 import os
+from setuptools import setup, find_packages
 
 
 def read(fname):
@@ -20,8 +21,6 @@ INSTALL_REQUIRES = [
     "numpy >= 1.15.0",
 ]
 
-PACKAGES = ["simuran"]
-
 CLASSIFIERS = [
     "Intended Audience :: Science/Research",
     "Programming Language :: Python :: 3.6",
@@ -34,12 +33,6 @@ CLASSIFIERS = [
     "Operating System :: Windows",
 ]
 
-try:
-    from setuptools import setup
-
-    _has_setuptools = True
-except ImportError:
-    from distutils.core import setup
 
 if __name__ == "__main__":
 
@@ -57,6 +50,6 @@ if __name__ == "__main__":
         download_url=DOWNLOAD_URL,
         install_requires=INSTALL_REQUIRES,
         include_package_data=True,
-        packages=PACKAGES,
+        packages=find_packages(),
         classifiers=CLASSIFIERS,
     )

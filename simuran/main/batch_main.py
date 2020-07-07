@@ -1,4 +1,6 @@
-from main import run
+"""Run a full analysis set."""
+
+from simuran.main.main import run
 from simuran.param_handler import ParamHandler
 
 
@@ -7,9 +9,9 @@ def make_default_dict(add=""):
         "file_list_name": "file_list{}.txt".format(add),
         "cell_list_name": "cell_list{}.txt".format(add),
         "fn_param_name": "simuran_fn_params{}.py".format(add),
-        "base_param_name": "simuran_base_params.py".format(add),
-        "batch_param_name": "simuran_batch_params.py".format(add),
-        "batch_find_name": "simuran_params.py".format(add),
+        "base_param_name": "simuran_base_params.py",
+        "batch_param_name": "simuran_batch_params.py",
+        "batch_find_name": "simuran_params.py",
     }
     return param_names
 
