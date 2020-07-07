@@ -14,7 +14,7 @@ MAINTAINER = "Sean Martin"
 MAINTAINER_EMAIL = "martins7@tcd.ie"
 URL = "https://github.com/seankmartin/SIMURAN"
 DOWNLOAD_URL = "https://github.com/seankmartin/SIMURAN"
-VERSION = "1.0"
+VERSION = "0.0.1"
 
 INSTALL_REQUIRES = [
     "matplotlib >= 3.0.2",
