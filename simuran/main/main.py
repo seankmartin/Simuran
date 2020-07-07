@@ -23,13 +23,13 @@ def main(
     attributes_to_save,
     args_fn=None,
     do_batch_setup=False,
+    verbose_batch_params=False,
     friendly_names=None,
     sort_container_fn=None,
     reverse_sort=False,
     param_name="simuran_params.py",
     batch_name="simuran_batch_params.py",
-    verbose_batch_params=False,
-    load_all=False,
+    load_all=True,
     to_load=["signals", "spatial", "units"],
     select_recordings=None,
     figures=[],
@@ -57,6 +57,8 @@ def main(
         The default value None indicates default parameters will be used.
     do_batch_setup : bool, optional
         Whether to write new parameter files (default False).
+    verbose_batch_params : bool, optional
+        Whether to print extra information about batch parameters (default False).
     friendly_names : list of strings, optional
         A list of names to save attributes_to_save under.
     sort_container_fn : function, optional
@@ -67,10 +69,8 @@ def main(
         Which filename to look for which holds recording information.
     batch_name : str, optional
         Which filename to look for which holds batch information.
-    verbose_batch_params : bool, optional
-        Whether to print extra information about batch parameters (default False).
     load_all : bool, optional
-        Whether to load information about each recording (default False).
+        Whether to load information about each recording (default True).
     to_load : list of strings, optional
         Which items to load on the recording.
         Should be a subset of ["signals", "spatial", "units"]
@@ -100,9 +100,10 @@ def main(
     ------
     ValueError
         If do_batch_setup is True, but location is not a directory.
-        If a valid location is not passed.
         If select_recordings is not None, but location is not a directory.
-        If user input is not detected.
+    FileNotFoundError
+        If a valid location is not passed.
+    LookupError
         Non-existant cells are tried to be selected.
 
     """
@@ -116,6 +117,8 @@ def main(
             in_loc=os.path.join(location, batch_name), name="params"
         )
         # TODO this does not work properly at the moment
+        # TODO overwrite should not be a config setup but a cli param
+        # Same with check params to be honest
         if param_handler["overwrite"] and (not param_handler["only_check"]):
             batch_setup.clear_params(location, to_remove=param_name)
             batch_setup.write_batch_params(verbose_params=verbose_batch_params)
@@ -130,7 +133,9 @@ def main(
             os.path.dirname(location), param_name=param_name, recursive=False
         )
     else:
-        raise ValueError("Please provide a valid location, entered {}".format(location))
+        raise FileNotFoundError(
+            "Please provide a valid location, entered {}".format(location)
+        )
 
     if sort_container_fn is not None:
         print("Sorting the container")
@@ -223,12 +228,15 @@ def main(
                     )
                     ok.append([i, available_unit])
                     total += 1
-        user_inp = input(
-            "Please enter the units to analyse or enter the word all or num\n"
+        input_str = (
+            "Please enter the units to analyse "
+            + "or enter the word all or a single number\n"
             + "Format: Idx: Unit, Unit, Unit | Idx: Unit, Unit, Unit\n"
         )
-        if user_inp == "":
-            raise ValueError("No user input entered")
+        user_inp = input(input_str)
+        while user_inp == "":
+            print("No user input entered, please enter something.\n")
+            user_inp = input(input_str)
         if user_inp != "all":
             final_units = []
             try:
@@ -254,7 +262,7 @@ def main(
             for u in unit_spec_list:
                 for val in u[1]:
                     if val not in ok[u[0]][1][1]:
-                        raise ValueError(
+                        raise LookupError(
                             "{}: {} not in {}".format(u[0], val, ok[u[0]][1][1])
                         )
                 final_units.append([ok[u[0]][0], ok[u[0]][1][0], u[1]])
@@ -336,9 +344,18 @@ def run(
     batch_find_name="simuran_params.py",
     default_param_folder=None,
     check_params=False,
+    text_editor="nano",
+    do_batch_setup=True,
+    verbose_batch_params=False,
 ):
     """
     A helper function to assist in running main more readily.
+
+    The basic purpose of this function is to help set up the correct
+    configuration files and setting the paths to those configuration files.
+
+    The main function has the same functionality without using configuration files
+    if that is preferred.
 
     Parameters
     ----------
@@ -359,14 +376,26 @@ def run(
         The name of the file listing recording parameters.
     default_param_folder : str or None, optional
         The folder to look for default parameters in.
-        This is used for creating new parameter files, 
+        This is used for creating new parameter files,
         the defaults are used as a template.
     check_params : bool, optional
         Whether to print the selected parameters (default False).
+    text_editor : str or None, optional
+        The text editor to use (default nano).
+    do_batch_setup : bool, optional
+        Whether to write new parameter files (default False).
+    verbose_batch_params : bool, optional
+        Whether to print extra information about batch parameters (default False).
 
     Returns
     -------
     None
+
+    Raises
+    ------
+    FileNotFoundError
+        Any parameter file does not exist in the default param folder.
+
 
     """
     # TODO extract this into another function
@@ -379,6 +408,11 @@ def run(
         "base": os.path.join(default_param_folder, "simuran_base_params.py"),
         "batch": os.path.join(default_param_folder, "simuran_batch_params.py"),
     }
+    for name in default_param_names.values():
+        if not os.path.isfile(name):
+            raise FileNotFoundError(
+                "Default parameters do not exist at {}".format(name)
+            )
 
     param_names = {
         "fn": fn_param_name,
@@ -386,35 +420,36 @@ def run(
         "batch": batch_param_name,
     }
 
-    # TODO put this in another file
-    # TODO let the editor be configurable
-    t_editor = "notepad++"
+    os.makedirs(in_dir, exist_ok=True)
     new = False
     for key, value in param_names.items():
-        full_name = os.path.join(in_dir, value)
+        full_name = os.path.abspath(os.path.join(in_dir, value))
         if not os.path.isfile(full_name):
             sim_p = default_param_names[key]
             shutil.copy(sim_p, full_name)
-            args = [t_editor, full_name]
-            print("Running {}".format(args))
+            args = [text_editor, full_name]
             subprocess.run(args)
             new = True
         elif check_params:
-            args = [t_editor, full_name]
-            print("Running {}".format(args))
+            args = [text_editor, full_name]
             subprocess.run(args)
     if check_params:
         full_name = os.path.join(in_dir, file_list_name)
         if os.path.isfile(full_name):
-            args = [t_editor, full_name]
-            print("Running {}".format(args))
+            args = [text_editor, full_name]
             subprocess.run(args)
+
     if new or check_params:
         cont = input("Do you wish to continue with this setup? (y/n)\n")
         if cont.lower() == "n":
+            delete_these = input("Do you wish to delete the setup files? (y/n)\n")
+            if delete_these.lower() == "y":
+                for key, value in param_names.items():
+                    full_name = os.path.join(in_dir, value)
+                    if os.path.isfile(full_name):
+                        os.remove(full_name)
             exit(0)
 
-    # TODO probably put this in main
     fn_param_loc = os.path.join(in_dir, fn_param_name)
     if not os.path.isfile(fn_param_loc):
         raise ValueError(
@@ -428,30 +463,28 @@ def run(
     figures = setup_ph.get("figs", [])
     figure_names = setup_ph.get("fignames", [])
     sort_fn = setup_ph.get("sorting", None)
+    to_load = setup_ph.get("to_load", ["signals", "spatial", "units"])
+    load_all = setup_ph.get("load_all", True)
+    select_recordings = setup_ph.get("select_recordings", True)
 
+    # TODO this dir can be different...
+    # TODO do some renaming on all of this
     main(
         in_dir,
         list_of_functions,
         save_list,
         args_fn=args_fn,
-        do_batch_setup=True,
         sort_container_fn=sort_fn,
-        verbose_batch_params=False,
-        load_all=True,
-        to_load=["units"],
-        select_recordings=True,
         friendly_names=friendly_names,
-        figures=figures,
         figure_names=figure_names,
+        figures=figures,
         param_name=batch_find_name,
         batch_name=batch_param_name,
         cell_list_name=cell_list_name,
         file_list_name=file_list_name,
+        to_load=to_load,
+        load_all=load_all,
+        select_recordings=select_recordings,
+        do_batch_setup=do_batch_setup,
+        verbose_batch_params=verbose_batch_params,
     )
-
-
-if __name__ == "__main__":
-    # in_dir = r"D:\SubRet_recordings_imaging\muscimol_data\CanCSR7_muscimol\2_03082018"
-    in_dir = r"D:\SubRet_recordings_imaging\muscimol_data\CanCSR8_muscimol\05102018"
-    # in_dir = r"D:\ATNx_CA1"
-    run(in_dir)
