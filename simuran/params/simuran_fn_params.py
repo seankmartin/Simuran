@@ -30,7 +30,7 @@ fig_names = ["3_1_ratemap.png", "11_1_ratemap.png"]
 
 
 def sort_fn(x):
-    in_dir = r"dirname"
+    in_dir = "__dirname__"
     comp = x.source_file[len(in_dir) + 1 :]
     order = int(comp.split("_")[0])
     return order
