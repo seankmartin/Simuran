@@ -10,6 +10,7 @@ import simuran.batch_setup
 import simuran.recording_container
 import simuran.analysis.analysis_handler
 import simuran.param_handler
+import simuran.plot.figure
 
 # TODO I want to use pyqt5 here but ill check my later requirements.
 import matplotlib
@@ -339,8 +340,26 @@ def main(
         out_loc, attr_list=attributes_to_save, friendly_names=friendly_names
     )
 
-    for f, name in zip(figures, figure_names):
-        f.savefig(os.path.join(out_dir, "plots", name))
+    for i, f in enumerate(figures):
+        if not isinstance(f, simuran.plot.figure.SimuranFigure):
+            figures[i] = simuran.plot.figure.SimuranFigure(figure=f)
+
+    if len(figure_names) != len(figures):
+        for f in figures:
+            if f.filename is None:
+                f.set_filename("fig{}.png".format(i))
+    else:
+        for f, name in zip(figures, figure_names):
+            f.set_filename(name)
+
+    if verbose_batch_params:
+        print("Plotting all figures to {}".format(os.path.join(out_dir, "plots")))
+
+    for f in figures:
+        # TODO change this to just one verbose
+        if verbose_batch_params:
+            print("Plotting to {}".format(f.get_filename()))
+        f.savefig(os.path.join(out_dir, "plots", f.get_filename()))
 
 
 def run(
