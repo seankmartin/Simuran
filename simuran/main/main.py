@@ -171,10 +171,10 @@ def main(
             print("All units already available at {}".format(help_out_loc))
 
     # Select a subset of all recordings found for use
-    if select_recordings is not None:
+    if (select_recordings is not None) and (select_recordings is not False):
         if not os.path.isdir(location):
             raise ValueError("Can't select recordings with only one")
-        if select_recordings == True:
+        if select_recordings is True:
             select_location = os.path.join(recording_container.base_dir, file_list_name)
             if not os.path.isfile(select_location):
                 idx_list = recording_container.subsample(interactive=True)
@@ -355,6 +355,10 @@ def main(
     if verbose_batch_params:
         print("Plotting all figures to {}".format(os.path.join(out_dir, "plots")))
 
+    # TODO this may cause problems on big batches since the memory would
+    # need to be kept - will need to reconsider.
+    # for example, could have a figure.isdone() method
+    # which checks if ready for saving and boots if so
     for f in figures:
         # TODO change this to just one verbose
         if verbose_batch_params:
