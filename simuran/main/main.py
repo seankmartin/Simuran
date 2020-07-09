@@ -266,31 +266,40 @@ def main(
                             "{}: {} not in {}".format(u[0], val, ok[u[0]][1][1])
                         )
                 final_units.append([ok[u[0]][0], ok[u[0]][1][0], u[1]])
-        with open(cell_location, "w") as f:
-            max_num = max([len(u[2]) for u in final_units])
-            unit_as_string = ["Unit_{}".format(i) for i in range(max_num)]
-            unit_str = ",".join(unit_as_string)
-            f.write("Recording,Group,{}\n".format(unit_str))
-            for u in final_units:
-                units_as_str = [str(val) for val in u[2]]
-                unit_str = ",".join(units_as_str)
-                f.write("{},{},{}\n".format(u[0], u[1], unit_str))
-                recording = recording_container[u[0]]
-                record_unit_idx = recording.units.group_by_property("group", u[1])[1][0]
-                recording.units[record_unit_idx].units_to_use = u[2]
-        print("Saved cells to {}".format(cell_location))
+
+            with open(cell_location, "w") as f:
+                max_num = max([len(u[2]) for u in final_units])
+                unit_as_string = ["Unit_{}".format(i) for i in range(max_num)]
+                unit_str = ",".join(unit_as_string)
+                f.write("Recording,Group,{}\n".format(unit_str))
+                for u in final_units:
+                    units_as_str = [str(val) for val in u[2]]
+                    unit_str = ",".join(units_as_str)
+                    f.write("{},{},{}\n".format(u[0], u[1], unit_str))
+                    recording = recording_container[u[0]]
+                    record_unit_idx = recording.units.group_by_property("group", u[1])[
+                        1
+                    ][0]
+                    recording.units[record_unit_idx].units_to_use = u[2]
+                print("Saved cells to {}".format(cell_location))
+        else:
+            # TODO check the logic for using all units
+            with open(cell_location, "w") as f:
+                f.write("all")
+
     else:
         print("Loading cells from {}".format(cell_location))
         with open(cell_location, "r") as f:
-            reader = csv.reader(f, delimiter=",")
-            next(reader)
-            for row in reader:
-                row = [int(x.strip()) for x in row]
-                recording = recording_container[row[0]]
-                record_unit_idx = recording.units.group_by_property("group", row[1])[1][
-                    0
-                ]
-                recording.units[record_unit_idx].units_to_use = row[2:]
+            if f.readline().strip().lower() != "all":
+                reader = csv.reader(f, delimiter=",")
+                next(reader)
+                for row in reader:
+                    row = [int(x.strip()) for x in row]
+                    recording = recording_container[row[0]]
+                    record_unit_idx = recording.units.group_by_property(
+                        "group", row[1]
+                    )[1][0]
+                    recording.units[record_unit_idx].units_to_use = row[2:]
 
     # Run the analysis on all the loaded recordings
     analysis_handler = simuran.analysis.analysis_handler.AnalysisHandler()
@@ -463,6 +472,8 @@ def run(
     figures = setup_ph.get("figs", [])
     figure_names = setup_ph.get("fignames", [])
     sort_fn = setup_ph.get("sorting", None)
+    # TODO put these into default and in general update default
+    # TODO get dirname to work in the config
     to_load = setup_ph.get("to_load", ["signals", "spatial", "units"])
     load_all = setup_ph.get("load_all", True)
     select_recordings = setup_ph.get("select_recordings", True)
