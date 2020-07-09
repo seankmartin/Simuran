@@ -1,6 +1,8 @@
 """A command line interface into SIMURAN."""
 import argparse
 import simuran.main
+import simuran.batch_setup
+import os
 
 
 def main():
@@ -38,6 +40,12 @@ def main():
         action="store_true",
         help="whether to print extra information during runtime",
     )
+    parser.add_argument(
+        "--grab_params",
+        "-g",
+        action="store_true",
+        help="whether to grab all parameters from location",
+    )
 
     parsed, unparsed = parser.parse_known_args()
     if len(unparsed) > 0:
@@ -47,6 +55,16 @@ def main():
         # TODO set this up properly
         simuran.main.batch_main.main([], [])
 
+    elif parsed.grab_params:
+        output_location = os.path.join(
+            os.path.dirname(parsed.location),
+            "..",
+            "simuran_params--" + os.path.basename(parsed.location),
+        )
+        print(
+            "Copying parameters from {} to {}".format(parsed.location, output_location)
+        )
+        simuran.batch_setup.BatchSetup.copy_params(parsed.location, output_location)
     else:
         # TODO probably just make one verbose option instead of many
         simuran.main.main.run(
