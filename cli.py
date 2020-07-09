@@ -58,7 +58,6 @@ def main():
     elif parsed.grab_params:
         output_location = os.path.join(
             os.path.dirname(parsed.location),
-            "..",
             "simuran_params--" + os.path.basename(parsed.location),
         )
         print(

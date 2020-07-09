@@ -111,10 +111,27 @@ def setup_sorting():
     return sort_fn
 
 
+def setup_loading():
+    """Establish how recordings are loaded."""
+    # Indicates if all information on a recording is loaded in bulk, or as needed
+    load_all = False
+
+    # If load_all is True, indicates what is loaded in bulk
+    # Should be a subset of ["signals", "spatial", "units"]
+    to_load = ["signals", "spatial", "units"]
+
+    # Whether a subset of recordings should be considered
+    # True opens a console to help choose, but a list of indices can be passed
+    select_recordings = True
+
+    return load_all, to_load, select_recordings
+
+
 functions, args_func = setup_functions()
 save_list, output_names = setup_output()
 figs, fig_names = setup_figures()
 sort_fn = setup_sorting()
+load_all, to_load, select_recordings = setup_loading()
 fn_params = {
     "run": functions,
     "args": args_func,
@@ -123,4 +140,7 @@ fn_params = {
     "figs": figs,
     "fignames": fig_names,
     "sorting": sort_fn,
+    "load_all": load_all,
+    "to_load": to_load,
+    "select_recordings": select_recordings,
 }
