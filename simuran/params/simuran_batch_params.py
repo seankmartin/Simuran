@@ -12,13 +12,14 @@ only_check = False
 # If True, opens an interactive console to help design your regex_filters.
 interactive = True
 
-# Please include either mapping or mapping_file.
+# Please include a path to mapping_file, or setup the mapping dictionary.
 # This will determine which parameters are used in proceeding analysis.
+# mapping directly specifies parameters, so mapping_file is preferred
 mapping = {}  # see default_params.py to set this up
 
-# Absolute path to a file that contains the mapping.
 # If left as empty string, will create an absolute path from the relative path.
 directory = ""
+# Absolute path to a file that contains the mapping.
 mapping_file = os.path.join(directory, "simuran_base_params.py")
 
 # The basename of the output parameter files.

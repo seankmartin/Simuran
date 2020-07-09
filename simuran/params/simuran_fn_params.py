@@ -1,44 +1,123 @@
-from skm_pyutils.py_plot import GridFig
-
-grid_fig1 = GridFig(rows=3, cols=6, traverse_rows=False)
-grid_fig2 = GridFig(rows=3, cols=6, traverse_rows=False)
-
-
-def run(recording_container, idx, figures):
-    arguments = {}
-    if idx == 5:
-        arguments["frate"] = {"0": [3, 1], "1": [10, 1]}
-        arguments["place_field"] = {"0": [figures[0], 3, 1], "1": [figures[1], 10, 1]}
-    else:
-        arguments["frate"] = {"0": [3, 1], "1": [11, 1]}
-        arguments["place_field"] = {"0": [figures[0], 3, 1], "1": [figures[1], 11, 1]}
-    return arguments
+"""
+The simuran_fn_params are used to control the functions
+that will be performed on each recording in a loaded container.
+"""
 
 
-save_list = []
-save_list.append(("results", "frate_0"))
-save_list.append(("results", "frate_1"))
+def setup_functions():
+    """Establish the functions to run and arguments to pass."""
 
-import simuran.analysis.custom.nc as nc
+    # The list of functions to run, in order
+    # Each function should take as its first argument a recording object
+    functions = []
 
-functions = [nc.frate, nc.place_field]
+    def argument_handler(recording_container, idx, figures):
+        """
+        Set up what arguments should be passed to the functions.
 
-output_names = ["3_1_rate", "11_1_rate"]
+        Given recording_container, idx, and figures
+        this should return all arguments for this run.
 
-figs = [grid_fig1, grid_fig2]
-fig_names = ["3_1_ratemap.png", "11_1_ratemap.png"]
+        This can be used to run the same function many times
+        with different parameters, by providing an argument. E.g.
+        def add(recording, num1, num2):
+            return num1 + num2
+        functions = ["add"]
+        arguments["add"] = {"0": 1, 2, "1": 2, 3}
+        would add 1 and 2, and then separately add 2 and 3
+
+        Parameters
+        ----------
+        recording_container : simuran.recordingcontainer.RecordingContainer
+            The recording container object that is in use
+        idx : int
+            The index of the current recording_container item in use
+        figures : list of matplotlib figure or simuran SimuranFigure objects
+            The list of figures in use.
+            This can be used to plot into axes of specific figures,
+            or can be appended to in order to store figures.
+
+        Returns
+        -------
+        dict
+            The arguments to use for each function in functions
+
+        """
+        arguments = {}
+        return arguments
+
+    return functions, argument_handler
 
 
-def sort_fn(x):
-    in_dir = "__dirname__"
-    comp = x.source_file[len(in_dir) + 1 :]
-    order = int(comp.split("_")[0])
-    return order
+def setup_figures():
+    """
+    Establish the figures that will be used.
+
+    This is mostly used if you need to make a big
+    grid plot and plot into specific axes.
+
+    See also
+    --------
+    skm_pyutils.py_plot.GridFig
+
+    """
+    # The list of figures to use
+    figs = []
+
+    # The name for each figure provided
+    fig_names = []
+
+    return figs, fig_names
 
 
+def setup_output():
+    """Establish what results of the functions will be saved."""
+
+    # This should list the results to save to a csv
+    save_list = []
+
+    # You can name each of these outputs
+    output_names = []
+
+    return save_list, output_names
+
+
+def setup_sorting():
+    """If you don't need to do sorting, simply return None."""
+
+    def sort_fn(x):
+        """
+        Establish a sorting function for recordings in a container.
+
+        Note
+        ----
+        "__dirname__" is a magic string that can be used to obtain
+        the absolute path to the directory this file is in
+        so you don't have to hard code it.
+
+        Returns
+        -------
+        object
+            any object with a defined ordering function.
+            for example, an integer
+
+        """
+        in_dir = "__dirname__"
+        comp = x.source_file[len(in_dir) + 1 :]
+        return comp
+
+    # Use return None to do no sorting
+    # return None
+    return sort_fn
+
+
+functions, args_func = setup_functions()
+save_list, output_names = setup_output()
+figs, fig_names = setup_figures()
+sort_fn = setup_sorting()
 fn_params = {
     "run": functions,
-    "args": run,
+    "args": args_func,
     "save": save_list,
     "names": output_names,
     "figs": figs,
