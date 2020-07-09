@@ -1,3 +1,8 @@
+"""
+simuran_batch_params.py is used to handle the 
+behaviour of analysis that recourses through child directories.
+"""
+
 import os
 
 # regex_filters should be a list of regex patterns to match against.

@@ -116,7 +116,7 @@ class ParamHandler:
         while True:
             this_re_filt = input(
                 "Please enter the regexes seperated by SIM_SEP to test or"
-                + "quit / qt to continue with the current selection:\n"
+                + " quit / qt to continue with the current selection:\n"
             )
             done = (this_re_filt.lower() == "quit") or (this_re_filt.lower() == "qt")
             if done:
