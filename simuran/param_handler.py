@@ -75,7 +75,7 @@ class ParamHandler:
         dirs = get_dirs_matching_regex(
             start_dir, re_filters=re_filters, return_absolute=return_absolute
         )
-        dirs = [d for d in dirs if "__pycache__" not in d]
+        dirs = [d for d in dirs if ("__pycache__" not in d) and (d != "")]
 
         if check_only:
             if exact_file is None:
@@ -112,13 +112,18 @@ class ParamHandler:
 
     def interactive_refilt(self, start_dir):
         re_filt = ""
-        dirs = []
+        dirs = self.batch_write(
+            start_dir, re_filters=None, check_only=True, return_absolute=False
+        )
         while True:
             this_re_filt = input(
                 "Please enter the regexes seperated by SIM_SEP to test or"
-                + " quit / qt to continue with the current selection:\n"
+                + " ok to continue with the current selection"
+                + ", or exit to kill the whole program:\n"
             )
-            done = (this_re_filt.lower() == "quit") or (this_re_filt.lower() == "qt")
+            if this_re_filt.lower().strip() == "exit":
+                exit(-1)
+            done = this_re_filt.lower().strip() == "ok"
             if done:
                 break
             if this_re_filt == "":
