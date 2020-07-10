@@ -23,7 +23,7 @@ def main():
     )
     parser.add_argument(
         "--check_params",
-        "-p",
+        "-c",
         action="store_true",
         help="whether to check input parameter files before running",
     )

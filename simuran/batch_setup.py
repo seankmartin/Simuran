@@ -15,10 +15,13 @@ class BatchSetup(object):
     batch_setup.write_batch_params()
     """
 
-    def __init__(self, in_dir, fname="simuran_batch_params.py"):
+    def __init__(self, in_dir, fpath="simuran_batch_params.py"):
         self.in_dir = in_dir
-        self.fname = fname
-        self.file_loc = os.path.join(self.in_dir, self.fname)
+        if not os.path.isfile(fpath):
+            if os.path.isfile(os.path.join(self.in_dir, fpath)):
+                self.file_loc = os.path.join(self.in_dir, fpath)
+        else:
+            self.file_loc = fpath
         self.setup()
 
     def setup(self):
@@ -70,6 +73,10 @@ class BatchSetup(object):
         check_only = self.ph["only_check"]
         overwrite = self.ph["overwrite"]
         re_filts = self.ph["regex_filters"]
+        delete_old_files = self.ph["delete_old_files"]
+
+        if delete_old_files:
+            BatchSetup.clear_params(self.in_dir, to_remove=self.ph["out_basename"])
 
         if verbose_params:
             if self._bad_file:

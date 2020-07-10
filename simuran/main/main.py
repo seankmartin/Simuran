@@ -113,23 +113,25 @@ def main(
     if do_batch_setup:
         if not os.path.isdir(location):
             raise ValueError("Please provide a directory, entered {}".format(location))
-        batch_setup = simuran.batch_setup.BatchSetup(location, fname=batch_name)
+        batch_setup = simuran.batch_setup.BatchSetup(location, fpath=batch_name)
         print("Running batch setup {}".format(batch_setup))
-        param_handler = simuran.param_handler.ParamHandler(
-            in_loc=os.path.join(location, batch_name), name="params"
+        batch_setup.write_batch_params(
+            verbose_params=False, verbose=verbose_batch_params
         )
-        # TODO this does not work properly at the moment
-        # TODO overwrite should not be a config setup but a cli param
-        # Same with check params to be honest
-        if param_handler["overwrite"] and (not param_handler["only_check"]):
-            batch_setup.clear_params(location, to_remove=param_name)
-            batch_setup.write_batch_params(verbose_params=verbose_batch_params)
 
     # Setup the recording_container
     # TODO only parse things to be selected
     recording_container = simuran.recording_container.RecordingContainer()
     if os.path.isdir(location):
-        recording_container.auto_setup(location, param_name=param_name, recursive=True)
+        batch_params = simuran.param_handler.ParamHandler(
+            in_loc=os.path.join(location, batch_name), name="params"
+        )
+        recording_container.auto_setup(
+            location,
+            param_name=batch_params["out_basename"],
+            recursive=True,
+            batch_regex_filters=batch_params["regex_filters"],
+        )
     elif os.path.isfile(location):
         recording_container.auto_setup(
             os.path.dirname(location), param_name=param_name, recursive=False
@@ -176,6 +178,7 @@ def main(
             print("All units already available at {}".format(help_out_loc))
 
     # Select a subset of all recordings found for use
+    # TODO this might need to be per function...
     if (select_recordings is not None) and (select_recordings is not False):
         if not os.path.isdir(location):
             raise ValueError("Can't select recordings with only one")

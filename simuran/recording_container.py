@@ -6,6 +6,7 @@ from copy import deepcopy
 from simuran.containers import AbstractContainer
 from simuran.recording import Recording
 from skm_pyutils.py_path import get_all_files_in_dir
+from skm_pyutils.py_path import get_dirs_matching_regex
 
 
 class RecordingContainer(AbstractContainer):
@@ -16,13 +17,14 @@ class RecordingContainer(AbstractContainer):
         self.last_loaded_idx = None
         self.base_dir = None
 
+    # TODO removing subset parameter but probably need it back
     def auto_setup(
         self,
         start_dir,
         param_name="simuran_params.py",
         recursive=True,
-        re_filter=None,
-        subset=None,
+        file_regex_filter=None,
+        batch_regex_filters=None,
         verbose=False,
     ):
         fnames = get_all_files_in_dir(
@@ -31,17 +33,21 @@ class RecordingContainer(AbstractContainer):
             return_absolute=True,
             recursive=recursive,
             case_sensitive_ext=True,
-            re_filter=re_filter,
+            re_filter=file_regex_filter,
         )
-        return self.setup(fnames, start_dir, param_name=param_name)
+        dirs = get_dirs_matching_regex(
+            start_dir, re_filters=batch_regex_filters, return_absolute=True
+        )
+        dirs = [d for d in dirs if ("__pycache__" not in d) and (d != "")]
+        fnames = [
+            fname
+            for fname in fnames
+            if (os.path.dirname(fname) in dirs)
+            and (os.path.basename(fname) == param_name)
+        ]
+        return self.setup(fnames, start_dir)
 
-    def setup(
-        self, filenames, start_dir, param_name="simuran_params.py", verbose=False
-    ):
-        param_files = []
-        for fname in filenames:
-            if os.path.basename(fname) == param_name:
-                param_files.append(fname)
+    def setup(self, param_files, start_dir, verbose=False):
         should_load = not self.load_on_fly
         out_str_load = "Loading" if should_load else "Parsing"
         for i, param_file in enumerate(param_files):

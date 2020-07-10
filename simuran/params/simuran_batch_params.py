@@ -1,5 +1,5 @@
 """
-simuran_batch_params.py is used to handle the 
+simuran_batch_params.py is used to handle the
 behaviour of analysis that recourses through child directories.
 """
 
@@ -30,6 +30,10 @@ mapping_file = os.path.join(directory, "simuran_base_params.py")
 # The basename of the output parameter files.
 out_basename = "simuran_params.py"
 
+# Should all parameter files be deleted that match out_basename
+# And exist in a child directory of the starting directory
+delete_old_files = False
+
 params = {
     "regex_filters": regex_filters,
     "overwrite": overwrite,
@@ -38,4 +42,5 @@ params = {
     "mapping": mapping,
     "mapping_file": mapping_file,
     "out_basename": out_basename,
+    "delete_old_files": delete_old_files,
 }

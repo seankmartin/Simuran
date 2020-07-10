@@ -107,7 +107,9 @@ class ParamHandler:
                     )
                 if verbose:
                     print("Copying from {} to {}".format(exact_file, write_loc))
-                shutil.copy(exact_file, write_loc)
+                if overwrite or not os.path.isfile(write_loc):
+                    shutil.copy(exact_file, write_loc)
+
         return dirs
 
     def interactive_refilt(self, start_dir):
