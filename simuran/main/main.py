@@ -104,6 +104,7 @@ def main(
         If select_recordings is not None, but location is not a directory.
     FileNotFoundError
         If a valid location is not passed.
+        If no recordings are found in the location passed
     LookupError
         Non-existant cells are tried to be selected.
 
@@ -137,6 +138,10 @@ def main(
         raise FileNotFoundError(
             "Please provide a valid location, entered {}".format(location)
         )
+
+    print(recording_container)
+    if len(recording_container) == 0:
+        raise FileNotFoundError("No recordings found.")
 
     if sort_container_fn is not None:
         print("Sorting the container")
@@ -368,9 +373,9 @@ def main(
 
 def run(
     in_dir,
+    fn_param_loc,
     file_list_name="file_list.txt",
     cell_list_name="cell_list.txt",
-    fn_param_name="simuran_fn_params.py",
     base_param_name="simuran_base_params.py",
     batch_param_name="simuran_batch_params.py",
     batch_find_name="simuran_params.py",
@@ -394,12 +399,13 @@ def run(
     in_dir : str
         The path to the directory or file to consider.
         TODO consider renaming
+    fn_param_loc : str
+        The path to a config file listing the function parameters.
+        If it does not exist, it will be created with the default params.
     file_list_name : str, optional
         The name of the file listing the files to consider.
     cell_list_name : str, optional
         The name of the file listing the cells to consider.
-    fn_param_name : str, optional
-        The name of the file listing function parameters.
     base_param_name : str, optional
         The name of the file list base parameters.
     batch_param_name : str, optional
@@ -447,15 +453,15 @@ def run(
             )
 
     param_names = {
-        "fn": fn_param_name,
-        "base": base_param_name,
-        "batch": batch_param_name,
+        "fn": fn_param_loc,
+        "base": os.path.abspath(os.path.join(in_dir, base_param_name)),
+        "batch": os.path.abspath(os.path.join(in_dir, batch_param_name)),
     }
 
     os.makedirs(in_dir, exist_ok=True)
     new = False
     for key, value in param_names.items():
-        full_name = os.path.abspath(os.path.join(in_dir, value))
+        full_name = value
         if not os.path.isfile(full_name):
             sim_p = default_param_names[key]
             shutil.copy(sim_p, full_name)
@@ -465,11 +471,6 @@ def run(
         elif check_params:
             args = [text_editor, full_name]
             subprocess.run(args)
-    if check_params:
-        full_name = os.path.join(in_dir, file_list_name)
-        if os.path.isfile(full_name):
-            args = [text_editor, full_name]
-            subprocess.run(args)
 
     if new or check_params:
         cont = input("Do you wish to continue with this setup? (y/n)\n")
@@ -477,16 +478,16 @@ def run(
             delete_these = input("Do you wish to delete the setup files? (y/n)\n")
             if delete_these.lower() == "y":
                 for key, value in param_names.items():
-                    full_name = os.path.join(in_dir, value)
+                    full_name = value
                     if os.path.isfile(full_name):
                         os.remove(full_name)
             exit(0)
 
-    fn_param_loc = os.path.join(in_dir, fn_param_name)
     if not os.path.isfile(fn_param_loc):
         raise ValueError(
             "Please create a file listing params at {}".format(fn_param_loc)
         )
+
     setup_ph = simuran.param_handler.ParamHandler(in_loc=fn_param_loc, name="fn_params")
     list_of_functions = setup_ph["run"]
     save_list = setup_ph["save"]
@@ -495,8 +496,6 @@ def run(
     figures = setup_ph.get("figs", [])
     figure_names = setup_ph.get("fignames", [])
     sort_fn = setup_ph.get("sorting", None)
-    # TODO put these into default and in general update default
-    # TODO get dirname to work in the config
     to_load = setup_ph.get("to_load", ["signals", "spatial", "units"])
     load_all = setup_ph.get("load_all", True)
     select_recordings = setup_ph.get("select_recordings", True)

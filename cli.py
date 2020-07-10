@@ -8,16 +8,15 @@ import os
 def main():
     description = "Command line arguments"
     parser = argparse.ArgumentParser(description)
+    # TODO refactor to support optional
+    parser.add_argument(
+        "function_config_path",
+        type=str,
+        help="path to configuration file for functions to run",
+    )
     parser.add_argument("location", type=str, help="where to run the program")
     parser.add_argument(
         "--editor", "-e", type=str, default="nano", help="the text editor to use"
-    )
-    parser.add_argument(
-        "--cfg_name",
-        "-n",
-        type=str,
-        default="simuran_fn_params.py",
-        help="the name of the configuration file",
     )
     parser.add_argument(
         "--recursive", "-r", action="store_true", help="whether to run in a batch"
@@ -70,7 +69,7 @@ def main():
             parsed.location,
             text_editor=parsed.editor,
             check_params=parsed.check_params,
-            fn_param_name=parsed.cfg_name,
+            fn_param_loc=parsed.function_config_path,
             do_batch_setup=not parsed.skip_batch_setup,
             verbose_batch_params=parsed.verbose,
         )

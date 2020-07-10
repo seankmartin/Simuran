@@ -3,7 +3,7 @@
 from simuran.main.main import run
 from simuran.param_handler import ParamHandler
 
-
+# TODO may need to fix this since changed run function param loc
 def make_default_dict(add=""):
     param_names = {
         "file_list_name": "file_list{}.txt".format(add),
