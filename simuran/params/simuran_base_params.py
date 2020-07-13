@@ -47,7 +47,7 @@ def setup_units():
     regions = ["CA1"] * num_groups
 
     # A group number for each group, for example the tetrode number
-    groups = [i for i in range(16)]
+    groups = [i for i in range(num_groups)]
 
     output_dict = {
         "num_groups": num_groups,

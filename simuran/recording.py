@@ -114,6 +114,7 @@ class Recording(BaseSimuran):
                 return
             self.source_file = base
 
+        # TODO this could possibly have different classes for diff loaders
         self.signals = GenericContainer(AbstractSignal)
         if "signals" in self.param_handler.keys():
             self.available.append("signals")

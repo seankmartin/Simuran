@@ -20,6 +20,7 @@ interactive = True
 # Please include a path to mapping_file, or setup the mapping dictionary.
 # This will determine which parameters are used in proceeding analysis.
 # mapping directly specifies parameters, so mapping_file is preferred
+# TODO does this work properly in main?
 mapping = {}  # see default_params.py to set this up
 
 # If left as empty string, will create an absolute path from the relative path.

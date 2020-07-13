@@ -50,7 +50,7 @@ class ParamHandler:
         self.set_param_dict(read_python(in_loc)[self._param_name])
 
     def get(self, key, default=None):
-        if key in self.params.keys():
+        if key in self.keys():
             return self[key]
         else:
             return default
