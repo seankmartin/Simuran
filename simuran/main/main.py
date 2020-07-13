@@ -461,13 +461,22 @@ def run(
         "batch": os.path.abspath(os.path.join(in_dir, batch_param_name)),
     }
 
+    # Grab the basename from batch params if it exists
+    if os.path.isfile(param_names["batch"]):
+        param_names["base"] = simuran.param_handler.ParamHandler(
+            in_loc=param_names["batch"]
+        ).get("mapping_file", None)
+
     os.makedirs(in_dir, exist_ok=True)
     new = False
+    made_files = []
     for key, value in param_names.items():
         full_name = value
+        made_files.append(False)
         if not os.path.isfile(full_name):
             sim_p = default_param_names[key]
             shutil.copy(sim_p, full_name)
+            made_files[-1] = True
             args = [text_editor, full_name]
             subprocess.run(args)
             new = True
@@ -478,11 +487,13 @@ def run(
     if new or check_params:
         cont = input("Do you wish to continue with this setup? (y/n)\n")
         if cont.lower() == "n":
-            delete_these = input("Do you wish to delete the setup files? (y/n)\n")
+            delete_these = input(
+                "Do you wish to delete the created setup files? (y/n)\n"
+            )
             if delete_these.lower() == "y":
-                for key, value in param_names.items():
+                for (key, value), made in zip(param_names.items(), made_files):
                     full_name = value
-                    if os.path.isfile(full_name):
+                    if os.path.isfile(full_name) and made:
                         os.remove(full_name)
             exit(0)
 
