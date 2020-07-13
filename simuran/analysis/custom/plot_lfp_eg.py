@@ -20,4 +20,4 @@ def main(recording, figures, base_dir):
             + "--"
             + name
         )
-        figures.append(SimuranFigure(figure, name, dpi=5, format="png"))
+        figures.append(SimuranFigure(figure, name, dpi=40, format="png"))
