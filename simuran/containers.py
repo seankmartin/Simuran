@@ -87,7 +87,7 @@ class AbstractContainer(ABC):
             )
             save_mixed_dict_to_csv(data, out_dir_list[i], name_list[i])
 
-    def save_summary_data(self, location, attr_list, friendly_names=None):
+    def save_summary_data(self, location, attr_list, friendly_names=None, decimals=3):
         """
         This saves one file for the whole container, each row is an object.
         """
@@ -101,13 +101,29 @@ class AbstractContainer(ABC):
                 self[i].source_name = None
         if friendly_names is not None:
             friendly_names = ["Recording directory", "Recording name"] + friendly_names
-        data_list = self.data_from_attr_list(attr_list, friendly_names=friendly_names)
+        data_list = self.data_from_attr_list(
+            attr_list, friendly_names=friendly_names, decimals=decimals
+        )
         save_dicts_to_csv(location, data_list)
 
-    def data_from_attr_list(self, attr_list, friendly_names=None, idx=None):
+    def data_from_attr_list(self, attr_list, friendly_names=None, idx=None, decimals=3):
         def get_single(item, attr_list):
             if isinstance(item, BaseSimuran):
                 data = item.data_dict_from_attr_list(attr_list, friendly_names)
+                try:
+                    round(data, decimals)
+                except BaseException:
+                    try:
+                        data = np.round(data, decimals)
+                    except BaseException:
+                        try:
+                            for key, value in data.items():
+                                try:
+                                    data[key] = round(value, decimals)
+                                except BaseException:
+                                    pass
+                        except BaseException:
+                            pass
             else:
                 raise ValueError(
                     "data_from_attr_list is only called on BaseSimuran objects"

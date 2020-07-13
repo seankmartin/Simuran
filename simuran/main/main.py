@@ -39,6 +39,7 @@ def main(
     file_list_name="file_list.txt",
     print_all_cells=True,
     do_cell_picker=True,
+    decimals=3,
 ):
     """
     Run the main control functionality.
@@ -95,6 +96,8 @@ def main(
         Whether to save a file containing all the cells found (default True).
     do_cell_picker : bool, optional
         Whether to start a cell picking helper (default True).
+    decimals : int, optional
+        The number of decimals to round to in output (default 3).
 
     Returns
     -------
@@ -371,7 +374,10 @@ def main(
     out_dir = os.path.join(recording_container.base_dir, "sim_results", whole_time)
     out_loc = os.path.join(out_dir, out_name)
     recording_container.save_summary_data(
-        out_loc, attr_list=attributes_to_save, friendly_names=friendly_names
+        out_loc,
+        attr_list=attributes_to_save,
+        friendly_names=friendly_names,
+        decimals=decimals,
     )
 
     for i, f in enumerate(figures):
