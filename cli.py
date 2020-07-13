@@ -45,6 +45,12 @@ def main():
         action="store_true",
         help="whether to grab all parameters from location",
     )
+    parser.add_argument(
+        "--do_cell_picker",
+        "-d",
+        action="store_true",
+        help="whether to launch an interactive cell picker",
+    )
 
     parsed, unparsed = parser.parse_known_args()
     if len(unparsed) > 0:
@@ -71,6 +77,7 @@ def main():
             check_params=parsed.check_params,
             fn_param_loc=parsed.function_config_path,
             do_batch_setup=not parsed.skip_batch_setup,
+            do_cell_picker=parsed.do_cell_picker,
             verbose_batch_params=parsed.verbose,
         )
 

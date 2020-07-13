@@ -38,6 +38,7 @@ def main(
     cell_list_name="cell_list.txt",
     file_list_name="file_list.txt",
     print_all_cells=True,
+    do_cell_picker=True,
 ):
     """
     Run the main control functionality.
@@ -92,6 +93,8 @@ def main(
         The filename to look for that describes the files to consider.
     print_all_cells : bool, optional
         Whether to save a file containing all the cells found (default True).
+    do_cell_picker : bool, optional
+        Whether to start a cell picking helper (default True).
 
     Returns
     -------
@@ -131,7 +134,7 @@ def main(
         batch_setup = simuran.batch_setup.BatchSetup(location, fpath=batch_name)
         print("Running batch setup {}".format(batch_setup))
         batch_setup.write_batch_params(
-            verbose_params=False, verbose=verbose_batch_params
+            verbose_params=True, verbose=verbose_batch_params
         )
         if batch_setup.ph["only_check"]:
             print("Done checking batch setup.")
@@ -160,7 +163,6 @@ def main(
             "Please provide a valid location, entered {}".format(location)
         )
 
-    print(recording_container)
     if len(recording_container) == 0:
         raise FileNotFoundError("No recordings found.")
 
@@ -239,81 +241,86 @@ def main(
     # TODO this makes no sense if only LFP needed.
     cell_location = os.path.join(in_dir, cell_list_name)
     if not os.path.isfile(cell_location):
-        print("Starting unit select helper")
-        total = 0
-        ok = []
-        for i in range(len(recording_container)):
-            recording_container[i].available = ["units"]
-            recording = recording_container.get(i)
-            available_units = recording.get_available_units()
-            print("--------{}--------".format(os.path.basename(recording.source_file)))
-            for available_unit in available_units:
-                if len(available_unit[1]) != 0:
-                    print(
-                        "    {}: Group {} with Units {}".format(
-                            total, available_unit[0], available_unit[1]
+        if do_cell_picker:
+            print("Starting unit select helper")
+            total = 0
+            ok = []
+            for i in range(len(recording_container)):
+                recording_container[i].available = ["units"]
+                recording = recording_container.get(i)
+                available_units = recording.get_available_units()
+                print(
+                    "--------{}--------".format(os.path.basename(recording.source_file))
+                )
+                for available_unit in available_units:
+                    if len(available_unit[1]) != 0:
+                        print(
+                            "    {}: Group {} with Units {}".format(
+                                total, available_unit[0], available_unit[1]
+                            )
                         )
-                    )
-                    ok.append([i, available_unit])
-                    total += 1
-        input_str = (
-            "Please enter the units to analyse "
-            + "or enter the word all or a single number\n"
-            + "Format: Idx: Unit, Unit, Unit | Idx: Unit, Unit, Unit\n"
-        )
-        user_inp = input(input_str)
-        while user_inp == "":
-            print("No user input entered, please enter something.\n")
+                        ok.append([i, available_unit])
+                        total += 1
+            input_str = (
+                "Please enter the units to analyse "
+                + "or enter the word all or a single number\n"
+                + "Format: Idx: Unit, Unit, Unit | Idx: Unit, Unit, Unit\n"
+            )
             user_inp = input(input_str)
-        if user_inp != "all":
-            final_units = []
-            try:
-                parts = user_inp.strip().split("_")
-                if len(parts) == 2:
-                    group, unit_number = parts
-                    group = int(group.strip())
-                    unit_number = int(unit_number.strip())
-                    unit_spec_list = [
-                        [i, [unit_number]] for i in range(total) if ok[i][1][0] == group
-                    ]
-                else:
-                    value = int(user_inp.strip())
-                    unit_spec_list = [[i, [value]] for i in range(total)]
-            except BaseException:
-                unit_spec_list = []
-                unit_specifications = user_inp.split("|")
-                for u in unit_specifications:
-                    parts = u.split(":")
-                    idx = int(parts[0].strip())
-                    units = [int(x.strip()) for x in parts[1].split(",")]
-                    unit_spec_list.append([idx, units])
-            for u in unit_spec_list:
-                for val in u[1]:
-                    if val not in ok[u[0]][1][1]:
-                        raise LookupError(
-                            "{}: {} not in {}".format(u[0], val, ok[u[0]][1][1])
-                        )
-                final_units.append([ok[u[0]][0], ok[u[0]][1][0], u[1]])
+            while user_inp == "":
+                print("No user input entered, please enter something.\n")
+                user_inp = input(input_str)
+            if user_inp != "all":
+                final_units = []
+                try:
+                    parts = user_inp.strip().split("_")
+                    if len(parts) == 2:
+                        group, unit_number = parts
+                        group = int(group.strip())
+                        unit_number = int(unit_number.strip())
+                        unit_spec_list = [
+                            [i, [unit_number]]
+                            for i in range(total)
+                            if ok[i][1][0] == group
+                        ]
+                    else:
+                        value = int(user_inp.strip())
+                        unit_spec_list = [[i, [value]] for i in range(total)]
+                except BaseException:
+                    unit_spec_list = []
+                    unit_specifications = user_inp.split("|")
+                    for u in unit_specifications:
+                        parts = u.split(":")
+                        idx = int(parts[0].strip())
+                        units = [int(x.strip()) for x in parts[1].split(",")]
+                        unit_spec_list.append([idx, units])
+                for u in unit_spec_list:
+                    for val in u[1]:
+                        if val not in ok[u[0]][1][1]:
+                            raise LookupError(
+                                "{}: {} not in {}".format(u[0], val, ok[u[0]][1][1])
+                            )
+                    final_units.append([ok[u[0]][0], ok[u[0]][1][0], u[1]])
 
-            with open(cell_location, "w") as f:
-                max_num = max([len(u[2]) for u in final_units])
-                unit_as_string = ["Unit_{}".format(i) for i in range(max_num)]
-                unit_str = ",".join(unit_as_string)
-                f.write("Recording,Group,{}\n".format(unit_str))
-                for u in final_units:
-                    units_as_str = [str(val) for val in u[2]]
-                    unit_str = ",".join(units_as_str)
-                    f.write("{},{},{}\n".format(u[0], u[1], unit_str))
-                    recording = recording_container[u[0]]
-                    record_unit_idx = recording.units.group_by_property("group", u[1])[
-                        1
-                    ][0]
-                    recording.units[record_unit_idx].units_to_use = u[2]
-                print("Saved cells to {}".format(cell_location))
-        else:
-            # TODO check the logic for using all units
-            with open(cell_location, "w") as f:
-                f.write("all")
+                with open(cell_location, "w") as f:
+                    max_num = max([len(u[2]) for u in final_units])
+                    unit_as_string = ["Unit_{}".format(i) for i in range(max_num)]
+                    unit_str = ",".join(unit_as_string)
+                    f.write("Recording,Group,{}\n".format(unit_str))
+                    for u in final_units:
+                        units_as_str = [str(val) for val in u[2]]
+                        unit_str = ",".join(units_as_str)
+                        f.write("{},{},{}\n".format(u[0], u[1], unit_str))
+                        recording = recording_container[u[0]]
+                        record_unit_idx = recording.units.group_by_property(
+                            "group", u[1]
+                        )[1][0]
+                        recording.units[record_unit_idx].units_to_use = u[2]
+                    print("Saved cells to {}".format(cell_location))
+            else:
+                # TODO check the logic for using all units
+                with open(cell_location, "w") as f:
+                    f.write("all")
 
     else:
         print("Loading cells from {}".format(cell_location))
@@ -405,6 +412,7 @@ def run(
     check_params=False,
     text_editor="nano",
     do_batch_setup=True,
+    do_cell_picker=True,
     verbose_batch_params=False,
 ):
     """
@@ -443,7 +451,9 @@ def run(
     text_editor : str or None, optional
         The text editor to use (default nano).
     do_batch_setup : bool, optional
-        Whether to write new parameter files (default False).
+        Whether to write new parameter files (default True).
+    do_cell_picker : bool, optional
+        Whether to launch a cell picker (default True).
     verbose_batch_params : bool, optional
         Whether to print extra information about batch parameters (default False).
 
@@ -553,5 +563,6 @@ def run(
         load_all=load_all,
         select_recordings=select_recordings,
         do_batch_setup=do_batch_setup,
+        do_cell_picker=do_cell_picker,
         verbose_batch_params=verbose_batch_params,
     )
