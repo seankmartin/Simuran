@@ -26,10 +26,6 @@ class BatchSetup(object):
 
     def setup(self):
         self.ph = ParamHandler(in_loc=self.file_loc, name="params")
-        if os.path.dirname(self.ph["mapping_file"]) == "":
-            self.ph.params["mapping_file"] = os.path.join(
-                self.in_dir, self.ph["mapping_file"]
-            )
         self._bad_file = self.ph["mapping_file"] is None
         if not self._bad_file:
             self._bad_file = not os.path.isfile(self.ph["mapping_file"])
