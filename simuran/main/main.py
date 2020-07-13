@@ -118,6 +118,10 @@ def main(
         batch_setup.write_batch_params(
             verbose_params=False, verbose=verbose_batch_params
         )
+        if batch_setup.ph["only_check"]:
+            print("Done checking batch setup.")
+            print("Change only_check to True in {} to run".format(batch_setup.file_loc))
+            return
 
     # Setup the recording_container
     # TODO only parse things to be selected
@@ -463,9 +467,10 @@ def run(
 
     # Grab the basename from batch params if it exists
     if os.path.isfile(param_names["batch"]):
-        param_names["base"] = simuran.param_handler.ParamHandler(
-            in_loc=param_names["batch"]
-        ).get("mapping_file", None)
+        batch_handler = simuran.param_handler.ParamHandler(
+            in_loc=param_names["batch"], name="params"
+        )
+        param_names["base"] = batch_handler.get("mapping_file", param_names["base"])
 
     os.makedirs(in_dir, exist_ok=True)
     new = False
