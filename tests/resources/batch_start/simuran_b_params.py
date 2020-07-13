@@ -24,6 +24,8 @@ mapping_file = os.path.join(directory, "sim_params.py")
 # The basename of the output parameter files.
 out_basename = "simuran_params_t.py"
 
+delete_old_files = True
+
 params = {
     "regex_filters": regex_filters,
     "overwrite": overwrite,
@@ -32,4 +34,5 @@ params = {
     "mapping": mapping,
     "mapping_file": mapping_file,
     "out_basename": out_basename,
+    "delete_old_files": delete_old_files,
 }
