@@ -78,7 +78,9 @@ def setup_loader():
 
     """
     # The type of loader to use, see simuran.loaders.loader_list.py for options
-    loader = "nc_loader"
+    # For now nc_loader is the most common option
+    loader = "params_only"
+    # loader = "nc_loader"
 
     # Keyword arguments to pass to the loader.
     loader_kwargs = {
