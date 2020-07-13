@@ -118,8 +118,9 @@ def main(
     # Check not called with only params loader
     if os.path.isdir(location):
         # TODO reuse these
+        # TODO fix the in_loc retrieval
         batch_params = simuran.param_handler.ParamHandler(
-            in_loc=os.path.join(location, batch_name), name="params"
+            in_loc=batch_name, name="params"
         )
         full_param_loc = batch_params["mapping_file"]
         record_params = simuran.param_handler.ParamHandler(
@@ -131,6 +132,7 @@ def main(
             )
 
     # Setup the parameters needed for running batch if requested.
+    # TODO fix the interactive regex...
     if do_batch_setup:
         if not os.path.isdir(location):
             raise ValueError("Please provide a directory, entered {}".format(location))
@@ -149,7 +151,7 @@ def main(
     recording_container = simuran.recording_container.RecordingContainer()
     if os.path.isdir(location):
         batch_params = simuran.param_handler.ParamHandler(
-            in_loc=os.path.join(location, batch_name), name="params"
+            in_loc=batch_name, name="params"
         )
         recording_container.auto_setup(
             location,
@@ -167,7 +169,7 @@ def main(
         )
 
     if len(recording_container) == 0:
-        raise FileNotFoundError("No recordings found.")
+        raise FileNotFoundError("No recordings found in {}".format(location))
 
     if sort_container_fn is not None:
         print("Sorting the container")
@@ -371,7 +373,20 @@ def main(
     current_time = now.strftime("%H-%M-%S")
     out_name = "sim_results_" + current_time + ".csv"
     whole_time = now.strftime("%Y-%m-%d--%H-%M-%S")
-    out_dir = os.path.join(recording_container.base_dir, "sim_results", whole_time)
+    # TODO perhaps could add the option
+    # For now, it is fixed
+    # os.path.abspath(os.path.join(os.path.dirname(batch_name), ".."))
+    out_dirname = whole_time
+    try:
+        start_str = os.path.dirname(batch_name).split(os.sep)[-1]
+        out_dirname = start_str + "--" + whole_time
+    except BaseException:
+        pass
+
+    out_dir = os.path.abspath(
+        os.path.join(os.path.dirname(batch_name), "..", "sim_results", out_dirname)
+    )
+    # out_dir = os.path.join(recording_container.base_dir, "sim_results", whole_time)
     out_loc = os.path.join(out_dir, out_name)
     recording_container.save_summary_data(
         out_loc,
@@ -407,7 +422,7 @@ def main(
 
 
 def run(
-    in_dir,
+    batch_param_loc,
     fn_param_loc,
     file_list_name="file_list.txt",
     cell_list_name="cell_list.txt",
@@ -432,9 +447,9 @@ def run(
 
     Parameters
     ----------
-    in_dir : str
-        The path to the directory or file to consider.
-        TODO consider renaming
+    batch_param_loc : str
+        The path to a config file listing the batch behaviour.
+        If it does not exist, it will be created with the default params.
     fn_param_loc : str
         The path to a config file listing the function parameters.
         If it does not exist, it will be created with the default params.
@@ -490,10 +505,11 @@ def run(
                 "Default parameters do not exist at {}".format(name)
             )
 
+    in_dir = os.path.dirname(batch_param_loc)
     param_names = {
         "fn": fn_param_loc,
         "base": os.path.abspath(os.path.join(in_dir, base_param_name)),
-        "batch": os.path.abspath(os.path.join(in_dir, batch_param_name)),
+        "batch": batch_param_loc,
     }
 
     # Grab the basename from batch params if it exists
@@ -502,6 +518,7 @@ def run(
             in_loc=param_names["batch"], name="params"
         )
         param_names["base"] = batch_handler.get("mapping_file", param_names["base"])
+        in_dir = batch_handler.get("start_dir", in_dir)
 
     os.makedirs(in_dir, exist_ok=True)
     new = False
@@ -531,26 +548,40 @@ def run(
                     full_name = value
                     if os.path.isfile(full_name) and made:
                         os.remove(full_name)
-            exit(0)
+            return
 
-    if not os.path.isfile(fn_param_loc):
+    if os.path.isfile(param_names["fn"]):
+        setup_ph = simuran.param_handler.ParamHandler(
+            in_loc=param_names["fn"], name="fn_params"
+        )
+        list_of_functions = setup_ph["run"]
+        save_list = setup_ph["save"]
+        args_fn = setup_ph.get("args", None)
+        friendly_names = setup_ph.get("names", None)
+        figures = setup_ph.get("figs", [])
+        figure_names = setup_ph.get("fignames", [])
+        sort_fn = setup_ph.get("sorting", None)
+        to_load = setup_ph.get("to_load", ["signals", "spatial", "units"])
+        load_all = setup_ph.get("load_all", True)
+        select_recordings = setup_ph.get("select_recordings", True)
+    else:
         raise ValueError(
             "Please create a file listing params at {}".format(fn_param_loc)
         )
 
-    setup_ph = simuran.param_handler.ParamHandler(in_loc=fn_param_loc, name="fn_params")
-    list_of_functions = setup_ph["run"]
-    save_list = setup_ph["save"]
-    args_fn = setup_ph.get("args", None)
-    friendly_names = setup_ph.get("names", None)
-    figures = setup_ph.get("figs", [])
-    figure_names = setup_ph.get("fignames", [])
-    sort_fn = setup_ph.get("sorting", None)
-    to_load = setup_ph.get("to_load", ["signals", "spatial", "units"])
-    load_all = setup_ph.get("load_all", True)
-    select_recordings = setup_ph.get("select_recordings", True)
+    if os.path.isfile(param_names["batch"]):
+        batch_handler = simuran.param_handler.ParamHandler(
+            in_loc=param_names["batch"], name="params"
+        )
+        in_dir = batch_handler.get("start_dir", in_dir)
+        print(in_dir)
+    else:
+        raise ValueError(
+            "Please create a file listing batch behaviour at {}".format(
+                param_names["batch"]
+            )
+        )
 
-    # TODO this dir can be different...
     # TODO do some renaming on all of this
     main(
         in_dir,
@@ -561,8 +592,8 @@ def run(
         friendly_names=friendly_names,
         figure_names=figure_names,
         figures=figures,
-        param_name=batch_find_name,
-        batch_name=batch_param_name,
+        param_name=os.path.basename(param_names["base"]),
+        batch_name=param_names["batch"],
         cell_list_name=cell_list_name,
         file_list_name=file_list_name,
         to_load=to_load,

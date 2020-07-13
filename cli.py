@@ -14,7 +14,9 @@ def main():
         type=str,
         help="path to configuration file for functions to run",
     )
-    parser.add_argument("location", type=str, help="where to run the program")
+    parser.add_argument(
+        "batch_config_path", type=str, help="path to configuration file for batch setup"
+    )
     parser.add_argument(
         "--editor", "-e", type=str, default="nano", help="the text editor to use"
     )
@@ -72,7 +74,7 @@ def main():
     else:
         # TODO probably just make one verbose option instead of many
         simuran.main.main.run(
-            parsed.location,
+            parsed.batch_config_path,
             text_editor=parsed.editor,
             check_params=parsed.check_params,
             fn_param_loc=parsed.function_config_path,

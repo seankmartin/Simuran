@@ -5,6 +5,9 @@ behaviour of analysis that recourses through child directories.
 
 import os
 
+# Where to start running batch analysis from
+start_dir = "__dirname__"
+
 # regex_filters should be a list of regex patterns to match against.
 regex_filters = []
 
@@ -36,6 +39,7 @@ out_basename = "simuran_params.py"
 delete_old_files = False
 
 params = {
+    "start_dir": start_dir,
     "regex_filters": regex_filters,
     "overwrite": overwrite,
     "only_check": only_check,
