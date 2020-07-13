@@ -18,7 +18,7 @@ mapping = {}  # see default_params.py to set this up
 
 # Absolute path to a file that contains the mapping.
 # If left as empty string, will create an absolute path from the relative path.
-directory = ""
+directory = "__dirname__"
 mapping_file = os.path.join(directory, "sim_params.py")
 
 # The basename of the output parameter files.
