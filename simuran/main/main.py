@@ -109,6 +109,21 @@ def main(
         Non-existant cells are tried to be selected.
 
     """
+    # Check not called with only params loader
+    if os.path.isdir(location):
+        # TODO reuse these
+        batch_params = simuran.param_handler.ParamHandler(
+            in_loc=os.path.join(location, batch_name), name="params"
+        )
+        full_param_loc = batch_params["mapping_file"]
+        record_params = simuran.param_handler.ParamHandler(
+            in_loc=full_param_loc, name="mapping"
+        )
+        if record_params["loader"] == "params_only":
+            raise ValueError(
+                "The only params loader is not supported for loading files"
+            )
+
     # Setup the parameters needed for running batch if requested.
     if do_batch_setup:
         if not os.path.isdir(location):
