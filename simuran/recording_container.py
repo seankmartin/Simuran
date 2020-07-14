@@ -3,7 +3,7 @@
 import os
 from copy import deepcopy
 
-from simuran.containers import AbstractContainer
+from simuran.base_container import AbstractContainer
 from simuran.recording import Recording
 from skm_pyutils.py_path import get_all_files_in_dir
 from skm_pyutils.py_path import get_dirs_matching_regex

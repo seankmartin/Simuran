@@ -3,7 +3,7 @@ import os
 
 from simuran.base_class import BaseSimuran
 from simuran.param_handler import ParamHandler
-from simuran.containers import GenericContainer
+from simuran.base_container import GenericContainer
 from simuran.base_signal import AbstractSignal
 from simuran.single_unit import SingleUnit
 from simuran.spatial import Spatial
