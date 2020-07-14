@@ -59,8 +59,23 @@ def main():
         raise ValueError("Unrecognized arguments passed {}".format(unparsed))
 
     if parsed.recursive:
-        # TODO set this up properly
-        simuran.main.batch_main.main([], [])
+        if os.path.isfile(parsed.batch_config_path):
+            to_use = parsed.batch_config_path
+        elif os.path.isfile(parsed.function_config_path):
+            to_use = parsed.function_config_path
+        else:
+            raise ValueError(
+                "Please provide either batch_config_path"
+                + " or function_config_path as a valid path"
+            )
+        simuran.main.batch_main.main(
+            to_use,
+            text_editor=parsed.editor,
+            check_params=parsed.check_params,
+            do_batch_setup=not parsed.skip_batch_setup,
+            do_cell_picker=parsed.do_cell_picker,
+            verbose_batch_params=parsed.verbose,
+        )
 
     elif parsed.grab_params:
         output_location = os.path.join(
@@ -75,9 +90,9 @@ def main():
         # TODO probably just make one verbose option instead of many
         simuran.main.main.run(
             parsed.batch_config_path,
+            parsed.function_config_path,
             text_editor=parsed.editor,
             check_params=parsed.check_params,
-            fn_param_loc=parsed.function_config_path,
             do_batch_setup=not parsed.skip_batch_setup,
             do_cell_picker=parsed.do_cell_picker,
             verbose_batch_params=parsed.verbose,

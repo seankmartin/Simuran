@@ -1,73 +1,33 @@
 """Run a full analysis set."""
 
 from simuran.main.main import run
-from simuran.param_handler import ParamHandler
 
-# TODO may need to fix this since changed run function param loc
-def make_default_dict(add=""):
-    param_names = {
-        "file_list_name": "file_list{}.txt".format(add),
-        "cell_list_name": "cell_list{}.txt".format(add),
-        "fn_param_name": "simuran_fn_params{}.py".format(add),
-        "base_param_name": "simuran_base_params.py",
-        "batch_param_name": "simuran_batch_params.py",
-        "batch_find_name": "simuran_params.py",
-    }
-    return param_names
+# TODO this just needs a way to define the relationship between the recordings
+# For example, you may want to concatenate them, or take the average of them,
+# And then run the analysis
 
 
-def main(
-    run_dict_list,
-    directory_list,
-    default_param_folder=None,
-    check_params=False,
-    idx=None,
-    handle_errors=False,
-):
-    with open("output_log.txt", "w") as f:
-        if idx is not None:
-            directory = directory_list[idx]
-            run_dict = run_dict_list[idx]
-            run(
-                directory,
-                check_params=check_params,
-                default_param_folder=default_param_folder,
-                **run_dict
-            )
-            return
-        for i, (directory, run_dict) in enumerate(zip(directory_list, run_dict_list)):
-            if handle_errors:
+def main(run_dict_list, idx=None, handle_errors=False, **kwargs):
+    def get_dict_entry(idx):
+        run_dict = run_dict_list[idx]
+        batch_param_loc = run_dict.pop("batch_param_loc")
+        fn_param_loc = run_dict.pop("fn_param_loc")
+        return run_dict, batch_param_loc, fn_param_loc
+
+    if idx is not None:
+        run_dict, batch_param_loc, fn_param_loc = get_dict_entry(idx)
+        full_kwargs = {**run_dict, **kwargs}
+        run(batch_param_loc, fn_param_loc, **full_kwargs)
+        return
+    for i in range(len(run_dict_list)):
+        run_dict, batch_param_loc, fn_param_loc = get_dict_entry(idx)
+        full_kwargs = {**run_dict, **kwargs}
+        if handle_errors:
+            with open("output_log.txt", "w") as f:
                 try:
-                    run(
-                        directory,
-                        check_params=check_params,
-                        default_param_folder=default_param_folder,
-                        **run_dict
-                    )
+                    run(batch_param_loc, fn_param_loc, **full_kwargs)
                 except Exception as e:
                     print("ERROR: check output_log.txt for details")
                     f.write("Error on {} was {}\n".format(i, e))
-            else:
-                run(
-                    directory,
-                    check_params=check_params,
-                    default_param_folder=default_param_folder,
-                    **run_dict
-                )
-
-
-if __name__ == "__main__":
-    param_file = r"D:\SubRet_recordings_imaging\muscimol_data\batch.py"
-    ph = ParamHandler(in_loc=param_file, name="params")
-    dict_l = ph["param_list"]
-    dir_l = ph["directory_list"]
-    default_param_folder = ph["default_param_folder"]
-    check_params = ph["check_params"]
-    main(
-        dict_l,
-        dir_l,
-        default_param_folder=default_param_folder,
-        check_params=check_params,
-        idx=None,
-        handle_errors=True,
-    )
+        else:
+            run(batch_param_loc, fn_param_loc, **full_kwargs)
