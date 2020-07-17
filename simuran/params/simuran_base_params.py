@@ -18,7 +18,7 @@ def setup_signals():
     regions = ["ACC"] * 2 + ["CLA"] * 28 + ["BLA"] * 2
 
     # If the wires were bundled, or any other kind of grouping existed
-    # If no grouping, grouping = [i for in range(num_signals)]
+    # If no grouping, groups = [i for i in range(num_signals)]
     groups = []
     for i in range(16):
         groups.append(i)

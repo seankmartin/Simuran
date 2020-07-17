@@ -78,7 +78,7 @@ class BatchSetup(object):
         if delete_old_files:
             BatchSetup.clear_params(self.in_dir, to_remove=self.ph["out_basename"])
 
-        if verbose_params:
+        if verbose_params and not check_only:
             if self._bad_file:
                 new_ph = ParamHandler(params=self.ph["mapping"])
             else:

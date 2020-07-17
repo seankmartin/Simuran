@@ -81,12 +81,12 @@ class ParamHandler:
             if exact_file is None:
                 print("Would write parameters:")
                 print(pformat(self.params, width=200))
-                print("to these directories:")
+                print("to:")
                 for d in dirs:
                     print(d)
                 return dirs
             else:
-                print("Would copy {} to these directories:".format(exact_file))
+                print("Would copy {} to:".format(exact_file))
                 for d in dirs:
                     print(d)
                 return dirs

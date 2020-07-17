@@ -1,4 +1,5 @@
 """Run a full analysis set."""
+import os
 
 from simuran.main.main import run
 from simuran.param_handler import ParamHandler
@@ -16,7 +17,7 @@ def main(run_dict_list, function_to_use=None, idx=None, handle_errors=False, **k
         fn_param_loc = run_dict.pop("fn_param_loc")
         if function_to_use is not None:
             fn_param_loc = function_to_use
-        return run_dict, batch_param_loc, fn_param_loc
+        return run_dict, os.path.abspath(batch_param_loc), os.path.abspath(fn_param_loc)
 
     if idx is not None:
         run_dict, batch_param_loc, fn_param_loc = get_dict_entry(idx)
@@ -24,6 +25,11 @@ def main(run_dict_list, function_to_use=None, idx=None, handle_errors=False, **k
         run(batch_param_loc, fn_param_loc, **full_kwargs)
         return
     for i in range(len(run_dict_list)):
+        print(
+            "--------------------SIMURAN Batch Iteration {}--------------------".format(
+                i
+            )
+        )
         run_dict, batch_param_loc, fn_param_loc = get_dict_entry(i)
         full_kwargs = {**run_dict, **kwargs}
         if handle_errors:

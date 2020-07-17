@@ -147,20 +147,22 @@ def main(
             raise ValueError("Please provide a directory, entered {}".format(location))
         batch_setup = simuran.batch_setup.BatchSetup(location, fpath=batch_name)
         batch_setup.set_only_check(only_check)
-        print("Running batch setup {}".format(batch_setup))
+        print("Running batch setup from {}".format(batch_setup.file_loc))
         batch_setup.write_batch_params(
             verbose_params=True, verbose=verbose_batch_params
         )
         # TODO allow this to be controlled outside
         if batch_setup.ph["only_check"]:
-            print("Done checking batch setup.")
             print(
-                "Change only_check to False in {} to run".format(batch_setup.file_loc)
+                "Done checking batch setup. "
+                + "Change only_check to False in {} to run".format(batch_setup.file_loc)
             )
             return
         elif only_check:
-            print("Done checking batch setup.")
-            print("Pass only_check as False in main to run")
+            print(
+                "Done checking batch setup. "
+                + "Pass only_check as False in main to run"
+            )
             return
 
     # Setup the recording_container
