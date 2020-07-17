@@ -101,12 +101,16 @@ class AbstractContainer(ABC):
                 self[i].source_name = None
         if friendly_names is not None:
             friendly_names = ["Recording directory", "Recording name"] + friendly_names
+
         data_list = self.data_from_attr_list(
             attr_list, friendly_names=friendly_names, decimals=decimals
         )
         save_dicts_to_csv(location, data_list)
 
     def data_from_attr_list(self, attr_list, friendly_names=None, idx=None, decimals=3):
+        if len(friendly_names) != len(attr_list):
+            friendly_names = None
+
         def get_single(item, attr_list):
             if isinstance(item, BaseSimuran):
                 data = item.data_dict_from_attr_list(attr_list, friendly_names)
