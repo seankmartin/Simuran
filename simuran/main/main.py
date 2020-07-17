@@ -6,6 +6,7 @@ from copy import copy
 from datetime import datetime
 
 from tqdm import tqdm
+
 import simuran.batch_setup
 import simuran.recording_container
 import simuran.analysis.analysis_handler
@@ -143,7 +144,9 @@ def main(
         )
         if batch_setup.ph["only_check"]:
             print("Done checking batch setup.")
-            print("Change only_check to True in {} to run".format(batch_setup.file_loc))
+            print(
+                "Change only_check to False in {} to run".format(batch_setup.file_loc)
+            )
             return
 
     # Setup the recording_container
@@ -399,26 +402,31 @@ def main(
         if not isinstance(f, simuran.plot.figure.SimuranFigure):
             figures[i] = simuran.plot.figure.SimuranFigure(figure=f)
 
-    if len(figure_names) != len(figures):
+    if len(figures) != 0:
+        print("Plotting figures to {}".format(os.path.join(out_dir, "plots")))
+
+        if len(figure_names) != len(figures):
+            for i, f in enumerate(figures):
+                if f.filename is None:
+                    f.set_filename("fig{}.png".format(i))
+        else:
+            for f, name in zip(figures, figure_names):
+                f.set_filename(name)
+
+        # TODO this may cause problems on big batches since the memory would
+        # need to be kept - will need to reconsider.
+        # for example, could have a figure.isdone() method
+        # which checks if ready for saving and boots if so
         for f in figures:
-            if f.filename is None:
-                f.set_filename("fig{}.png".format(i))
-    else:
-        for f, name in zip(figures, figure_names):
-            f.set_filename(name)
+            # TODO change this to just one verbose
+            if verbose_batch_params:
+                print("Plotting to {}".format(f.get_filename()))
+            f.savefig(os.path.join(out_dir, "plots", f.get_filename()))
+            f.close()
 
-    if verbose_batch_params:
-        print("Plotting all figures to {}".format(os.path.join(out_dir, "plots")))
-
-    # TODO this may cause problems on big batches since the memory would
-    # need to be kept - will need to reconsider.
-    # for example, could have a figure.isdone() method
-    # which checks if ready for saving and boots if so
-    for f in figures:
-        # TODO change this to just one verbose
-        if verbose_batch_params:
-            print("Plotting to {}".format(f.get_filename()))
-        f.savefig(os.path.join(out_dir, "plots", f.get_filename()))
+    return recording_container.data_from_attr_list(
+        attributes_to_save, friendly_names=friendly_names, decimals=decimals
+    )
 
 
 def run(
