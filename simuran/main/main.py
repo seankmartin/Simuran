@@ -397,14 +397,11 @@ def main(
 
     # Set the output folder
     now = datetime.now()
-    # TODO maybe make the date optional?
     current_time = now.strftime("%H-%M-%S")
     out_name = "sim_results_" + current_time + ".csv"
     whole_time = now.strftime("%Y-%m-%d--%H-%M-%S")
-    # TODO perhaps could add the option
-    # For now, it is fixed
-    # os.path.abspath(os.path.join(os.path.dirname(batch_name), ".."))
     out_dirname = whole_time
+
     try:
         start_str = os.path.splitext(os.path.basename(batch_name))[0]
         if function_config_path is not None:
@@ -413,7 +410,8 @@ def main(
                 + "--"
                 + os.path.splitext(os.path.basename(function_config_path))[0]
             )
-        out_dirname = start_str + "--" + whole_time
+        out_dirname = start_str
+        out_name = "sim_results" + start_str + ".csv"
     except BaseException:
         pass
 
