@@ -411,7 +411,7 @@ def main(
                 + os.path.splitext(os.path.basename(function_config_path))[0]
             )
         out_dirname = start_str
-        out_name = "sim_results" + start_str + ".csv"
+        out_name = "sim_results--" + start_str + ".csv"
     except BaseException:
         pass
 
