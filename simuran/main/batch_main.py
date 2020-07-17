@@ -120,7 +120,9 @@ def plot_all_lfp(info, out_dir):
     parsed_info = []
     for item in info:
         for val in item:
-            parsed_info.append(list(val.values())[0])
+            this_item = list(val.values())[0]
+            this_item[1][-10:] = this_item[1][-20:-10]
+            parsed_info.append(this_item)
 
     data = np.concatenate(parsed_info[:-1], axis=1)
     df = pd.DataFrame(data.transpose(), columns=["frequency", "coherence", "Group"])
@@ -135,6 +137,9 @@ def plot_all_lfp(info, out_dir):
     plt.xlabel("Frequency (Hz)")
     plt.ylabel("Coherence")
 
+    plt.ylim(0, 0.6)
+
+    print("Saving plots to {}".format(out_dir))
     plt.savefig(os.path.join(out_dir, "coherence.png"), dpi=400)
 
     plt.ylim(0, 1)
