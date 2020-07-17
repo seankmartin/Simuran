@@ -9,6 +9,7 @@ from simuran.param_handler import ParamHandler
 
 
 def main(run_dict_list, idx=None, handle_errors=False, **kwargs):
+    # TODO I'd like to let names have no ext, and auto add .py if not there
     def get_dict_entry(index):
         run_dict = run_dict_list[index]
         batch_param_loc = run_dict.pop("batch_param_loc")

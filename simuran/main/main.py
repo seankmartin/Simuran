@@ -41,6 +41,7 @@ def main(
     print_all_cells=True,
     do_cell_picker=True,
     decimals=3,
+    function_config_path=None,
 ):
     """
     Run the main control functionality.
@@ -99,6 +100,10 @@ def main(
         Whether to start a cell picking helper (default True).
     decimals : int, optional
         The number of decimals to round to in output (default 3).
+    function_config_path : str, optional
+        The path to a function configuration file (default None).
+        At the moment, this is parsed in run.
+        This is only used for naming purposes, currently.
 
     Returns
     -------
@@ -381,7 +386,13 @@ def main(
     # os.path.abspath(os.path.join(os.path.dirname(batch_name), ".."))
     out_dirname = whole_time
     try:
-        start_str = os.path.dirname(batch_name).split(os.sep)[-1]
+        start_str = os.path.splitext(os.path.basename(batch_name))[0]
+        if function_config_path is not None:
+            start_str = (
+                start_str
+                + "--"
+                + os.path.splitext(os.path.basename(function_config_path))[0]
+            )
         out_dirname = start_str + "--" + whole_time
     except BaseException:
         pass
@@ -610,4 +621,5 @@ def run(
         do_batch_setup=do_batch_setup,
         do_cell_picker=do_cell_picker,
         verbose_batch_params=verbose_batch_params,
+        function_config_path=fn_param_loc,
     )
