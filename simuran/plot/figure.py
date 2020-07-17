@@ -1,6 +1,8 @@
 """Holds a custom figure class."""
 import os
 
+import matplotlib.pyplot as plt
+
 from simuran.plot.base_plot import save_simuran_plot
 
 
@@ -12,6 +14,10 @@ class SimuranFigure(object):
         self.figure = figure
         self.filename = filename
         self.kwargs = kwargs
+        self.closed = False
+
+    def __del__(self):
+        self.close()
 
     def set_filename(self, filename):
         self.filename = filename
@@ -20,6 +26,8 @@ class SimuranFigure(object):
         out_format = self.kwargs.get("format", None)
         if out_format is not None:
             filename = os.path.splitext(self.filename)[0] + "." + out_format
+        else:
+            filename = self.filename
         return filename
 
     def set_figure(self, figure):
@@ -39,3 +47,8 @@ class SimuranFigure(object):
 
     def save(self, filename=None, **kwargs):
         self.savefig(filename, **kwargs)
+
+    def close(self):
+        if not self.closed:
+            plt.close(self.figure)
+            self.closed = True
