@@ -59,17 +59,14 @@ def main():
         raise ValueError("Unrecognized arguments passed {}".format(unparsed))
 
     if parsed.recursive:
-        if os.path.isfile(parsed.batch_config_path):
-            to_use = parsed.batch_config_path
-        elif os.path.isfile(parsed.function_config_path):
-            to_use = parsed.function_config_path
-        else:
-            raise ValueError(
-                "Please provide either batch_config_path"
-                + " or function_config_path as a valid path"
-            )
+        if not os.path.isfile(parsed.batch_config_path):
+            raise ValueError("Please provide batch_config_path as a valid path")
+        if not os.path.isfile(parsed.function_config_path):
+            parsed.function_config_path = None
+
         simuran.main.batch_main.batch_run(
-            to_use,
+            parsed.batch_config_path,
+            function_to_use=parsed.function_config_path,
             text_editor=parsed.editor,
             check_params=parsed.check_params,
             do_batch_setup=not parsed.skip_batch_setup,
