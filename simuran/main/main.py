@@ -378,6 +378,7 @@ def main(
         recording_container[i].results = copy(analysis_handler.results)
         analysis_handler.reset()
     now = datetime.now()
+    # TODO maybe make the date optional?
     current_time = now.strftime("%H-%M-%S")
     out_name = "sim_results_" + current_time + ".csv"
     whole_time = now.strftime("%Y-%m-%d--%H-%M-%S")
