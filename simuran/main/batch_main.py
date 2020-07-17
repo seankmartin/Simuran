@@ -7,7 +7,7 @@ from simuran.param_handler import ParamHandler
 # For example, you may want to concatenate them, or take the average of them,
 # And then run the analysis
 
-
+# TODO allow for auto merging
 def main(run_dict_list, function_to_use=None, idx=None, handle_errors=False, **kwargs):
     # TODO I'd like to let names have no ext, and auto add .py if not there
     def get_dict_entry(index):

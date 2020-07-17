@@ -415,7 +415,8 @@ def main(
             figures[i] = simuran.plot.figure.SimuranFigure(figure=f)
 
     if len(figures) != 0:
-        print("Plotting figures to {}".format(os.path.join(out_dir, "plots")))
+        if verbose_batch_params:
+            print("Plotting figures to {}".format(os.path.join(out_dir, "plots")))
 
         if len(figure_names) != len(figures):
             for i, f in enumerate(figures):
@@ -594,7 +595,6 @@ def run(
             in_loc=param_names["batch"], name="params"
         )
         in_dir = batch_handler.get("start_dir", in_dir)
-        print(in_dir)
     else:
         raise ValueError(
             "Please create a file listing batch behaviour at {}".format(

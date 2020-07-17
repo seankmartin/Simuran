@@ -35,13 +35,15 @@ def merge(in_dict, out_dir, all_result_ext=None):
             shutil.copytree(d, copy_location, dirs_exist_ok=True)
 
 
+# TODO allow for putting in dirs manually
+# TODO data_start_col is acutally not variable at the moment
 def csv_merge(
     in_dir,
     keep_headers=True,
     insert_newline=True,
     stats=True,
     delim=",",
-    data_start_col=1,
+    data_start_col=2,
 ):
     csv_files = get_all_files_in_dir(in_dir, ext="csv", recursive=True)
     o_name = os.path.join(in_dir, "merge.csv")
@@ -71,8 +73,12 @@ def csv_merge(
                             data[i, j] = to_write
                     avg = np.nanmean(data, axis=0)
                     std = np.nanstd(data, axis=0)
-                    avg_str = "Average," + ",".join(str(val) for val in avg)[:-1] + "\n"
-                    std_str = "Std," + ",".join(str(val) for val in std)[:-1] + "\n"
+                    avg_str = (
+                        "Average," + "," + ",".join(str(val) for val in avg)[:-1] + "\n"
+                    )
+                    std_str = (
+                        "Std," + "," + ",".join(str(val) for val in std)[:-1] + "\n"
+                    )
                     output.write(avg_str)
                     output.write(std_str)
 
@@ -81,16 +87,20 @@ def csv_merge(
 
 
 if __name__ == "__main__":
-    param_file = r"D:\SubRet_recordings_imaging\muscimol_data\batch.py"
-    out_dir = r"D:\SubRet_recordings_imaging\muscimol_data\sim_results"
-    os.makedirs(out_dir, exist_ok=True)
-    ph = ParamHandler(in_loc=param_file, name="params")
-    dir_l = ph["directory_list"]
-    in_dict = {}
-    for val in dir_l:
-        if val not in in_dict.keys():
-            in_dict[val] = 1
-        else:
-            in_dict[val] += 1
-    merge(in_dict, out_dir, all_result_ext="png")
+    # param_file = r"D:\SubRet_recordings_imaging\muscimol_data\batch.py"
+    # out_dir = r"D:\SubRet_recordings_imaging\muscimol_data\sim_results"
+    # os.makedirs(out_dir, exist_ok=True)
+    # ph = ParamHandler(in_loc=param_file, name="params")
+    # dir_l = ph["directory_list"]
+    # in_dict = {}
+    # for val in dir_l:
+    #     if val not in in_dict.keys():
+    #         in_dict[val] = 1
+    #     else:
+    #         in_dict[val] += 1
+    # merge(in_dict, out_dir, all_result_ext="png")
+
+    out_dir = (
+        r"/media/sean/Elements/SubRet_recordings_imaging/SIMURAN/sim_results/LFP_plots"
+    )
     csv_merge(out_dir)

@@ -1,8 +1,14 @@
 import os
 
+import numpy as np
+
 from bvmpc.lfp_odict import LfpODict
 from bvmpc.lfp_plot import plot_lfp
 from simuran.plot.figure import SimuranFigure
+
+
+def get_normalised_diff(s1, s2):
+    return np.sum(np.square(s1 - s2)) / (np.sum(np.square(s1) + np.square(s2)) / 2)
 
 
 def main(recording, figures, base_dir):
@@ -21,3 +27,15 @@ def main(recording, figures, base_dir):
             + name
         )
         figures.append(SimuranFigure(figure, name, dpi=40, format="png"))
+
+    sub_signals = recording.signals.group_by_property("region", "SUB")[0]
+    sub_signals = [s for s in sub_signals if not np.all((s.samples == 0))]
+    rsc_signals = recording.signals.group_by_property("region", "RSC")[0]
+    rsc_signals = [s for s in rsc_signals if not np.all((s.samples == 0))]
+
+    results = {
+        "sub": get_normalised_diff(sub_signals[0].samples, sub_signals[1].samples),
+        "rsc": get_normalised_diff(rsc_signals[0].samples, rsc_signals[1].samples),
+    }
+
+    return results
