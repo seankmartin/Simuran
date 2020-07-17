@@ -420,6 +420,7 @@ def main(
     )
 
     # Run the analysis on all the loaded recordings
+    # TODO make _0 be the default if no number
     analysis_handler = simuran.analysis.analysis_handler.AnalysisHandler()
     pbar = tqdm(range(len(recording_container)))
     for i in pbar:
@@ -464,6 +465,7 @@ def main(
     # TODO this should be a setting
     save_unclosed_figures(out_dir)
 
+    # TODO this should probably be a dict with the name as the key
     return recording_container.data_from_attr_list(
         attributes_to_save, friendly_names=friendly_names, decimals=decimals
     )
@@ -633,7 +635,7 @@ def run(
         )
 
     # TODO do some renaming on all of this
-    main(
+    return main(
         in_dir,
         list_of_functions,
         save_list,
