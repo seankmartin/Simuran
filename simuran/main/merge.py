@@ -1,57 +1,50 @@
 import os
 import shutil
+import argparse
+
 import numpy as np
 
 from simuran.param_handler import ParamHandler
 from skm_pyutils.py_path import get_all_files_in_dir
 
 
-def merge(in_dict, out_dir, all_result_ext=None):
-    all_file_loc = os.path.join(out_dir, "all_results_merged")
+def merge(in_dir, all_result_ext=None):
+    # TODO allow for putting in dirs manually
+    all_file_loc = os.path.join(in_dir, "all_results_merged")
     os.makedirs(all_file_loc, exist_ok=True)
-    for location, value in in_dict.items():
-        d = os.path.join(location, "sim_results")
-        dirs = [
-            os.path.join(d, o)
-            for o in os.listdir(d)
-            if os.path.isdir(os.path.join(d, o))
-        ][::-1]
-        dirs_to_use = dirs[:value]
-        for d in dirs_to_use:
-            name = d[len(out_dir) - 11 :]
-            name = "--".join(name.split(os.sep))
-            copy_location = os.path.join(out_dir, name)
-            print("Copying {} to {}".format(d, copy_location))
-            all_files = get_all_files_in_dir(
-                d, ext=all_result_ext, recursive=True, return_absolute=True
-            )
+    print("Copying all results into {}".format(all_file_loc))
+    dirs = [
+        os.path.join(in_dir, o)
+        for o in os.listdir(in_dir)
+        if os.path.isdir(os.path.join(in_dir, o)) and o != "all_results_merged"
+    ][::-1]
+    for d in dirs:
+        name = d[len(in_dir) :]
+        name = "--".join(name.split(os.sep))
+        print("Copying contents of {}".format(d))
+        all_files = get_all_files_in_dir(
+            d, ext=all_result_ext, recursive=True, return_absolute=True
+        )
 
-            all_names = [
-                "--".join(f[len(out_dir) - 11 :].split(os.sep)) for f in all_files
-            ]
-            for f, o_name in zip(all_files, all_names):
-                out_name = os.path.join(all_file_loc, o_name)
-                shutil.copy(f, out_name)
-            shutil.copytree(d, copy_location, dirs_exist_ok=True)
+        all_names = [
+            "--".join(f[len(in_dir + os.sep) :].split(os.sep)) for f in all_files
+        ]
+        for f, o_name in zip(all_files, all_names):
+            out_name = os.path.join(all_file_loc, o_name)
+            shutil.copy(f, out_name)
 
 
-# TODO allow for putting in dirs manually
-# TODO data_start_col is acutally not variable at the moment
-def csv_merge(
-    in_dir,
-    keep_headers=True,
-    insert_newline=True,
-    stats=True,
-    delim=",",
-    data_start_col=2,
-):
+def csv_merge(in_dir, keep_headers=True, insert_newline=True, stats=True, delim=","):
+    # TODO allow for putting in dirs manually
+    data_start_col = 2
     csv_files = get_all_files_in_dir(in_dir, ext="csv", recursive=True)
     o_name = os.path.join(in_dir, "merge.csv")
+    print("Merging results into {}".format(o_name))
     if os.path.isfile(o_name):
         csv_files = csv_files[1:]
     with open(o_name, "w") as output:
         for i, f in enumerate(csv_files):
-            print("Merging {} into {}".format(f, o_name))
+            print("Merging {}".format(f))
             with open(f, "r") as open_file:
                 lines = open_file.readlines()
                 if keep_headers or (i == 0):
@@ -87,20 +80,30 @@ def csv_merge(
 
 
 if __name__ == "__main__":
-    # param_file = r"D:\SubRet_recordings_imaging\muscimol_data\batch.py"
-    # out_dir = r"D:\SubRet_recordings_imaging\muscimol_data\sim_results"
-    # os.makedirs(out_dir, exist_ok=True)
-    # ph = ParamHandler(in_loc=param_file, name="params")
-    # dir_l = ph["directory_list"]
-    # in_dict = {}
-    # for val in dir_l:
-    #     if val not in in_dict.keys():
-    #         in_dict[val] = 1
-    #     else:
-    #         in_dict[val] += 1
-    # merge(in_dict, out_dir, all_result_ext="png")
-
-    out_dir = (
-        r"/media/sean/Elements/SubRet_recordings_imaging/SIMURAN/sim_results/LFP_plots"
+    parser = argparse.ArgumentParser(description="Command line arguments")
+    parser.add_argument("directory", type=str, help="The directory to merge in")
+    parser.add_argument(
+        "--do_csv", "-n", action="store_true", help="should merge csv files"
     )
-    csv_merge(out_dir)
+    parser.add_argument(
+        "--do_images", "-i", action="store_true", help="should merge images"
+    )
+    parser.add_argument(
+        "--image-extension",
+        "-e",
+        type=str,
+        default="png",
+        help="the image extension to look for (without .)",
+    )
+
+    parsed, unparsed = parser.parse_known_args()
+    if len(unparsed) > 0:
+        raise ValueError("Unexpected arguments {}".format(unparsed))
+
+    if parsed.do_csv:
+        print("----------CSV MERGE-----------")
+        csv_merge(parsed.directory)
+
+    if parsed.do_images:
+        print("----------IMAGE MERGE-----------")
+        merge(parsed.directory, all_result_ext="png")
