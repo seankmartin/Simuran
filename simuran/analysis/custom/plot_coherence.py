@@ -83,7 +83,7 @@ def plot_recording_coherence(recording, figures, base_dir):
     fig, ax = plt.subplots()
     result = plot_coherence(sub_signal, rsc_signal, ax, sub_signals[0].sampling_rate,)
 
-    figures.append(SimuranFigure(fig, name, dpi=400, format="png"))
+    figures.append(SimuranFigure(fig, name, dpi=400, done=True, format="png"))
 
     fig, ax = plt.subplots()
     plot_psd(sub_signal, ax, sub_signals[0].sampling_rate, group=group)
@@ -96,7 +96,7 @@ def plot_recording_coherence(recording, figures, base_dir):
         + ".png"
     )
 
-    figures.append(SimuranFigure(fig, name, dpi=400, format="png"))
+    figures.append(SimuranFigure(fig, name, dpi=400, done=True, format="png"))
 
     fig, ax = plt.subplots()
     plot_psd(rsc_signal, ax, rsc_signals[0].sampling_rate, group=group)
@@ -109,6 +109,6 @@ def plot_recording_coherence(recording, figures, base_dir):
         + ".png"
     )
 
-    figures.append(SimuranFigure(fig, name, dpi=400, format="png"))
+    figures.append(SimuranFigure(fig, name, dpi=400, done=True, format="png"))
 
     return result

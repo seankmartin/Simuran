@@ -15,8 +15,43 @@ import simuran.plot.figure
 
 # TODO I want to use pyqt5 here but ill check my later requirements.
 import matplotlib
+import matplotlib.pyplot as plt
 
 matplotlib.use("Qt4agg")
+
+
+def save_figures(figures, figure_names, out_dir, verbose=False):
+    for i, f in enumerate(figures):
+        if not isinstance(f, simuran.plot.figure.SimuranFigure):
+            figures[i] = simuran.plot.figure.SimuranFigure(figure=f)
+
+    if len(figures) != 0:
+        if verbose:
+            print("Plotting figures to {}".format(os.path.join(out_dir, "plots")))
+
+        if len(figure_names) != len(figures):
+            for i, f in enumerate(figures):
+                if f.filename is None:
+                    f.set_filename("fig{}.png".format(i))
+        else:
+            for f, name in zip(figures, figure_names):
+                f.set_filename(name)
+
+        for f in figures:
+            if f.isdone():
+                if verbose:
+                    print("Plotting to {}".format(f.get_filename()))
+                f.savefig(os.path.join(out_dir, "plots", f.get_filename()))
+                f.close()
+
+    return [f for f in figures if not f.isdone()]
+
+
+def save_unclosed_figures(out_dir):
+    figs = list(map(plt.figure, plt.get_fignums()))
+    for i, f in enumerate(figs):
+        f.savefig(os.path.join(out_dir, "unclosed_plots", "fig_{}.png".format(i)))
+        f.close()
 
 
 def main(
@@ -360,6 +395,32 @@ def main(
                     )[1][0]
                     recording.units[record_unit_idx].units_to_use = row[2:]
 
+    # Set the output folder
+    now = datetime.now()
+    # TODO maybe make the date optional?
+    current_time = now.strftime("%H-%M-%S")
+    out_name = "sim_results_" + current_time + ".csv"
+    whole_time = now.strftime("%Y-%m-%d--%H-%M-%S")
+    # TODO perhaps could add the option
+    # For now, it is fixed
+    # os.path.abspath(os.path.join(os.path.dirname(batch_name), ".."))
+    out_dirname = whole_time
+    try:
+        start_str = os.path.splitext(os.path.basename(batch_name))[0]
+        if function_config_path is not None:
+            start_str = (
+                start_str
+                + "--"
+                + os.path.splitext(os.path.basename(function_config_path))[0]
+            )
+        out_dirname = start_str + "--" + whole_time
+    except BaseException:
+        pass
+
+    out_dir = os.path.abspath(
+        os.path.join(os.path.dirname(batch_name), "..", "sim_results", out_dirname)
+    )
+
     # Run the analysis on all the loaded recordings
     analysis_handler = simuran.analysis.analysis_handler.AnalysisHandler()
     pbar = tqdm(range(len(recording_container)))
@@ -388,30 +449,8 @@ def main(
         analysis_handler.run_all_fns()
         recording_container[i].results = copy(analysis_handler.results)
         analysis_handler.reset()
-    now = datetime.now()
-    # TODO maybe make the date optional?
-    current_time = now.strftime("%H-%M-%S")
-    out_name = "sim_results_" + current_time + ".csv"
-    whole_time = now.strftime("%Y-%m-%d--%H-%M-%S")
-    # TODO perhaps could add the option
-    # For now, it is fixed
-    # os.path.abspath(os.path.join(os.path.dirname(batch_name), ".."))
-    out_dirname = whole_time
-    try:
-        start_str = os.path.splitext(os.path.basename(batch_name))[0]
-        if function_config_path is not None:
-            start_str = (
-                start_str
-                + "--"
-                + os.path.splitext(os.path.basename(function_config_path))[0]
-            )
-        out_dirname = start_str + "--" + whole_time
-    except BaseException:
-        pass
+        figures = save_figures(figures, figure_names, out_dir, verbose=False)
 
-    out_dir = os.path.abspath(
-        os.path.join(os.path.dirname(batch_name), "..", "sim_results", out_dirname)
-    )
     # out_dir = os.path.join(recording_container.base_dir, "sim_results", whole_time)
     out_loc = os.path.join(out_dir, out_name)
     recording_container.save_summary_data(
@@ -421,32 +460,11 @@ def main(
         decimals=decimals,
     )
 
-    for i, f in enumerate(figures):
-        if not isinstance(f, simuran.plot.figure.SimuranFigure):
-            figures[i] = simuran.plot.figure.SimuranFigure(figure=f)
+    # This is currently in the loop
+    # save_figures(figures, figure_names, out_dir, verbose=False)
 
-    if len(figures) != 0:
-        if verbose_batch_params:
-            print("Plotting figures to {}".format(os.path.join(out_dir, "plots")))
-
-        if len(figure_names) != len(figures):
-            for i, f in enumerate(figures):
-                if f.filename is None:
-                    f.set_filename("fig{}.png".format(i))
-        else:
-            for f, name in zip(figures, figure_names):
-                f.set_filename(name)
-
-        # TODO this may cause problems on big batches since the memory would
-        # need to be kept - will need to reconsider.
-        # for example, could have a figure.isdone() method
-        # which checks if ready for saving and boots if so
-        for f in figures:
-            # TODO change this to just one verbose
-            if verbose_batch_params:
-                print("Plotting to {}".format(f.get_filename()))
-            f.savefig(os.path.join(out_dir, "plots", f.get_filename()))
-            f.close()
+    # TODO this should be a setting
+    save_unclosed_figures(out_dir)
 
     return recording_container.data_from_attr_list(
         attributes_to_save, friendly_names=friendly_names, decimals=decimals

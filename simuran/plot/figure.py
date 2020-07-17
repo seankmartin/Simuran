@@ -9,15 +9,19 @@ from simuran.plot.base_plot import save_simuran_plot
 class SimuranFigure(object):
     """A custom figure class."""
 
-    def __init__(self, figure=None, filename=None, **kwargs):
+    def __init__(self, figure=None, filename=None, done=False, **kwargs):
         """Holds a figure as well as a filename."""
         self.figure = figure
         self.filename = filename
         self.kwargs = kwargs
+        self.done = done
         self.closed = False
 
     def __del__(self):
         self.close()
+
+    def set_done(self, done):
+        self.done = done
 
     def set_filename(self, filename):
         self.filename = filename
@@ -52,3 +56,6 @@ class SimuranFigure(object):
         if not self.closed:
             plt.close(self.figure)
             self.closed = True
+
+    def isdone(self):
+        return self.done or self.closed
