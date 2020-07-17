@@ -3,27 +3,25 @@ simuran_multi_params describes running main.py for multiple
 different recordings, functions, etc.
 In theory, this could describe a full experiment.
 """
-import os
-
-
-def make_default_dict(add=""):
-    param_names = {}
-
-    # file_list_name is often specific to each analysis
-    # as it lists all recordings found under the given regex
-    param_names["file_list_name"] = "file_list_{}.txt".format(add)
-
-    param_names["cell_list_name"] = "cell_list_{}.txt".format(add)
-
-    # These will often stay the same since the parameters that describe the
-    # layout of a recording don't often change
-    param_names["base_param_name"] = "simuran_base_params.py"
-    param_names["batch_find_name"] = "simuran_params.py"
-
-    return param_names
 
 
 def create_new_entry(batch_param_loc, fn_param_loc, add=""):
+    def make_default_dict(add=""):
+        param_names = {}
+
+        # file_list_name is often specific to each analysis
+        # as it lists all recordings found under the given regex
+        param_names["file_list_name"] = "file_list{}.txt".format(add)
+
+        param_names["cell_list_name"] = "cell_list{}.txt".format(add)
+
+        # These will often stay the same since the parameters that describe the
+        # layout of a recording don't often change
+        param_names["base_param_name"] = "simuran_base_params.py"
+        param_names["batch_find_name"] = "simuran_params.py"
+
+        return param_names
+
     output_dict = make_default_dict(add=add)
 
     output_dict["batch_param_loc"] = batch_param_loc
@@ -33,6 +31,8 @@ def create_new_entry(batch_param_loc, fn_param_loc, add=""):
 
 
 def set_file_locations():
+    import os
+
     output = []
 
     output.append(
@@ -48,6 +48,8 @@ def set_file_locations():
 
 def set_fixed_params(in_dict):
     in_dict["default_param_folder"] = None
+
+    return in_dict
 
 
 # Setup the actual parameters
