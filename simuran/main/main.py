@@ -42,6 +42,7 @@ def main(
     do_cell_picker=True,
     decimals=3,
     function_config_path=None,
+    only_check=False,
 ):
     """
     Run the main control functionality.
@@ -104,6 +105,8 @@ def main(
         The path to a function configuration file (default None).
         At the moment, this is parsed in run.
         This is only used for naming purposes, currently.
+    only_check : bool, optional
+        Only checks what would run if True (default False)
 
     Returns
     -------
@@ -143,15 +146,21 @@ def main(
         if not os.path.isdir(location):
             raise ValueError("Please provide a directory, entered {}".format(location))
         batch_setup = simuran.batch_setup.BatchSetup(location, fpath=batch_name)
+        batch_setup.set_only_check(only_check)
         print("Running batch setup {}".format(batch_setup))
         batch_setup.write_batch_params(
             verbose_params=True, verbose=verbose_batch_params
         )
+        # TODO allow this to be controlled outside
         if batch_setup.ph["only_check"]:
             print("Done checking batch setup.")
             print(
                 "Change only_check to False in {} to run".format(batch_setup.file_loc)
             )
+            return
+        elif only_check:
+            print("Done checking batch setup.")
+            print("Pass only_check as False in main to run")
             return
 
     # Setup the recording_container
@@ -456,6 +465,7 @@ def run(
     do_batch_setup=True,
     do_cell_picker=True,
     verbose_batch_params=False,
+    only_check=False,
 ):
     """
     A helper function to assist in running main more readily.
@@ -498,6 +508,8 @@ def run(
         Whether to launch a cell picker (default True).
     verbose_batch_params : bool, optional
         Whether to print extra information about batch parameters (default False).
+    only_check : bool, optional
+        Only checks what would run if True (default False)
 
     Returns
     -------
@@ -623,4 +635,5 @@ def run(
         do_cell_picker=do_cell_picker,
         verbose_batch_params=verbose_batch_params,
         function_config_path=fn_param_loc,
+        only_check=only_check,
     )

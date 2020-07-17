@@ -49,9 +49,15 @@ def main():
     )
     parser.add_argument(
         "--do_cell_picker",
-        "-d",
+        "-p",
         action="store_true",
         help="whether to launch an interactive cell picker",
+    )
+    parser.add_argument(
+        "--dummy",
+        "-d",
+        action="store_true",
+        help="Whether to do a full run or a dummy run",
     )
 
     parsed, unparsed = parser.parse_known_args()
@@ -72,6 +78,7 @@ def main():
             do_batch_setup=not parsed.skip_batch_setup,
             do_cell_picker=parsed.do_cell_picker,
             verbose_batch_params=parsed.verbose,
+            only_check=parsed.dummy,
         )
 
     elif parsed.grab_params:
@@ -93,6 +100,7 @@ def main():
             do_batch_setup=not parsed.skip_batch_setup,
             do_cell_picker=parsed.do_cell_picker,
             verbose_batch_params=parsed.verbose,
+            only_check=parsed.dummy,
         )
 
 

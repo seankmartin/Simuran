@@ -23,6 +23,10 @@ class BatchSetup(object):
         else:
             self.file_loc = fpath
         self.setup()
+        self.only_check = False
+
+    def set_only_check(self, val):
+        self.only_check = val
 
     def setup(self):
         self.ph = ParamHandler(in_loc=self.file_loc, name="params")
@@ -66,7 +70,7 @@ class BatchSetup(object):
 
     def write_batch_params(self, verbose_params=False, verbose=False):
         """If verbose_params is True, writes the result of executing code."""
-        check_only = self.ph["only_check"]
+        check_only = self.ph["only_check"] or self.only_check
         overwrite = self.ph["overwrite"]
         re_filts = self.ph["regex_filters"]
         delete_old_files = self.ph["delete_old_files"]
