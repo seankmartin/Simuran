@@ -47,10 +47,10 @@ def plot_recording_coherence(recording, figures, base_dir):
     # TODO turn this naming into a helper function
     location = os.path.splitext(recording.source_file)[0]
 
-    start = os.path.dirname(location)[len(base_dir + os.sep) :]
-    if start.startswith("C"):
+    dirs = base_dir.split(os.sep)
+    if dirs[-1].startswith("CS") or dirs[-2].startswith("CS"):
         group = "ATN"
-    elif start.startswith("L"):
+    elif dirs[-1].startswith("LS") or dirs[-2].startswith("LS"):
         group = "ATNx"
     else:
         group = "Undefined"
@@ -81,7 +81,9 @@ def plot_recording_coherence(recording, figures, base_dir):
     )
 
     fig, ax = plt.subplots()
-    result = plot_coherence(sub_signal, rsc_signal, ax, sub_signals[0].sampling_rate,)
+    result = plot_coherence(
+        sub_signal, rsc_signal, ax, sub_signals[0].sampling_rate, group=group
+    )
 
     figures.append(SimuranFigure(fig, name, dpi=400, done=True, format="png"))
 
