@@ -49,9 +49,9 @@ def plot_recording_coherence(recording, figures, base_dir):
 
     dirs = base_dir.split(os.sep)
     if dirs[-1].startswith("CS") or dirs[-2].startswith("CS"):
-        group = "ATN"
+        group = "Control"
     elif dirs[-1].startswith("LS") or dirs[-2].startswith("LS"):
-        group = "ATNx"
+        group = "Lesion"
     else:
         group = "Undefined"
 

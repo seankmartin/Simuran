@@ -81,21 +81,26 @@ def batch_run(
         **kwargs,
     )
 
-    if after_batch_function is not None:
-        # TODO support reloading this pickle dump
-        import pickle
+    # TODO support reloading this pickle dump
+    import pickle
 
-        out_dir = os.path.abspath(
-            os.path.join(os.path.dirname(run_dict_loc), "..", "sim_results")
-        )
-        os.makedirs(out_dir, exist_ok=True)
-        pickle_name = os.path.join(
-            out_dir,
-            os.path.splitext(os.path.basename(run_dict_loc))[0] + "_dump.pickle",
-        )
-        print("Dumping info to {}".format(pickle_name))
-        with open(pickle_name, "wb") as f:
-            pickle.dump(all_info, f)
+    out_dir = os.path.abspath(
+        os.path.join(os.path.dirname(run_dict_loc), "..", "sim_results")
+    )
+    os.makedirs(out_dir, exist_ok=True)
+    fn_name = "" if function_to_use is None else os.path.basename(function_to_use)
+    pickle_name = os.path.join(
+        out_dir,
+        os.path.splitext(os.path.basename(run_dict_loc))[0]
+        + "--"
+        + fn_name
+        + "_dump.pickle",
+    )
+    print("Dumping info to {}".format(pickle_name))
+    with open(pickle_name, "wb") as f:
+        pickle.dump(all_info, f)
+
+    if after_batch_function is not None:
         after_batch_function(all_info, out_dir)
 
 
@@ -117,11 +122,13 @@ def plot_all_lfp(info, out_dir):
         for val in item:
             parsed_info.append(list(val.values())[0])
 
-    data = np.concatenate(parsed_info, axis=1)
-    df = pd.DataFrame(data.transpose(), columns=["frequency", "coherence", "group"])
+    data = np.concatenate(parsed_info[:-1], axis=1)
+    df = pd.DataFrame(data.transpose(), columns=["frequency", "coherence", "Group"])
     df[["frequency", "coherence"]] = df[["frequency", "coherence"]].apply(pd.to_numeric)
 
-    sns.lineplot(data=df, x="frequency", y="coherence", style="group", hue="group")
+    sns.lineplot(
+        data=df, x="frequency", y="coherence", style="Group", hue="Group", ci=None
+    )
 
     sns.despine()
 
@@ -129,3 +136,7 @@ def plot_all_lfp(info, out_dir):
     plt.ylabel("Coherence")
 
     plt.savefig(os.path.join(out_dir, "coherence.png"), dpi=400)
+
+    plt.ylim(0, 1)
+
+    plt.savefig(os.path.join(out_dir, "coherence_full.png"), dpi=400)
