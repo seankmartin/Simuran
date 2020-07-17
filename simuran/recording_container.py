@@ -77,7 +77,7 @@ class RecordingContainer(AbstractContainer):
         else:
             return self[idx]
 
-    def get_results(self, idx):
+    def get_results(self, idx=None):
         return self.data_from_attr_list([("results", None)], idx=idx)
 
     def get_set_units(self):
