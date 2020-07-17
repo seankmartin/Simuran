@@ -68,7 +68,7 @@ def main():
                 "Please provide either batch_config_path"
                 + " or function_config_path as a valid path"
             )
-        simuran.main.batch_main.main(
+        simuran.main.batch_main.batch_run(
             to_use,
             text_editor=parsed.editor,
             check_params=parsed.check_params,
