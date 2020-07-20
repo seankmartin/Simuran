@@ -319,5 +319,5 @@ class BaseSimuran(ABC):
         return data_out
 
     def __str__(self):
-        """Called on print."""
+        """Call on print."""
         return "{} with attributes {}".format(self.__class__.__name__, self.__dict__)

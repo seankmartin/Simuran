@@ -12,13 +12,58 @@ from skm_pyutils.py_save import save_dicts_to_csv
 
 
 class AbstractContainer(ABC):
-    """TODO Put the docstring here."""
+    """
+    A abstract class container in SIMURAN, really a wrapper of a list.
+
+    This has some extra functionality, such as retrieving
+    information from each item in the container,
+    or grouping items by property.
+
+    Any subclass must implement the _create_new method,
+    which just describes how a new item is added.
+    For example, it could simply be return params if nothing is done.
+
+    Attributes
+    ----------
+    container : list
+        The underlying list being wrapped.
+
+    """
 
     def __init__(self):
+        """See help(AbstractContainer)."""
         self.container = []
         super().__init__()
 
+    @abstractmethod
+    def _create_new(self, params):
+        """
+        Create a new item to add to the container.
+
+        Parameters
+        ----------
+        params : obj
+            Anything needed for instantiating the object.
+
+        """
+        pass
+
+    def load(self):
+        """Iteratively load each object in the container."""
+        for item in self:
+            item.load()
+
+    def append(self, item):
+        """Append item to self.container."""
+        self.container.append(item)
+
+    def append_new(self, params):
+        """Append a new item to self.container using _create_new."""
+        to_add = self._create_new(params)
+        self.append(to_add)
+
     def group_by_property(self, prop, value):
+
         group = []
         indices = []
         for i, val in enumerate(self):
@@ -29,31 +74,6 @@ class AbstractContainer(ABC):
 
     def get_property(self, prop):
         return [getattr(val, prop) for val in self.container]
-
-    def __getitem__(self, idx):
-        return self.container[idx]
-
-    def __len__(self):
-        return len(self.container)
-
-    def __iter__(self):
-        return iter(self.container)
-
-    def __str__(self):
-        return "{} with {} elements:\n{}".format(
-            self.__class__.__name__, len(self), self.container
-        )
-
-    def load(self):
-        for item in self:
-            item.load()
-
-    def append(self, item):
-        self.container.append(item)
-
-    def append_new(self, params):
-        to_add = self._create_new(params)
-        self.append(to_add)
 
     def save_single_data(
         self,
@@ -165,9 +185,19 @@ class AbstractContainer(ABC):
         self.container = [self.container[i] for i in idx_list]
         return idx_list
 
-    @abstractmethod
-    def _create_new(self, params):
-        pass
+    def __getitem__(self, idx):
+        return self.container[idx]
+
+    def __len__(self):
+        return len(self.container)
+
+    def __iter__(self):
+        return iter(self.container)
+
+    def __str__(self):
+        return "{} with {} elements:\n{}".format(
+            self.__class__.__name__, len(self), self.container
+        )
 
 
 class GenericContainer(AbstractContainer):
