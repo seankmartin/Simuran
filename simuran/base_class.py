@@ -1,6 +1,8 @@
 """The base class sets up information and methods held in most SIMURAN classes."""
 
 from abc import ABC, abstractmethod
+import datetime
+
 from simuran.loaders.base_loader import BaseLoader
 
 
@@ -8,22 +10,42 @@ class BaseSimuran(ABC):
     """
     An abstract class which is the base class for most SIMURAN classes.
 
+    This class describes a general framework for any object
+    which loads information from a source file.
+
+    The abstract method load must be implemented by subclasses.
+
     Attributes
     ----------
     kwargs : dict
         Any extra keyword arguments to store on this object.
     info : dict
         Store any extra information on this object.
-    date : TODO
+    datetime : datetime.datetime
+        The datetime stored on the object.
+        Can be used for filtering purposes.
+        For example, to get recordings performed on a specific day.
+    tag : str
+        An optional tag to describe the object.
+    loader : simuran.loader.Loader
+        A loader object that is used to load the object.
+    source_file : str
+        The path to the source file for this object.
+    last_loaded_source : str
+        The path to the last file this object was loaded from.
+    underlying : object
+        When self.loader is called, the underlying object
+        can be stored in this object under this name.
+    results : dict
+        A dictionary of results.
 
     """
 
     def __init__(self, **kwargs):
         """See help(BaseSimuran) for more info."""
         self.kwargs = kwargs
-        self.info = None
-        self.date = None
-        self.time = None
+        self.info = {}
+        self.datetime = datetime.date.now()
         self.tag = None
         self.loader = None
         self.source_file = None
@@ -32,41 +54,28 @@ class BaseSimuran(ABC):
         self.results = {}
         super().__init__()
 
-    def add_info(self, key, name, info):
-        if self.info is None:
-            self.info = {}
-        if key not in self.info.keys():
-            self.info[key] = {}
-        self.info[key][name] = info
-
-    def get_info(self, key, name):
-        if self.info is None:
-            raise ValueError("info has not been initialised in {}".format(self))
-        return self.info[key][name]
-
-    def does_info_exist(self, name):
-        if self.info is not None:
-            for item in self.info.values():
-                if name in item.keys():
-                    return True
-        return False
-
-    def setup(self, params):
-        self.save_attrs(params)
-
-    def set_loader(self, loader):
-        if not isinstance(loader, BaseLoader):
-            raise ValueError(
-                "Loader set in set_loader should be derived from BaseLoader"
-                + " actual class is {}".format(loader.__class__.__name__)
-            )
-        self.loader = loader
-
-    def set_source_file(self, file):
-        self.source_file = file
-
     @abstractmethod
     def load(self, *args, **kwargs):
+        """
+        Load the data using the set loader object.
+
+        Parameters
+        ----------
+        *args : list
+            Positional arguments
+        **kwargs : dict
+            Keyword arguments
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        ValueError
+            If no loader has been set.
+
+        """
         if self.loader is None:
             raise ValueError(
                 "Set a loader in {} before calling load.".format(
@@ -75,16 +84,214 @@ class BaseSimuran(ABC):
             )
         if self.loaded():
             return
-            # print("Already loaded {} from {}".format(
-            #     self.__class__.__name__, self.source_file))
+
+    def save_attrs(self, attr_dict):
+        """
+        Store all the keys in attr_dict as attributes.
+
+        If attr_dict is passed as None, nothing happens.
+
+        Parameters
+        ----------
+        attr_dict : dict
+            A dictionary of key/value pairs to be stored as attributes.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        TypeError
+            Input is not a dictionary.
+
+        """
+        if attr_dict is not None:
+            if hasattr(attr_dict, "items"):
+                for key, value in attr_dict.items():
+                    setattr(self, key, value)
+            else:
+                raise TypeError("Input is not a dictionary")
+
+    def setup(self, params):
+        """
+        Store all the keys in params as attributes.
+
+        Parameters
+        ----------
+        params : dict
+            A dictionary of key/value pairs to be stored as attributes.
+
+        Returns
+        -------
+        None
+
+        """
+        self.save_attrs(params)
+
+    def add_info(self, key, name, info):
+        """
+        Store information so self.info[key][name] = info.
+
+        Parameters
+        ----------
+        key : str
+            The first key in the dictionary to store information to.
+        name : str
+            The second key in the dictionary to store information to.
+        info : object
+            The information to store
+
+        Returns
+        -------
+        None
+
+        """
+        if key not in self.info.keys():
+            self.info[key] = {}
+        self.info[key][name] = info
+
+    def get_info(self, key, name):
+        """
+        Retrieve self.info[key][name].
+
+        Parameters
+        ----------
+        key : str
+            The first key in the dictionary to retrieve information from.
+        name : str
+            The second key in the dictionary to retrieve information from.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        ValueError
+            The key and name are not in self.info.
+
+        """
+        if key in self.info.keys():
+            if name in self.info[key].keys():
+                return self.info[key][name]
+        raise ValueError("info has not been initialised in {}".format(self))
+
+    def does_info_exist(self, name):
+        """
+        Check if name exists in any sub dictionaries in self.info.
+
+        Parameters
+        ----------
+        name : str
+            The string to check for.
+
+        Returns
+        -------
+        bool
+            Whether name exists in any sub dictionaries.
+
+        """
+        for item in self.info.values():
+            if name in item.keys():
+                return True
+        return False
+
+    def set_loader(self, loader):
+        """
+        Set the loader object.
+
+        Parameters
+        ----------
+        loader : simuran.loader.Loader
+            Loader object to set.
+
+        Raises
+        ------
+        TypeError
+            The passed loader is not a simuran.loader.Loader.
+
+        """
+        if not isinstance(loader, BaseLoader):
+            raise TypeError(
+                "Loader set in set_loader should be derived from BaseLoader"
+                + " actual class is {}".format(loader.__class__.__name__)
+            )
+        self.loader = loader
+
+    def set_source_file(self, file):
+        """
+        Set the source file.
+
+        Parameters
+        ----------
+        file : str
+            [description]
+
+        """
+        self.source_file = file
 
     def loaded(self):
+        """
+        Return True if the file has been loaded.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        bool
+            True if the source file has been loaded.
+
+        """
         loaded = (self.last_loaded_source is not None) and (
             self.last_loaded_source == self.source_file
         )
         return loaded
 
     def data_dict_from_attr_list(self, attr_list, friendly_names=None):
+        """
+        From a list of attributes, return a dictionary.
+
+        Each item in attr_list should be a tuple containing
+        attributes, keys, or None.
+        The elements of the tuple are then accessed iteratively, like
+        self.tuple_el1.tuple_el2...
+        If the element is an attribute, it is directly retrieved.
+        If the element is a key in a dictionary, that is retrieved.
+        If the element is None, it indicates a break.
+        (This last option can be used to get functions without calling them,
+        or to get a full dictionary instead of pulling out the key, value pairs.)
+
+        The output also depends on what is retrieved, if a dictionary or a function.
+        Functions are called with no arguments.
+        Dictionaries have key value pairs, that are stored in the output dictionary.
+        Both of these can be avoided by passing the last element of the tuple as None.
+
+        Parameters
+        ----------
+        attr_list : list
+            The list of attributes to retrieve.
+        friendly_names : list, optional
+            What to name each retrieved attribute, (default None).
+            Must be the same size as attr_list or None.
+
+        Returns
+        -------
+        dict
+            The retrieved attributes.
+
+        Raises
+        ------
+        ValueError
+            attr_list and friendly_names are not the same size.
+
+        """
+        if friendly_names is not None:
+            if len(friendly_names) != len(attr_list):
+                raise ValueError("friendly_names and attr_list must be the same")
+
         data_out = {}
         for i, attr_tuple in enumerate(attr_list):
             item = self
@@ -110,12 +317,6 @@ class BaseSimuran(ABC):
                     key = friendly_names[i]
                 data_out[key] = item
         return data_out
-
-    def save_attrs(self, attr_dict):
-        if attr_dict is not None:
-            if hasattr(attr_dict, "items"):
-                for key, value in attr_dict.items():
-                    setattr(self, key, value)
 
     def __str__(self):
         """Called on print."""
