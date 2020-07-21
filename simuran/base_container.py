@@ -1,6 +1,7 @@
 """This module holds containers to allow for batch processing."""
 from abc import ABC, abstractmethod
 import os
+import copy
 
 import numpy as np
 
@@ -54,16 +55,61 @@ class AbstractContainer(ABC):
             item.load()
 
     def append(self, item):
-        """Append item to self.container."""
+        """
+        Append item to self.container.
+
+        Parameters
+        ----------
+        item : object
+            The item to append.
+
+        Returns
+        -------
+        None
+
+        """
         self.container.append(item)
 
     def append_new(self, params):
-        """Append a new item to self.container using _create_new."""
+        """
+        Append a new item to self.container using _create_new.
+
+        Parameters
+        ----------
+        params : object
+            Parameter object passed to _create_new.
+
+        Returns
+        -------
+        None
+
+        See Also
+        --------
+        simuran.base_container._create_new
+
+        """
         to_add = self._create_new(params)
         self.append(to_add)
 
     def group_by_property(self, prop, value):
+        """
+        Return all items in the container with item.prop == value.
 
+        Parameters
+        ----------
+        prop : str
+            The name of the attribute to group by.
+        value : object
+            The value of the property to group by.
+
+        Returns
+        -------
+        group : list of objects
+            The items in the container satisfying the conditions.
+        indices : list of int
+            The index of each item in the container satisfying the conditions.
+
+        """
         group = []
         indices = []
         for i, val in enumerate(self):
@@ -73,6 +119,20 @@ class AbstractContainer(ABC):
         return group, indices
 
     def get_property(self, prop):
+        """
+        Return a list as item.prop for prop in self.
+
+        Parameters
+        ----------
+        prop : str
+            The name of the attribute to retrieve from each item.
+
+        Returns
+        -------
+        list
+            The value of the property for each item in the container.
+
+        """
         return [getattr(val, prop) for val in self.container]
 
     def save_single_data(
@@ -84,20 +144,56 @@ class AbstractContainer(ABC):
         name_list=None,
     ):
         """
-        This saves one file per object in the container.
+        Save attributes to one file per object in the container.
 
-        Currently dict, np.ndarray, and list are supported values.
+        Currently dict, np.ndarray, and list are supported outputs.
+        save_summary_data should be preferred if all the data could fit in
+        a single row for each item in the container.
+
+        Parameters
+        ----------
+        attr_list : list of tuples
+            The list of attributes to obtain for each object in the container
+        friendly_names : list of str, optional
+            What to name the values retrieved from attr_list, by default None
+        idx_list : list of int, optional
+            A subset of indices to get data for in the container, by default uses all
+        out_dir_list : list of str, optional
+            Paths to directories to save results to, by default cwd + "sim_results"
+        name_list : list of str, optional
+            Names of the files to save, by default "sim_results{}.csv".format(i)
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        ValueError
+            If name_list or out_dir_list is provided but not the same size as idx_list.
+
+        See also
+        --------
+        simuran.base_container.data_from_attr_list
+
         """
         if idx_list is None:
             idx_list = [i for i in range(len(self))]
 
-        if name_list == None:
+        if name_list is None:
             name_list = ["sim_results" + str(i) + ".csv" for i in idx_list]
+        elif len(name_list) != len(idx_list):
+            raise ValueError("Number of names must match number of items")
 
-        if out_dir_list == None:
+        if out_dir_list is None:
             out_dir_list = [
                 os.path.join(os.getcwd(), "sim_results") for i in range(len(idx_list))
             ]
+        elif len(out_dir_list) != len(idx_list):
+            raise ValueError(
+                "Number of output directories must match the number of items"
+            )
+
         elif isinstance(out_dir_list, "str"):
             out_dir_list = [out_dir_list] * len(idx_list)
 
@@ -109,7 +205,27 @@ class AbstractContainer(ABC):
 
     def save_summary_data(self, location, attr_list, friendly_names=None, decimals=3):
         """
-        This saves one file for the whole container, each row is an object.
+        Save attributes to one file for the whole container, each row is an object.
+
+        Parameters
+        ----------
+        location : str
+            Path to the location to save the data to
+        attr_list : list of tuples
+            Attributes to save.
+        friendly_names : list of str, optional
+            The names of the attributes to save, by default None
+        decimals : int, optional
+            The number of decimal places to save outputs with, by default 3
+
+        Returns
+        -------
+        None
+
+        See also
+        --------
+        simuran.base_container.data_from_attr_list
+
         """
         attr_list = [("source_dir",), ("source_name",)] + attr_list
         for i in range(len(self)):
@@ -128,6 +244,37 @@ class AbstractContainer(ABC):
         save_dicts_to_csv(location, data_list)
 
     def data_from_attr_list(self, attr_list, friendly_names=None, idx=None, decimals=3):
+        """
+        Retrieve attr_list from each item in the container.
+
+        See simuran.base_class.data_dict_from_attr_list for the
+        description of the attributes list to be provided.
+
+        Parameters
+        ----------
+        attr_list : list of tuples
+            The attributes to retrieve.
+        friendly_names : list of str, optional
+            The names for the attributes, by default None
+        idx : [type], optional
+            A specific index to retrieve data for, by default retrieves all
+        decimals : int, optional
+            The number of decimal places to save outputs with, by default 3
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        ValueError
+            If friendly names is provided but not the same size as attr_list.
+
+        See also
+        --------
+        simuran.base_class.data_dict_from_attr_list
+
+        """
         if len(friendly_names) != len(attr_list):
             friendly_names = None
 
@@ -163,9 +310,51 @@ class AbstractContainer(ABC):
         return data_out
 
     def sort(self, sort_fn, reverse=False):
+        """
+        Sort the container in place.
+
+        Parameters
+        ----------
+        sort_fn : function
+            The function to use as the key in the sorted function
+        reverse : bool, optional
+            If the sorting should be applied in reverse, by default False
+
+        Returns
+        -------
+        None
+
+        """
         self.container = sorted(self.container, key=sort_fn, reverse=reverse)
 
-    def subsample(self, idx_list=None, interactive=False, prop=None):
+    def subsample(self, idx_list=None, interactive=False, prop=None, inplace=False):
+        """
+        Subsample the container, optionally in place.
+
+        Parameters
+        ----------
+        idx_list : list of int, optional
+            The list to subsample, by default None.
+            Only pass None if interactive is set to True.
+        interactive : bool, optional
+            Whether to launch an interactive prompt for sub-sampling, by default False
+        prop : str, optional
+            An attribute of the the items in the container, by default None.
+            This can be used in the interactive mode to help identify the recordings.
+        inplace : bool, optional
+            Perform the subsampling in place, or return a copy, by default False
+
+        Returns
+        -------
+        list of int, or simuran.base_container.AbstractContainer
+            A container with the subsampled items if inplace is False.
+            The indices of the items subsampled from the container if inplace is True
+
+        TODO
+        ----
+        Test using inplace as False
+
+        """
         if interactive:
             if prop is None:
                 full_list = self.container
@@ -182,8 +371,13 @@ class AbstractContainer(ABC):
                 return [i for i in range(len(self))]
             indices = indices.strip().split(" ")
             idx_list = [int(i) - 1 for i in indices]
-        self.container = [self.container[i] for i in idx_list]
-        return idx_list
+        if inplace:
+            self.container = [self.container[i] for i in idx_list]
+            return idx_list
+        else:
+            new_instance = copy.copy(self)
+            new_instance.container = [self.container[i] for i in idx_list]
+            return new_instance
 
     def __getitem__(self, idx):
         return self.container[idx]
