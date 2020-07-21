@@ -429,7 +429,7 @@ class GenericContainer(AbstractContainer):
 
         """
         new = self.cls()
-        if new.hasattr("setup"):
+        if hasattr(new, "setup"):
             new.setup(params)
             return new
         else:
