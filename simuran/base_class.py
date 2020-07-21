@@ -45,7 +45,7 @@ class BaseSimuran(ABC):
         """See help(BaseSimuran) for more info."""
         self.kwargs = kwargs
         self.info = {}
-        self.datetime = datetime.date.now()
+        self.datetime = datetime.datetime.now()
         self.tag = None
         self.loader = None
         self.source_file = None
