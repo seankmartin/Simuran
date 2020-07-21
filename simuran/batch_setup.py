@@ -1,3 +1,6 @@
+"""This module assists with writing parameters needed for batch analysis."""
+
+
 import os
 import shutil
 from pprint import pformat
@@ -8,14 +11,40 @@ from skm_pyutils.py_path import get_all_files_in_dir
 
 class BatchSetup(object):
     """
-    Example usage is:
+    Help managing parameters for running batch operations.
 
-    batch_setup = BatchSetup(directory)
-    print(batch_setup)
-    batch_setup.write_batch_params()
+    Attributes
+    ----------
+    in_dir : str
+        The path to the directory to start batch operations in.
+    fpath : str
+        The path to the parameter file describing the behaviour.
+    only_check: bool
+        Whether files should actually be written out,
+        or just have the paths that would be written to printed out.
+
+    Parameters
+    ----------
+    in_dir : str
+        Sets attribute in_dir.
+    fpath : str
+        Either the full path to a parameter file, or just
+        the name of the parameter file relative to in_dir.
+        This should describe how batch_setup will behave.
+
+    Example
+    -------
+    .. highlight:: python
+    .. code-block:: python
+
+        batch_setup = BatchSetup(directory, fpath="params.py")
+        batch_setup.interactive_refilt()
+        print(batch_setup)
+        batch_setup.write_batch_params()
     """
 
     def __init__(self, in_dir, fpath="simuran_batch_params.py"):
+        """See help(BatchSetup)."""
         self.in_dir = in_dir
         if not os.path.isfile(fpath):
             if os.path.isfile(os.path.join(self.in_dir, fpath)):
@@ -26,9 +55,23 @@ class BatchSetup(object):
         self.only_check = False
 
     def set_only_check(self, val):
+        """
+        Set the value of only_check.
+
+        Parameters
+        ----------
+        val : bool
+            The value to set.
+
+        Returns
+        -------
+        None
+
+        """
         self.only_check = val
 
     def setup(self):
+        """Call on initialisation."""
         self.ph = ParamHandler(in_loc=self.file_loc, name="params")
         self._bad_file = self.ph["mapping_file"] is None
         if not self._bad_file:
@@ -46,6 +89,7 @@ class BatchSetup(object):
             self.interactive_refilt()
 
     def interactive_refilt(self):
+        """Launch an interactive prompt to design REGEX filters for batch operation."""
         regex_filts, _ = self.ph.interactive_refilt(self.in_dir)
         neuro_file = open(self.file_loc, "r")
         temp_file = open("temp.txt", "w")
@@ -69,7 +113,32 @@ class BatchSetup(object):
         self.setup()
 
     def write_batch_params(self, verbose_params=False, verbose=False):
-        """If verbose_params is True, writes the result of executing code."""
+        """
+        Write parameters to the established locations in setup.
+
+        If verbose_params is True, prints the files that would be written to.
+
+        Parameters
+        ----------
+        verbose_params : bool, optional
+            Whether to write the parameters in short or long format, default is False.
+            E.g. if params = [1, 2, 3] * 2, verbose_params set to True would write
+            [1, 2, 3, 1, 2, 3], while false would write params = [1, 2, 3] * 2
+        verbose : bool, optional
+            Whether to print out extra information during execution, default is False.
+
+        Returns
+        -------
+        list
+            A list of directories that were written to.
+
+        Raises
+        ------
+        ValueError
+            If a non-existent file is attempted to be written.
+            Can only occur in non verbose_params mode.
+
+        """
         check_only = self.ph["only_check"] or self.only_check
         overwrite = self.ph["overwrite"]
         re_filts = self.ph["regex_filters"]
@@ -110,6 +179,25 @@ class BatchSetup(object):
     def clear_params(
         start_dir, to_remove="simuran_params.py", recursive=True, verbose=False
     ):
+        """
+        Remove all files with the name to_remove from start_dir.
+
+        Parameters
+        ----------
+        start_dir : str
+            Where to start removing files from
+        to_remove : str, optional
+            The name of the files to remove, by default "simuran_params.py"
+        recursive : bool, optional
+            Whether to recursive through child directories, by default True
+        verbose : bool, optional
+            Whether to print the files that were deleted, by default False
+
+        Returns
+        -------
+        None
+
+        """
         fnames = BatchSetup.get_param_locations(
             start_dir, to_find=to_remove, recursive=recursive
         )
@@ -121,6 +209,23 @@ class BatchSetup(object):
 
     @staticmethod
     def get_param_locations(start_dir, to_find="simuran_params.py", recursive=True):
+        """
+        Find all directories that have to_find in them.
+
+        Parameters
+        ----------
+        start_dir : str
+            Where to start the search from.
+        to_find : str, optional
+            What filename to find, by default "simuran_params.py"
+        recursive : bool, optional
+            Whether to recurse through child directories, by default True
+
+        Returns
+        -------
+        list
+            Paths to each of the files found.
+        """
         fnames = get_all_files_in_dir(start_dir, ext=".py", recursive=recursive)
 
         def keep_file(filename):
@@ -134,6 +239,24 @@ class BatchSetup(object):
     def get_params_matching_pattern(
         start_dir, re_filter=".*simuran.*params", recursive=True
     ):
+        """
+        Find all files matching a regex pattern.
+
+        Parameters
+        ----------
+        start_dir : str
+            Where to start the search from.
+        re_filter : str, optional
+            A regular expression pattern, by default ".*simuran.*params"
+        recursive : bool, optional
+            Whether to recurse into subdirectories, by default True
+
+        Returns
+        -------
+        list
+            Paths to the files found.
+
+        """
         fnames = get_all_files_in_dir(
             start_dir, ext=".py", recursive=recursive, re_filter=re_filter
         )
@@ -147,6 +270,27 @@ class BatchSetup(object):
     def copy_params(
         from_dir, to_dir, re_filter=".*simuran.*params", recursive=True, test_only=False
     ):
+        """
+        Copy all parameters matching a regex between directories.
+
+        Parameters
+        ----------
+        from_dir : str
+            Path to the directory to copy from.
+        to_dir : str
+            Path to the directory to copy to.
+        re_filter : str, optional
+            A regular expression pattern, by default ".*simuran.*params"
+        recursive : bool, optional
+            Whether to recurse into subdirectories, by default True
+        test_only : bool, optional
+            If True, it only prints what would be copied, by default False
+
+        Returns
+        -------
+        None
+
+        """
         files = BatchSetup.get_params_matching_pattern(
             from_dir, re_filter=re_filter, recursive=recursive
         )
@@ -162,6 +306,7 @@ class BatchSetup(object):
                 shutil.copy(f, dest)
 
     def __str__(self):
+        """Call on print."""
         return "{} from {} with parameters:\n {} ".format(
             self.__class__.__name__, self.file_loc, pformat(self.ph.params, width=200)
         )

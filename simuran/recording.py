@@ -81,7 +81,7 @@ class Recording(BaseSimuran):
         self._setup(load=load)
 
     def _setup(self, load=True):
-        if self.source_file == None:
+        if self.source_file is None:
             default_base_val = None
             if self.param_handler.location is not None:
                 default_base_val = os.path.dirname(self.param_handler.location)
