@@ -50,7 +50,7 @@ class AbstractContainer(ABC):
         pass
 
     def load(self):
-        """Iteratively load each object in the container."""
+        """Iterate and load each object in the container."""
         for item in self:
             item.load()
 
@@ -380,26 +380,59 @@ class AbstractContainer(ABC):
             return new_instance
 
     def __getitem__(self, idx):
+        """Retrive the object at the specified index from the container."""
         return self.container[idx]
 
     def __len__(self):
+        """Get the number of items in the container."""
         return len(self.container)
 
     def __iter__(self):
+        """Iterate over the items in the container."""
         return iter(self.container)
 
     def __str__(self):
+        """Call on print."""
         return "{} with {} elements:\n{}".format(
             self.__class__.__name__, len(self), self.container
         )
 
 
 class GenericContainer(AbstractContainer):
+    """
+    A subclass of AbstractContainer where each item in the container has the same type.
+
+    Attributes
+    ----------
+    cls : class
+        The class of each item in the container.
+
+    """
+
     def __init__(self, cls):
+        """See help(GenericContainer)."""
         self.cls = cls
         super().__init__()
 
     def _create_new(self, params):
+        """
+        Create a new entry to be placed in the container.
+
+        Parameters
+        ----------
+        params : object
+            The parameters to use if class has a setup function,
+            otherwise this object is just returned back.
+
+        Returns
+        -------
+        object
+            The created object, has type self.cls
+
+        """
         new = self.cls()
-        new.setup(params)
-        return new
+        if new.hasattr("setup"):
+            new.setup(params)
+            return new
+        else:
+            return params
