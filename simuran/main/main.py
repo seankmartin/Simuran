@@ -265,7 +265,7 @@ def main(
         if select_recordings is True:
             select_location = os.path.join(recording_container.base_dir, file_list_name)
             if not os.path.isfile(select_location):
-                idx_list = recording_container.subsample(interactive=True)
+                idx_list = recording_container.subsample(interactive=True, inplace=True)
                 print(
                     "Selected {} for processing, saved to {}".format(
                         recording_container.get_property("source_file"), select_location
@@ -289,9 +289,9 @@ def main(
                 if isinstance(val, str):
                     all_idx = False
             if all_idx:
-                recording_container.subsample(idx_list=select_recordings)
+                recording_container.subsample(idx_list=select_recordings, inplace=True)
             else:
-                recording_container.subsample_by_name(select_recordings)
+                recording_container.subsample_by_name(select_recordings, inplace=True)
 
     # Select which cells to consider
     # TODO move cell picking helper

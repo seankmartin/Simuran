@@ -89,10 +89,10 @@ class RecordingContainer(AbstractContainer):
             l.append(unit_l)
         return l
 
-    def subsample(self, idx_list=None, interactive=False, prop=None):
+    def subsample(self, idx_list=None, interactive=False, prop=None, inplace=False):
         if prop is None:
             prop = "source_file"
-        return super().subsample(idx_list, interactive, prop)
+        return super().subsample(idx_list, interactive, prop, inplace)
 
     def find_recording_with_source(self, source_file):
         found = False
@@ -110,9 +110,11 @@ class RecordingContainer(AbstractContainer):
             "Could not find a recording with the source {}".format(source_file)
         )
 
-    def subsample_by_name(self, source_files):
+    def subsample_by_name(self, source_files, inplace=False):
         indexes = [self.find_recording_with_source(s) for s in source_files]
-        self.subsample(idx_list=indexes, interactive=False, prop="source_file")
+        self.subsample(
+            idx_list=indexes, interactive=False, prop="source_file", inplace=inplace
+        )
 
     def _create_new(self, params):
         recording = Recording(params=params)
