@@ -4,7 +4,7 @@ import os
 from simuran.base_class import BaseSimuran
 from simuran.param_handler import ParamHandler
 from simuran.base_container import GenericContainer
-from simuran.base_signal import AbstractSignal
+from simuran.base_signal import BaseSignal
 from simuran.single_unit import SingleUnit
 from simuran.spatial import Spatial
 from simuran.loaders.loader_list import loaders_dict
@@ -115,7 +115,7 @@ class Recording(BaseSimuran):
             self.source_file = base
 
         # TODO this could possibly have different classes for diff loaders
-        self.signals = GenericContainer(AbstractSignal)
+        self.signals = GenericContainer(BaseSignal)
         if "signals" in self.param_handler.keys():
             self.available.append("signals")
             signal_dict = self.param_handler["signals"]

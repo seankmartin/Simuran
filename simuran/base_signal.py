@@ -3,7 +3,7 @@
 from simuran.base_class import BaseSimuran
 
 
-class AbstractSignal(BaseSimuran):
+class BaseSignal(BaseSimuran):
     """
     Describes the base information for a regularly sampled signal.
 
@@ -26,7 +26,7 @@ class AbstractSignal(BaseSimuran):
     """
 
     def __init__(self):
-        """See help(AbstractSignal)."""
+        """See help(BaseSignal)."""
         self.timestamps = None
         self.samples = None
         self.sampling_rate = None

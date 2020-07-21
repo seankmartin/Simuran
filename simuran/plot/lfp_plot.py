@@ -111,7 +111,7 @@ def plot_lfp(
     It is assumed that the input lfps are prefiltered if filtering is required.
 
     Args:
-        signals (list): list of signals (AbstractSignal) to plot.
+        signals (list): list of signals (BaseSignal) to plot.
         channels (list): list of channels (str or int) to plot.
         out_dir (str): The directory to plot the output to.
         start_name (str): The start_part of the name to plot to. 
