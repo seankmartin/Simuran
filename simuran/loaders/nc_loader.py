@@ -9,10 +9,22 @@ from skm_pyutils.py_path import get_all_files_in_dir
 
 
 class NCLoader(BaseLoader):
+    """Load data compatible with the NeuroChaT package."""
+
     def __init__(self, load_params={}):
+        """Call super class initialize."""
         super().__init__(load_params=load_params)
 
     def load_signal(self, *args, **kwargs):
+        """
+        Call the NeuroChaT NLfp.load method.
+
+        Returns
+        -------
+        dict
+            The keys of this dictionary are saved as attributes
+            in simuran.signal.BaseSignal.load()
+        """
         self.signal = NLfp()
         self.signal.load(*args, self.load_params["system"])
         return {
@@ -24,6 +36,15 @@ class NCLoader(BaseLoader):
         }
 
     def load_spatial(self, *args, **kwargs):
+        """
+        Call the NeuroChaT NSpatial.load method.
+
+        Returns
+        -------
+        dict
+            The keys of this dictionary are saved as attributes
+            in simuran.single_unit.SingleUnit.load()
+        """
         self.spatial = NSpatial()
         self.spatial.load(*args, self.load_params["system"])
         return {
@@ -33,6 +54,16 @@ class NCLoader(BaseLoader):
         }
 
     def load_single_unit(self, *args, **kwargs):
+        """
+        Call the NeuroChaT NSpike.load method.
+
+        Returns
+        -------
+        dict
+            The keys of this dictionary are saved as attributes
+            in simuran.spatial.Spatial.load()
+
+        """
         fname, clust_name = args
         if clust_name is not None:
             self.single_unit = NSpike()
@@ -50,6 +81,28 @@ class NCLoader(BaseLoader):
             return None
 
     def auto_fname_extraction(self, base, **kwargs):
+        """
+        Extract all filenames relevant to the recording from base.
+
+        Parameters
+        ----------
+        base : str
+            Where to start looking from.
+            For Axona, this should be a .set file,
+            or a directory containing exactly one .set file
+
+        Returns
+        -------
+        fnames : dict
+            A dictionary listing the filenames involved in loading.
+        base : str
+            The base file name, in Axona this is a .set file.
+
+        TODO
+        ----
+        Expand to support nwb and neuralynx as well as Axona.
+
+        """
         # Currently only implemented for Axona systems
         if self.load_params["system"] == "Axona":
 

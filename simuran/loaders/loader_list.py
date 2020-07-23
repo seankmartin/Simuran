@@ -9,5 +9,5 @@ try:
     from simuran.loaders.nc_loader import NCLoader
 
     loaders_dict["nc_loader"] = NCLoader
-except Exception as e:
+except BaseException:
     print("NeuroChaT is not installed")
