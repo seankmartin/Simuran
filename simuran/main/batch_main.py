@@ -104,6 +104,8 @@ def batch_run(
     if after_batch_function is not None:
         after_batch_function(all_info, out_dir)
 
+    return all_info
+
 
 def plot_all_lfp(info, out_dir):
     # TODO this is only temp here, should not be here in general
@@ -127,7 +129,8 @@ def plot_all_lfp(info, out_dir):
             to_use = this_item
             this_item[1][-10:] = this_item[1][-20:-10]
             to_use[1] = smooth_1d(
-                this_item[1].astype(float), kernel_type="hg", kernel_size=5)
+                this_item[1].astype(float), kernel_type="hg", kernel_size=5
+            )
             if this_item[2][0] == "Control":
                 control_data.append(to_use[1])
             else:
@@ -146,7 +149,7 @@ def plot_all_lfp(info, out_dir):
     data = np.concatenate(parsed_info[:-1], axis=1)
     df = pd.DataFrame(data.transpose(), columns=["frequency", "coherence", "Group"])
     df.replace("Control", "Control (ATN,   N = 6)", inplace=True)
-    df.replace("Lesion",  "Lesion  (ATNx, N = 5)", inplace=True)
+    df.replace("Lesion", "Lesion  (ATNx, N = 5)", inplace=True)
     df[["frequency", "coherence"]] = df[["frequency", "coherence"]].apply(pd.to_numeric)
 
     sns.lineplot(

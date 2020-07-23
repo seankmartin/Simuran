@@ -6,22 +6,51 @@ import os
 
 
 def main():
+    """
+    Start the SIMURAN command line interface.
+
+    Raises
+    ------
+    ValueError
+        If any command line arguments are not recognised.
+    FileNotFoundError
+        The path to the file describing the program behaviour is not found.
+    ValueError
+        If the -r flag is not present, and the -fn variable is not a valid path.
+
+    Returns
+    -------
+    dict or list of dicts
+        The output of running analysis from the specified configuration.
+
+    """
     description = "Command line arguments"
     parser = argparse.ArgumentParser(description)
-    # TODO refactor to support optional
     parser.add_argument(
-        "function_config_path",
+        "batch_config_path",
         type=str,
-        help="path to configuration file for functions to run",
+        help="path to configuration file for program behaviour",
     )
     parser.add_argument(
-        "batch_config_path", type=str, help="path to configuration file for batch setup"
+        "--function_config_path",
+        "-fn",
+        type=str,
+        default="",
+        help="path to configuration file for functions to run, "
+        + "must be present if -r is not flagged",
     )
     parser.add_argument(
-        "--editor", "-e", type=str, default="nano", help="the text editor to use"
+        "--editor",
+        "-e",
+        type=str,
+        default="nano",
+        help="the text editor to use for any file changes",
     )
     parser.add_argument(
-        "--recursive", "-r", action="store_true", help="whether to run in a batch"
+        "--recursive",
+        "-r",
+        action="store_true",
+        help="whether to launch the batch version of SIMURAN",
     )
     parser.add_argument(
         "--check_params",
@@ -33,7 +62,7 @@ def main():
         "--skip_batch_setup",
         "-s",
         action="store_true",
-        help="whether to run batch setup for the input folder",
+        help="whether to run parameter setup for the input folder",
     )
     parser.add_argument(
         "--verbose",
@@ -45,7 +74,7 @@ def main():
         "--grab_params",
         "-g",
         action="store_true",
-        help="whether to grab all parameters from location",
+        help="whether to grab all parameters from the input location",
     )
     parser.add_argument(
         "--do_cell_picker",
@@ -66,11 +95,11 @@ def main():
 
     if parsed.recursive:
         if not os.path.isfile(parsed.batch_config_path):
-            raise ValueError("Please provide batch_config_path as a valid path")
+            raise FileNotFoundError("Please provide batch_config_path as a valid path")
         if not os.path.isfile(parsed.function_config_path):
             parsed.function_config_path = None
 
-        simuran.main.batch_main.batch_run(
+        return simuran.main.batch_main.batch_run(
             parsed.batch_config_path,
             function_to_use=parsed.function_config_path,
             text_editor=parsed.editor,
@@ -91,8 +120,12 @@ def main():
         )
         simuran.batch_setup.BatchSetup.copy_params(parsed.location, output_location)
     else:
-        # TODO probably just make one verbose option instead of many
-        simuran.main.main.run(
+        # TODO make clearer naming of verbose
+        if not os.path.isfile(parsed.function_config_path):
+            raise ValueError(
+                "In non recursive mode, the function configuration path must be a file"
+            )
+        return simuran.main.main.run(
             parsed.batch_config_path,
             parsed.function_config_path,
             text_editor=parsed.editor,
