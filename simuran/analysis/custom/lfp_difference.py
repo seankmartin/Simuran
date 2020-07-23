@@ -1,8 +1,6 @@
 import os
 
 import numpy as np
-import seaborn as sns
-import matplotlib.pyplot as plt
 
 from skm_pyutils.py_path import make_path_if_not_exists
 import simuran.plot.lfp_plot
