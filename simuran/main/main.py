@@ -13,17 +13,40 @@ import simuran.analysis.analysis_handler
 import simuran.param_handler
 import simuran.plot.figure
 
-# TODO I want to use pyqt5 here but ill check my later requirements.
 import matplotlib
 import matplotlib.pyplot as plt
 
 matplotlib.use("Qt4agg")
 
 
-def save_figures(figures, figure_names, out_dir, verbose=False):
+def save_figures(figures, out_dir, figure_names=[], verbose=False, set_done=False):
+    """
+    Save all figures to the output directory if they are ready.
+
+    Parameters
+    ----------
+    figures : list of matplotlib.figure.Figure or simuran.plot.figure.SimuranFigure
+        The figures to save.
+    out_dir : str
+        The output directory to save the figures to.
+    figure_names : list of str, optional
+        Names for each of the figures, by default [].
+        If empty, uses fig+iteration as name, unless the figure at iteration,
+        is a SimuranFigure with a name set.
+    verbose : bool, optional
+        Whether to print more information, by default False
+    set_done : bool, optional
+        If converting to a SimuranFigure, set whether the figure is ready for output.
+
+    Returns
+    -------
+    list of simuran.plot.figure.SimuranFigure
+        All the figures that were not ready to be saved.
+
+    """
     for i, f in enumerate(figures):
         if not isinstance(f, simuran.plot.figure.SimuranFigure):
-            figures[i] = simuran.plot.figure.SimuranFigure(figure=f)
+            figures[i] = simuran.plot.figure.SimuranFigure(figure=f, done=set_done)
 
     if len(figures) != 0:
         if verbose:
@@ -48,6 +71,7 @@ def save_figures(figures, figure_names, out_dir, verbose=False):
 
 
 def save_unclosed_figures(out_dir):
+    """Save any figures which were not closed to out_dir and close them."""
     figs = list(map(plt.figure, plt.get_fignums()))
     for i, f in enumerate(figs):
         f.savefig(os.path.join(out_dir, "unclosed_plots", "fig_{}.png".format(i)))
@@ -448,7 +472,9 @@ def main(
         analysis_handler.run_all_fns()
         recording_container[i].results = copy(analysis_handler.results)
         analysis_handler.reset()
-        figures = save_figures(figures, figure_names, out_dir, verbose=False)
+        figures = save_figures(
+            figures, out_dir, figure_names=figure_names, verbose=False
+        )
 
     # out_dir = os.path.join(recording_container.base_dir, "sim_results", whole_time)
     out_loc = os.path.join(out_dir, out_name)
@@ -459,10 +485,10 @@ def main(
         decimals=decimals,
     )
 
-    # This is currently in the loop
-    # save_figures(figures, figure_names, out_dir, verbose=False)
-
-    # TODO this should be a setting
+    # Save any plots that have not been saved yet
+    save_figures(
+        figures, out_dir, figure_names=figure_names, verbose=False, set_done=True
+    )
     save_unclosed_figures(out_dir)
 
     # TODO this should probably be a dict with the name as the key
