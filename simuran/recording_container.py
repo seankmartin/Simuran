@@ -106,12 +106,13 @@ class RecordingContainer(AbstractContainer):
         start_dir : str, optional
             The directory to set self.base_dir to, defaults to None.
         verbose : bool, optional
-            [description], by default False
+            Whether to print more information, by default False
 
         Returns
         -------
-        [type]
-            [description]
+        list of str
+            The param_files that were loaded from
+
         """
         should_load = not self.load_on_fly
         out_str_load = "Loading" if should_load else "Parsing"
