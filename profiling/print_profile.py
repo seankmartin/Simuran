@@ -3,6 +3,8 @@ Print the result of code profling.
 
 See https://docs.python.org/2/library/profile.html
 
+TODO move this elsewhere.
+
 """
 
 import pstats
