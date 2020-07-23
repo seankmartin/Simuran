@@ -6,6 +6,8 @@ In theory, this could describe a full experiment.
 
 
 def create_new_entry(batch_param_loc, fn_param_loc, add=""):
+    """Create a new entry in the batch dictionary."""
+
     def make_default_dict(add=""):
         param_names = {}
 
@@ -31,6 +33,7 @@ def create_new_entry(batch_param_loc, fn_param_loc, add=""):
 
 
 def set_file_locations():
+    """The actual locations to analyse should be set here."""
     import os
 
     output = []
@@ -47,6 +50,7 @@ def set_file_locations():
 
 
 def set_fixed_params(in_dict):
+    """The parameters that are general should be set here."""
     in_dict["default_param_folder"] = None
 
     return in_dict
