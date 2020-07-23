@@ -106,7 +106,7 @@ def main():
             check_params=parsed.check_params,
             do_batch_setup=not parsed.skip_batch_setup,
             do_cell_picker=parsed.do_cell_picker,
-            verbose_batch_params=parsed.verbose,
+            verbose=parsed.verbose,
             only_check=parsed.dummy,
         )
 
@@ -132,7 +132,7 @@ def main():
             check_params=parsed.check_params,
             do_batch_setup=not parsed.skip_batch_setup,
             do_cell_picker=parsed.do_cell_picker,
-            verbose_batch_params=parsed.verbose,
+            verbose=parsed.verbose,
             only_check=parsed.dummy,
         )
 

@@ -78,13 +78,97 @@ def save_unclosed_figures(out_dir):
         f.close()
 
 
+def check_input_params(location, batch_name):
+    """
+    Check the configuration parameters and create a batch setup.
+
+    Parameters
+    ----------
+    location : str
+        Where the main control will run, either a file or a directory.
+    batch_name : str
+        The path to a config file listing the configuration.
+
+    Returns
+    -------
+    simuran.batch_setup.BatchSetup or None
+        The created batch setup object based on the configuration.
+
+    Raises
+    ------
+    FileNotFoundError
+        The input location must be a file or a directory.
+    ValueError
+        The parameter file has the only_params loader set.
+
+    """
+    if os.path.isdir(location):
+        batch_setup = simuran.batch_setup.BatchSetup(location, fpath=batch_name)
+        full_param_loc = batch_setup.ph.get("mapping_file", "")
+
+        record_params = simuran.param_handler.ParamHandler(
+            in_loc=full_param_loc, name="mapping"
+        )
+        return batch_setup
+    elif os.path.isfile(location):
+        record_params = simuran.param_handler.ParamHandler(
+            in_loc=location, name="mapping"
+        )
+        return None
+    else:
+        raise FileNotFoundError("location must be a file or a directory")
+
+    if record_params["loader"] == "params_only":
+        raise ValueError("The only params loader is not supported for loading files")
+
+
+def main_batch_setup(batch_setup, only_check, do_interactive=True, verbose=False):
+    """
+    Perform the batch setup operation for main.
+
+    Parameters
+    ----------
+    batch_setup : simuran.batch_setup.BatchSetup
+        The object to perform the batch setup with.
+    only_check : bool
+        Whether to write files or just check where they would be written.
+    do_interactive : bool, optional
+        Whether to launch an interactive prompt for regex design, by default True
+    verbose : bool, optional
+        Whether to print more information, by default False
+
+    Returns
+    -------
+    bool
+        Whether files were written or not, True if they were written.
+
+    """
+    batch_setup.set_only_check(only_check)
+
+    if batch_setup.ph["interactive"] or do_interactive:
+        print("Interactive mode selected")
+        batch_setup.interactive_refilt()
+
+    print("Running batch setup from {}".format(batch_setup.file_loc))
+    batch_setup.write_batch_params(verbose_params=True, verbose=verbose)
+    if batch_setup.ph["only_check"]:
+        print(
+            "Done checking batch setup. "
+            + "Change only_check to False in {} to run".format(batch_setup.file_loc)
+        )
+    else:
+        print("Done checking batch setup. " + "Pass only_check as False in main to run")
+
+    return not (batch_setup.ph["only_check"] or only_check)
+
+
 def main(
     location,
     functions,
     attributes_to_save,
     args_fn=None,
     do_batch_setup=False,
-    verbose_batch_params=False,
+    verbose=False,
     friendly_names=None,
     sort_container_fn=None,
     reverse_sort=False,
@@ -122,7 +206,7 @@ def main(
         The default value None indicates default parameters will be used.
     do_batch_setup : bool, optional
         Whether to write new parameter files (default False).
-    verbose_batch_params : bool, optional
+    verbose : bool, optional
         Whether to print extra information about batch parameters (default False).
     friendly_names : list of strings, optional
         A list of names to save attributes_to_save under.
@@ -183,45 +267,10 @@ def main(
         Non-existant cells are tried to be selected.
 
     """
-    # Check not called with only params loader
-    if os.path.isdir(location):
-        # TODO reuse these
-        # TODO fix the in_loc retrieval
-        batch_params = simuran.param_handler.ParamHandler(
-            in_loc=batch_name, name="params"
-        )
-        full_param_loc = batch_params["mapping_file"]
-        record_params = simuran.param_handler.ParamHandler(
-            in_loc=full_param_loc, name="mapping"
-        )
-        if record_params["loader"] == "params_only":
-            raise ValueError(
-                "The only params loader is not supported for loading files"
-            )
+    batch_setup = check_input_params(location, batch_name)
 
-    # Setup the parameters needed for running batch if requested.
-    # TODO fix the interactive regex...
     if do_batch_setup:
-        if not os.path.isdir(location):
-            raise ValueError("Please provide a directory, entered {}".format(location))
-        batch_setup = simuran.batch_setup.BatchSetup(location, fpath=batch_name)
-        batch_setup.set_only_check(only_check)
-        print("Running batch setup from {}".format(batch_setup.file_loc))
-        batch_setup.write_batch_params(
-            verbose_params=True, verbose=verbose_batch_params
-        )
-        # TODO allow this to be controlled outside
-        if batch_setup.ph["only_check"]:
-            print(
-                "Done checking batch setup. "
-                + "Change only_check to False in {} to run".format(batch_setup.file_loc)
-            )
-            return
-        elif only_check:
-            print(
-                "Done checking batch setup. "
-                + "Pass only_check as False in main to run"
-            )
+        if not main_batch_setup(batch_setup, only_check, verbose=verbose):
             return
 
     # Setup the recording_container
@@ -237,6 +286,9 @@ def main(
             recursive=True,
             batch_regex_filters=batch_params["regex_filters"],
         )
+    # TODO this seems off for setting up in non batch
+    # TODO this should just be a
+    # recording = Recording(param_file=param_file, load=should_load)
     elif os.path.isfile(location):
         recording_container.auto_setup(
             os.path.dirname(location), param_name=param_name, recursive=False
@@ -510,7 +562,7 @@ def run(
     text_editor="nano",
     do_batch_setup=True,
     do_cell_picker=True,
-    verbose_batch_params=False,
+    verbose=False,
     only_check=False,
 ):
     """
@@ -552,7 +604,7 @@ def run(
         Whether to write new parameter files (default True).
     do_cell_picker : bool, optional
         Whether to launch a cell picker (default True).
-    verbose_batch_params : bool, optional
+    verbose : bool, optional
         Whether to print extra information about batch parameters (default False).
     only_check : bool, optional
         Only checks what would run if True (default False)
@@ -679,7 +731,7 @@ def run(
         select_recordings=select_recordings,
         do_batch_setup=do_batch_setup,
         do_cell_picker=do_cell_picker,
-        verbose_batch_params=verbose_batch_params,
+        verbose=verbose,
         function_config_path=fn_param_loc,
         only_check=only_check,
     )

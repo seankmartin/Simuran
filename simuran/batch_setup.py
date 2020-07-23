@@ -31,6 +31,10 @@ class BatchSetup(object):
         Either the full path to a parameter file, or just
         the name of the parameter file relative to in_dir.
         This should describe how batch_setup will behave.
+    ph : simuran.params.ParamHandler
+        A param handler that holds the configuration.
+    _bad_file : bool
+        True if the file passed is not valid, or not passed.
 
     Example
     -------
@@ -84,9 +88,13 @@ class BatchSetup(object):
                     self.ph["mapping_file"], self.ph["mapping"]
                 )
             )
+
+    def start(self):
+        """Start the main control function."""
         if self.ph["interactive"]:
             print("Interactive mode selected")
             self.interactive_refilt()
+        self.write_batch_params(verbose_params=True)
 
     def interactive_refilt(self):
         """Launch an interactive prompt to design REGEX filters for batch operation."""
