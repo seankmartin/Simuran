@@ -235,6 +235,11 @@ def write_cells_in_container(
         The name of the file to write, by default "all_cells.txt"
     overwrite : bool, optional
         Whether to overwrite an existing file, by default True
+
+    Returns
+    -------
+    None
+
     """
     help_out_loc = os.path.join(in_dir, "all_cells.txt")
     if (not os.path.isfile(help_out_loc)) or overwrite:
@@ -261,6 +266,70 @@ def write_cells_in_container(
                 help_out_loc
             )
         )
+
+
+def subsample_main_container(
+    recording_container, select_recordings, file_list_name, overwrite=True
+):
+    """
+    Subsample the main recording container.
+
+    Parameters
+    ----------
+    recording_container : simuran.recording_container.RecordingContainer
+        The recording container to subsample
+    select_recordings : list or bool
+        If a list, it should be a list of indices or names of recordings to use.
+        If a bool, True indicates to launch an interactive prompt, False passes.
+        If None is passed, it also passes.
+    file_list_name : str
+        The name of the file to save choices to, or load from if it exists.
+    overwrite : bool, optional
+        Whether to overwrite an existing file.
+
+    Returns
+    -------
+    None
+
+    """
+    if len(recording_container) <= 1:
+        return
+
+    if (select_recordings is not None) and (select_recordings is not False):
+        if select_recordings is True:
+            select_location = os.path.join(recording_container.base_dir, file_list_name)
+            if (not os.path.isfile(select_location)) or overwrite:
+                recording_container.subsample(interactive=True, inplace=True)
+                print(
+                    "Selected {} for processing, saved to {}".format(
+                        recording_container.get_property("source_file"), select_location
+                    )
+                )
+                with open(select_location, "w") as f:
+                    out_str = ""
+                    for recording in recording_container:
+                        name = recording.source_file
+                        name = name[len(recording_container.base_dir + os.sep) :]
+                        out_str = "{}\n".format(name)
+                        f.write(out_str)
+            else:
+                print(
+                    "Loading recordings from {}, delete this to update".format(
+                        select_location
+                    )
+                )
+                with open(select_location, "r") as f:
+                    name_list = [x.strip() for x in f.readlines() if x.strip() != ""]
+                    recording_container.subsample_by_name(name_list)
+        else:
+            all_idx = True
+            for val in select_recordings:
+                if isinstance(val, str):
+                    all_idx = False
+            if all_idx:
+                recording_container.subsample(idx_list=select_recordings, inplace=True)
+            else:
+                recording_container.subsample_by_name(select_recordings, inplace=True)
 
 
 def main(
@@ -383,41 +452,9 @@ def main(
         in_dir = location if os.path.isdir(location) else os.path.dirname(location)
         write_cells_in_container(recording_container, in_dir, overwrite=False)
 
-    # Select a subset of all recordings found for use
-    if (select_recordings is not None) and (select_recordings is not False):
-        if not os.path.isdir(location):
-            raise ValueError("Can't select recordings with only one")
-        if select_recordings is True:
-            select_location = os.path.join(recording_container.base_dir, file_list_name)
-            if not os.path.isfile(select_location):
-                idx_list = recording_container.subsample(interactive=True, inplace=True)
-                print(
-                    "Selected {} for processing, saved to {}".format(
-                        recording_container.get_property("source_file"), select_location
-                    )
-                )
-                with open(select_location, "w") as f:
-                    out_str = ""
-                    for recording in recording_container:
-                        name = recording.source_file
-                        name = name[len(location + os.sep) :]
-                        out_str = "{}\n".format(name)
-                        f.write(out_str)
-            else:
-                print("Loading recordings from {}".format(select_location))
-                with open(select_location, "r") as f:
-                    name_list = [x.strip() for x in f.readlines() if x.strip() != ""]
-                    recording_container.subsample_by_name(name_list)
-        else:
-            all_idx = True
-            for val in select_recordings:
-                if isinstance(val, str):
-                    all_idx = False
-            if all_idx:
-                recording_container.subsample(idx_list=select_recordings, inplace=True)
-            else:
-                recording_container.subsample_by_name(select_recordings, inplace=True)
-
+    subsample_main_container(
+        recording_container, select_recordings, file_list_name, overwrite=False
+    )
     # Select which cells to consider
     # TODO move cell picking helper
     # TODO provide loaders with get list of cell only methods
