@@ -99,6 +99,7 @@ def main():
         if not os.path.isfile(parsed.function_config_path):
             parsed.function_config_path = None
 
+        # TODO add ability to select the after batch function here
         return simuran.main.batch_main.batch_run(
             parsed.batch_config_path,
             function_to_use=parsed.function_config_path,
@@ -120,7 +121,6 @@ def main():
         )
         simuran.batch_setup.BatchSetup.copy_params(parsed.location, output_location)
     else:
-        # TODO make clearer naming of verbose
         if not os.path.isfile(parsed.function_config_path):
             raise ValueError(
                 "In non recursive mode, the function configuration path must be a file"

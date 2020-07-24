@@ -4,12 +4,25 @@ import argparse
 
 import numpy as np
 
-from simuran.param_handler import ParamHandler
 from skm_pyutils.py_path import get_all_files_in_dir
 
 
-def merge(in_dir, all_result_ext=None):
-    # TODO allow for putting in dirs manually
+def merge_files(in_dir, all_result_ext=None):
+    """
+    Merge all files with the given extension recursively from in_dir.
+
+    Parameters
+    ----------
+    in_dir : str
+        The path to where to start merging from.
+    all_result_ext : str, optional
+        The extension to look for, by default None, which takes all
+
+    Returns
+    -------
+    None
+
+    """
     all_file_loc = os.path.join(in_dir, "all_results_merged")
     os.makedirs(all_file_loc, exist_ok=True)
     print("Copying all results into {}".format(all_file_loc))
@@ -35,7 +48,27 @@ def merge(in_dir, all_result_ext=None):
 
 
 def csv_merge(in_dir, keep_headers=True, insert_newline=True, stats=True, delim=","):
-    # TODO allow for putting in dirs manually
+    """
+    Merge all csv files recursively from in_dir into one file.
+
+    Parameters
+    ----------
+    in_dir : str
+        The directory to start the merging from.
+    keep_headers : bool, optional
+        Keep the headers in the csv file, by default True
+    insert_newline : bool, optional
+        Write things on new lines, by default True
+    stats : bool, optional
+        Do average and std of numerical values, by default True
+    delim : str, optional
+        What delimiter to use, by default ","
+
+    Returns
+    -------
+    None
+
+    """
     data_start_col = 2
     csv_files = get_all_files_in_dir(in_dir, ext="csv", recursive=True)
     o_name = os.path.join(in_dir, "merge.csv")
@@ -79,7 +112,8 @@ def csv_merge(in_dir, keep_headers=True, insert_newline=True, stats=True, delim=
                     output.write("\n")
 
 
-if __name__ == "__main__":
+def cli():
+    """Command line interface."""
     parser = argparse.ArgumentParser(description="Command line arguments")
     parser.add_argument("directory", type=str, help="The directory to merge in")
     parser.add_argument(
@@ -106,4 +140,8 @@ if __name__ == "__main__":
 
     if parsed.do_images:
         print("----------IMAGE MERGE-----------")
-        merge(parsed.directory, all_result_ext="png")
+        merge_files(parsed.directory, all_result_ext="png")
+
+
+if __name__ == "__main__":
+    cli()
