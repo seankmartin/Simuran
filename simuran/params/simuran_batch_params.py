@@ -1,7 +1,4 @@
-"""
-simuran_batch_params.py is used to handle the
-behaviour of analysis that recourses through child directories.
-"""
+"""simuran_batch_params.py describes behaviour for recursing through directories."""
 
 import os
 

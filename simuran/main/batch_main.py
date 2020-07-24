@@ -97,9 +97,7 @@ def batch_run(
     **kwargs
 ):
     """
-    A helper function for running batch_main.
-
-    It makes it easier to handle the parameters involved.
+    Run batch main, but makes it easier to handle the parameters involved.
 
     Parameters
     ----------

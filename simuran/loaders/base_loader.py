@@ -27,6 +27,7 @@ class BaseLoader(ABC):
     """
 
     def __init__(self, load_params={}):
+        """See help(BaseLoader)."""
         self.signal = None
         self.spatial = None
         self.single_unit = None

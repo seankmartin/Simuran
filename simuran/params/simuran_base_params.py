@@ -1,7 +1,8 @@
 """
-The simuran_base_params is used to initialize the
-the simuran_params file in each recording data session
-that is a child directory of starting directory.
+The simuran_base_params holds individual recording metadata.
+
+It is used to initialise the simuran_params file in each
+recording data session that is a child directory of starting directory.
 
 This should contain information about the recording,
 such as the number electrodes in the recording.
@@ -10,7 +11,6 @@ such as the number electrodes in the recording.
 
 def setup_signals():
     """Set up the signals (such as eeg or lfp)."""
-
     # The total number of signals in the recording
     num_signals = 32
 

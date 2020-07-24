@@ -1,8 +1,11 @@
+"""How to install simuran."""
+
 import os
 from setuptools import setup, find_packages
 
 
 def read(fname):
+    """Read files from the main source dir."""
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 

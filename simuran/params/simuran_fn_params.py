@@ -1,12 +1,12 @@
 """
-The simuran_fn_params are used to control the functions
-that will be performed on each recording in a loaded container.
+simuran_fn_params controls the functions that will be performed.
+
+These functions are performed on each recording in a loaded container.
 """
 
 
 def setup_functions():
     """Establish the functions to run and arguments to pass."""
-
     # The list of functions to run, in order
     # Each function should take as its first argument a recording object
     # This should be an actual function, as opposed to a string name
@@ -73,7 +73,6 @@ def setup_figures():
 
 def setup_output():
     """Establish what results of the functions will be saved."""
-
     # This should list the results to save to a csv
     save_list = []
 

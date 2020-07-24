@@ -1,3 +1,5 @@
+"""This package holds routine for merging outputs of batch simuran runs."""
+
 import os
 import shutil
 import argparse

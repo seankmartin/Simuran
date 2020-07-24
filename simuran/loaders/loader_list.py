@@ -1,4 +1,6 @@
 """
+This lists the available loaders in SIMURAN.
+
 Current loaders are:
 1. params_only : only loads parameters from files.
 2. nc_loader : requires the neurochat package to be installed.

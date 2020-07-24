@@ -1,6 +1,7 @@
 """
-simuran_multi_params describes running main.py for multiple
-different recordings, functions, etc.
+simuran_multi_params describes running main.py multiple times.
+
+This can support different recordings, functions, etc.
 In theory, this could describe a full experiment.
 """
 

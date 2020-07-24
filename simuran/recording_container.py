@@ -479,7 +479,7 @@ class RecordingContainer(AbstractContainer):
 
     def print_units(self, f=None):
         """
-        Print all the units in this container, optionally to a file
+        Print all the units in this container, optionally to a file.
 
         Also returns all the units found.
 

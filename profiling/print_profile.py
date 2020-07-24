@@ -12,6 +12,7 @@ import os
 
 
 def main():
+    """Print a profile.out file."""
     if os.path.isfile("profile.out"):
         p = pstats.Stats("profile.out")
         # p.strip_dirs().sort_stats(-1).print_stats()

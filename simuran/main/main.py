@@ -1,3 +1,5 @@
+"""This module is the main control for the simuran package."""
+
 import os
 import shutil
 import subprocess
@@ -720,7 +722,7 @@ def run(
     only_check=False,
 ):
     """
-    A helper function to assist in running main more readily.
+    Run main more readily without having to set as many params.
 
     The basic purpose of this function is to help set up the correct
     configuration files and setting the paths to those configuration files.
