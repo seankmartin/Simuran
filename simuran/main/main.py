@@ -9,6 +9,7 @@ from tqdm import tqdm
 
 import simuran.batch_setup
 import simuran.recording_container
+import simuran.recording
 import simuran.analysis.analysis_handler
 import simuran.param_handler
 import simuran.plot.figure
@@ -162,6 +163,35 @@ def main_batch_setup(batch_setup, only_check, do_interactive=True, verbose=False
     return not (batch_setup.ph["only_check"] or only_check)
 
 
+def main_container_setup(
+    location, batch_params=None, sort_container_fn=None, reverse_sort=False
+):
+    recording_container = simuran.recording_container.RecordingContainer()
+    if os.path.isdir(location):
+        recording_container.auto_setup(
+            location,
+            param_name=batch_params["out_basename"],
+            recursive=True,
+            batch_regex_filters=batch_params["regex_filters"],
+        )
+    elif os.path.isfile(location):
+        recording = simuran.recording.Recording(param_file=location, load=False)
+        recording_container.append(recording)
+    else:
+        raise FileNotFoundError(
+            "Please provide a valid location, entered {}".format(location)
+        )
+
+    if len(recording_container) == 0:
+        raise FileNotFoundError("No recordings found in {}".format(location))
+
+    if sort_container_fn is not None:
+        print("Sorting the container")
+        recording_container.sort(sort_container_fn, reverse=reverse_sort)
+
+    return recording_container
+
+
 def main(
     location,
     functions,
@@ -268,42 +298,15 @@ def main(
 
     """
     batch_setup = check_input_params(location, batch_name)
+    batch_params = batch_setup.ph
 
     if do_batch_setup:
         if not main_batch_setup(batch_setup, only_check, verbose=verbose):
             return
 
-    # Setup the recording_container
-    # TODO only parse things to be selected
-    recording_container = simuran.recording_container.RecordingContainer()
-    if os.path.isdir(location):
-        batch_params = simuran.param_handler.ParamHandler(
-            in_loc=batch_name, name="params"
-        )
-        recording_container.auto_setup(
-            location,
-            param_name=batch_params["out_basename"],
-            recursive=True,
-            batch_regex_filters=batch_params["regex_filters"],
-        )
-    # TODO this seems off for setting up in non batch
-    # TODO this should just be a
-    # recording = Recording(param_file=param_file, load=should_load)
-    elif os.path.isfile(location):
-        recording_container.auto_setup(
-            os.path.dirname(location), param_name=param_name, recursive=False
-        )
-    else:
-        raise FileNotFoundError(
-            "Please provide a valid location, entered {}".format(location)
-        )
-
-    if len(recording_container) == 0:
-        raise FileNotFoundError("No recordings found in {}".format(location))
-
-    if sort_container_fn is not None:
-        print("Sorting the container")
-        recording_container.sort(sort_container_fn, reverse=reverse_sort)
+    recording_container = main_container_setup(
+        location, batch_params, sort_container_fn, reverse_sort
+    )
 
     # Save a list of all cells found
     # TODO if file is empty run again
