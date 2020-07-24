@@ -91,7 +91,6 @@ def batch_run(
     function_to_use=None,
     idx=None,
     handle_errors=False,
-    after_batch_function=None,
     overwrite=False,
     merge=True,
     **kwargs
@@ -109,8 +108,6 @@ def batch_run(
         An optional index in the batch to run for, by default None
     handle_errors : bool, optional
         Whether to crash on error or print to file, by default False
-    after_batch_function : function, optional
-        A function to run after the batch has run, by default None
     overwrite : bool, optional
         Whether to overwrite an existing pickle of data, by default False
     merge: bool, optional
@@ -123,6 +120,7 @@ def batch_run(
 
     """
     run_dict = ParamHandler(in_loc=run_dict_loc, name="params")
+    after_batch_function = run_dict.get("after_batch_fn", None)
     out_dir = os.path.abspath(
         os.path.join(os.path.dirname(run_dict_loc), "..", "sim_results")
     )

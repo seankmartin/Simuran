@@ -54,6 +54,10 @@ def set_fixed_params(in_dict):
     """The parameters that are general should be set here."""
     in_dict["default_param_folder"] = None
 
+    # Can set a function to run after all analysis here
+    # For example, it could plot a summary of all the data
+    in_dict["after_batch_fn"] = None
+
     return in_dict
 
 

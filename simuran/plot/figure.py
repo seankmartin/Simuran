@@ -77,7 +77,7 @@ class SimuranFigure(object):
             Overrides self.filename if passed.
         kwargs : keyword arguments
             simuran.plot.base_plot.save_simuran_plot for support kwargs
-        
+
         Returns
         -------
         None
