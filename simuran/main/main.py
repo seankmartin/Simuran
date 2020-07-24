@@ -123,7 +123,7 @@ def check_input_params(location, batch_name):
         raise ValueError("The only params loader is not supported for loading files")
 
 
-def main_batch_setup(batch_setup, only_check, do_interactive=True, verbose=False):
+def batch_control_setup(batch_setup, only_check, do_interactive=True, verbose=False):
     """
     Perform the batch setup operation for main.
 
@@ -163,7 +163,7 @@ def main_batch_setup(batch_setup, only_check, do_interactive=True, verbose=False
     return not (batch_setup.ph["only_check"] or only_check)
 
 
-def main_container_setup(
+def container_setup(
     location, batch_params=None, sort_container_fn=None, reverse_sort=False
 ):
     """
@@ -268,7 +268,7 @@ def write_cells_in_container(
         )
 
 
-def subsample_main_container(
+def subsample_container(
     recording_container, select_recordings, file_list_name, overwrite=True
 ):
     """
@@ -441,10 +441,10 @@ def main(
     batch_params = batch_setup.ph
 
     if do_batch_setup:
-        if not main_batch_setup(batch_setup, only_check, verbose=verbose):
+        if not batch_control_setup(batch_setup, only_check, verbose=verbose):
             return
 
-    recording_container = main_container_setup(
+    recording_container = container_setup(
         location, batch_params, sort_container_fn, reverse_sort
     )
 
@@ -452,7 +452,7 @@ def main(
         in_dir = location if os.path.isdir(location) else os.path.dirname(location)
         write_cells_in_container(recording_container, in_dir, overwrite=False)
 
-    subsample_main_container(
+    subsample_container(
         recording_container, select_recordings, file_list_name, overwrite=False
     )
     # Select which cells to consider
