@@ -436,6 +436,107 @@ def run_all_analysis(
     return figures, figure_names
 
 
+def setup_default_params(
+    default_param_folder,
+    batch_param_loc,
+    fn_param_loc,
+    base_param_name,
+    text_editor,
+    check_params,
+):
+    """
+    Set up the default parameters from the folder given.
+
+    Parameters
+    ----------
+    default_param_folder : str
+        The path to a folder containing default parameters.
+    batch_param_loc : str
+        The path to a config file listing the program behaviour.
+    fn_param_loc : str
+        The path to a config file listing the functions that should be run.
+    base_param_name : str
+        The name of the base parameter file to use.
+        Will be overwritten by the setting in batch_param_loc if exists.
+    text_editor : str
+        The text editor to use for editing the default parameters.
+    check_params : bool
+        Whether to check the parameters.
+
+    Returns
+    -------
+    should_quit : bool
+        True if execution should be halted.
+    param_names : dict
+        The "fn", "base", and "batch" parameter locations.
+    in_dir : str
+        The path to the directory that execution should start in.
+
+    Raises
+    ------
+    FileNotFoundError
+        Any of the default parameters do not exist.
+
+    """
+    should_quit = False
+    default_param_names = {
+        "fn": os.path.join(default_param_folder, "simuran_fn_params.py"),
+        "base": os.path.join(default_param_folder, "simuran_base_params.py"),
+        "batch": os.path.join(default_param_folder, "simuran_batch_params.py"),
+    }
+    for name in default_param_names.values():
+        if not os.path.isfile(name):
+            raise FileNotFoundError(
+                "Default parameters do not exist at {}".format(name)
+            )
+
+    in_dir = os.path.dirname(batch_param_loc)
+    param_names = {
+        "fn": fn_param_loc,
+        "base": os.path.abspath(os.path.join(in_dir, base_param_name)),
+        "batch": batch_param_loc,
+    }
+
+    if os.path.isfile(param_names["batch"]):
+        batch_handler = simuran.param_handler.ParamHandler(
+            in_loc=param_names["batch"], name="params"
+        )
+        param_names["base"] = batch_handler.get("mapping_file", param_names["base"])
+        in_dir = batch_handler.get("start_dir", in_dir)
+
+    os.makedirs(in_dir, exist_ok=True)
+    new = False
+    made_files = []
+    for key, value in param_names.items():
+        full_name = value
+        made_files.append(False)
+        if not os.path.isfile(full_name):
+            sim_p = default_param_names[key]
+            shutil.copy(sim_p, full_name)
+            made_files[-1] = True
+            args = [text_editor, full_name]
+            subprocess.run(args)
+            new = True
+        elif check_params:
+            args = [text_editor, full_name]
+            subprocess.run(args)
+
+    if new or check_params:
+        cont = input("Do you wish to continue with this setup? (y/n)\n")
+        if cont.lower() == "n":
+            delete_these = input(
+                "Do you wish to delete the created setup files? (y/n)\n"
+            )
+            if delete_these.lower() == "y":
+                for (key, value), made in zip(param_names.items(), made_files):
+                    full_name = value
+                    if os.path.isfile(full_name) and made:
+                        os.remove(full_name)
+            should_quit = True
+
+    return should_quit, param_names, in_dir
+
+
 def main(
     location,
     functions,
@@ -552,7 +653,7 @@ def main(
 
     if do_batch_setup:
         if not batch_control_setup(batch_setup, only_check, verbose=verbose):
-            return
+            return [], []
 
     recording_container = container_setup(
         location, batch_params, sort_container_fn, reverse_sort
@@ -664,75 +765,31 @@ def run(
 
     Returns
     -------
-    None
+    results : list of dict
+        The results obtained from the analysis for each recording in the container.
+    recording_names : list of str
+        The source files for each of the recordings in the container.
 
     Raises
     ------
     FileNotFoundError
-        Any parameter file does not exist in the default param folder.
-
+        If the batch configuration path or function config path are invalid.
 
     """
     # TODO extract this into another function
-    # TODO get different defaults. EG for NC.
     here = os.path.dirname(__file__)
     if default_param_folder is None:
         default_param_folder = os.path.join(here, "..", "params")
-    default_param_names = {
-        "fn": os.path.join(default_param_folder, "simuran_fn_params.py"),
-        "base": os.path.join(default_param_folder, "simuran_base_params.py"),
-        "batch": os.path.join(default_param_folder, "simuran_batch_params.py"),
-    }
-    for name in default_param_names.values():
-        if not os.path.isfile(name):
-            raise FileNotFoundError(
-                "Default parameters do not exist at {}".format(name)
-            )
-
-    in_dir = os.path.dirname(batch_param_loc)
-    param_names = {
-        "fn": fn_param_loc,
-        "base": os.path.abspath(os.path.join(in_dir, base_param_name)),
-        "batch": batch_param_loc,
-    }
-
-    # Grab the basename from batch params if it exists
-    if os.path.isfile(param_names["batch"]):
-        batch_handler = simuran.param_handler.ParamHandler(
-            in_loc=param_names["batch"], name="params"
-        )
-        param_names["base"] = batch_handler.get("mapping_file", param_names["base"])
-        in_dir = batch_handler.get("start_dir", in_dir)
-
-    os.makedirs(in_dir, exist_ok=True)
-    new = False
-    made_files = []
-    for key, value in param_names.items():
-        full_name = value
-        made_files.append(False)
-        if not os.path.isfile(full_name):
-            sim_p = default_param_names[key]
-            shutil.copy(sim_p, full_name)
-            made_files[-1] = True
-            args = [text_editor, full_name]
-            subprocess.run(args)
-            new = True
-        elif check_params:
-            args = [text_editor, full_name]
-            subprocess.run(args)
-
-    if new or check_params:
-        cont = input("Do you wish to continue with this setup? (y/n)\n")
-        if cont.lower() == "n":
-            delete_these = input(
-                "Do you wish to delete the created setup files? (y/n)\n"
-            )
-            if delete_these.lower() == "y":
-                for (key, value), made in zip(param_names.items(), made_files):
-                    full_name = value
-                    if os.path.isfile(full_name) and made:
-                        os.remove(full_name)
-            return
+    should_quit, param_names, in_dir = setup_default_params(
+        default_param_folder,
+        batch_param_loc,
+        fn_param_loc,
+        base_param_name,
+        text_editor,
+        check_params,
+    )
+    if should_quit:
+        return [], []
 
     if os.path.isfile(param_names["fn"]):
         setup_ph = simuran.param_handler.ParamHandler(
@@ -749,7 +806,7 @@ def run(
         load_all = setup_ph.get("load_all", True)
         select_recordings = setup_ph.get("select_recordings", True)
     else:
-        raise ValueError(
+        raise FileNotFoundError(
             "Please create a file listing params at {}".format(fn_param_loc)
         )
 
@@ -759,13 +816,12 @@ def run(
         )
         in_dir = batch_handler.get("start_dir", in_dir)
     else:
-        raise ValueError(
+        raise FileNotFoundError(
             "Please create a file listing batch behaviour at {}".format(
                 param_names["batch"]
             )
         )
 
-    # TODO do some renaming on all of this
     return main(
         in_dir,
         list_of_functions,
