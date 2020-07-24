@@ -166,6 +166,33 @@ def main_batch_setup(batch_setup, only_check, do_interactive=True, verbose=False
 def main_container_setup(
     location, batch_params=None, sort_container_fn=None, reverse_sort=False
 ):
+    """
+    Set up the recording_container for the main control.
+
+    Parameters
+    ----------
+    location : str
+        The directory or file to run on
+    batch_params : dict, optional
+        Parameters for running if a directory is passed, by default None
+    sort_container_fn : function, optional
+        A function to sort the container with, by default None
+    reverse_sort : bool, optional
+        Whether to reverse the sorting, by default False
+
+    Returns
+    -------
+    simuran.recording_container.RecordingContainer
+        The recording container object with filenames setup
+
+    Raises
+    ------
+    FileNotFoundError
+        The location passed is not a file or a directory
+    FileNotFoundError
+        No recordings were found at the given location
+
+    """
     recording_container = simuran.recording_container.RecordingContainer()
     if os.path.isdir(location):
         recording_container.auto_setup(
@@ -190,6 +217,50 @@ def main_container_setup(
         recording_container.sort(sort_container_fn, reverse=reverse_sort)
 
     return recording_container
+
+
+def write_cells_in_container(
+    recording_container, in_dir, name="all_cells.txt", overwrite=True
+):
+    """
+    Write all the cells available in this container to a file.
+
+    Parameters
+    ----------
+    recording_container : simuran.recording_container.RecordingContainer
+        The container to write the cells for.
+    location : str
+        A directory to write to
+    name : str, optional
+        The name of the file to write, by default "all_cells.txt"
+    overwrite : bool, optional
+        Whether to overwrite an existing file, by default True
+    """
+    help_out_loc = os.path.join(in_dir, "all_cells.txt")
+    if (not os.path.isfile(help_out_loc)) or overwrite:
+        print("Printing all units to {}".format(help_out_loc))
+        total = 0
+        with open(help_out_loc, "w") as f:
+            for i in range(len(recording_container)):
+                recording_container[i].available = ["units"]
+                recording = recording_container.get(i)
+                available_units = recording.get_available_units()
+                f.write("----{}----\n".format(os.path.basename(recording.source_file)))
+                for available_unit in available_units:
+                    if len(available_unit[1]) != 0:
+                        f.write(
+                            "        "
+                            + "{}: Group {} with Units {}\n".format(
+                                total, available_unit[0], available_unit[1]
+                            )
+                        )
+                        total += 1
+    else:
+        print(
+            "All units already available at {}, delete this to update".format(
+                help_out_loc
+            )
+        )
 
 
 def main(
@@ -308,36 +379,11 @@ def main(
         location, batch_params, sort_container_fn, reverse_sort
     )
 
-    # Save a list of all cells found
-    # TODO if file is empty run again
-    in_dir = location if os.path.isdir(location) else os.path.dirname(location)
     if print_all_cells:
-        help_out_loc = os.path.join(in_dir, "all_cells.txt")
-        if not os.path.isfile(help_out_loc):
-            print("Printing all units to {}".format(help_out_loc))
-            total = 0
-            with open(help_out_loc, "w") as f:
-                for i in range(len(recording_container)):
-                    recording_container[i].available = ["units"]
-                    recording = recording_container.get(i)
-                    available_units = recording.get_available_units()
-                    f.write(
-                        "----{}----\n".format(os.path.basename(recording.source_file))
-                    )
-                    for available_unit in available_units:
-                        if len(available_unit[1]) != 0:
-                            f.write(
-                                "        "
-                                + "{}: Group {} with Units {}\n".format(
-                                    total, available_unit[0], available_unit[1]
-                                )
-                            )
-                            total += 1
-        else:
-            print("All units already available at {}".format(help_out_loc))
+        in_dir = location if os.path.isdir(location) else os.path.dirname(location)
+        write_cells_in_container(recording_container, in_dir, overwrite=False)
 
     # Select a subset of all recordings found for use
-    # TODO this might need to be per function...
     if (select_recordings is not None) and (select_recordings is not False):
         if not os.path.isdir(location):
             raise ValueError("Can't select recordings with only one")
