@@ -292,6 +292,220 @@ class RecordingContainer(AbstractContainer):
             idx_list=indexes, interactive=False, prop="source_file", inplace=inplace
         )
 
+    def select_cells(self, cell_location, do_cell_picker=False, overwrite=False):
+        """
+        Select cells to use from a file or interactive prompt.
+
+        Parameters
+        ----------
+        cell_location : str
+            Path to a file to save choice to or read choice from.
+        do_cell_picker : bool, optional
+            Whether to launch an interactive prompt to pick cells, by default False.
+        overwrite : bool, optional
+            Whether to overwrite an existing file, by default False.
+
+        Returns
+        -------
+        None
+
+        """
+        if ((not os.path.isfile(cell_location)) or overwrite) and do_cell_picker:
+            print("Starting unit select helper")
+            units_to_use = self.pick_cells(cell_location)
+            self.set_chosen_cells(units_to_use, cell_location)
+        else:
+            print("Loading cells from {}".format(cell_location))
+            load_cells(cell_location)
+            
+    def load_cells(self, cell_location):
+        """Load cells from a csv file at the given location."""
+        with open(cell_location, "r") as f:
+            if f.readline().strip().lower() != "all":
+                reader = csv.reader(f, delimiter=",")
+                next(reader)
+                for row in reader:
+                    row = [int(x.strip()) for x in row]
+                    recording = self[row[0]]
+                    record_unit_idx = recording.units.group_by_property(
+                        "group", row[1]
+                    )[1][0]
+                    recording.units[record_unit_idx].units_to_use = row[2:]
+
+    def pick_cells(self, cell_location):
+        """
+        Launch an interactive prompt to select cells in this container.
+
+        The chosen cells are saved to cell_location.
+
+        1. Enter the word all to select every single unit.
+        2. Enter a single number to select that unit from everything.
+        3. Enter <group>_<unit-num> to analyse one unit.
+        4. Enter Idx: Unit, Unit, Unit | Idx, Unit, Unit, ... for anything
+
+        Parameters
+        ----------
+        cell_location : str
+            The path to a file to save the selected cells to.
+
+        Raises
+        ------
+        LookupError
+            If any unit in the user input is not found.
+
+        TODO
+        ----
+        Make sure the "all" selection works as expected.
+
+        Returns
+        -------
+        list of tuple
+            Each tuple is layed out as
+            Recording container index, single unit group at that index, group units
+
+        """
+        total, all_cells = self.print_units()
+        final_units = []
+        input_str = (
+            "Please enter the units to analyse, the input options are:\n"
+            + "\t 1. Enter the word all to select every single unit.\n"
+            + "\t 2. Enter a single number to select that unit from everything.\n"
+            + "\t 3. Enter <group>_<unit-num> to analyse one unit.\n"
+            + "\t 4. Enter Idx: Unit, Unit, Unit | Idx, Unit, Unit, ... "
+            + "to select anything\n"
+        )
+
+        user_inp = input(input_str)
+        while user_inp == "":
+            print("No user input entered, please enter something.\n")
+            user_inp = input(input_str)
+
+        # Handle option 1
+        if user_inp == "all":
+            with open(cell_location, "w") as f:
+                f.write("all")
+            return
+
+        # Handle option 2 and 3
+        try:
+            parts = user_inp.strip().split("_")
+            if len(parts) == 2:
+                group, unit_number = parts
+                group = int(group.strip())
+                unit_number = int(unit_number.strip())
+                unit_spec_list = [
+                    [i, [unit_number]]
+                    for i in range(total)
+                    if all_cells[i][1][0] == group
+                ]
+            else:
+                value = int(user_inp.strip())
+                unit_spec_list = [[i, [value]] for i in range(total)]
+
+        # Handle option 4
+        except BaseException:
+            unit_spec_list = []
+            unit_specifications = user_inp.split("|")
+            for u in unit_specifications:
+                parts = u.split(":")
+                idx = int(parts[0].strip())
+                units = [int(x.strip()) for x in parts[1].split(",")]
+                unit_spec_list.append([idx, units])
+
+        # Use the result option 2, 3, or 4
+        for u in unit_spec_list:
+            for val in u[1]:
+                if val not in all_cells[u[0]][1][1]:
+                    raise LookupError(
+                        "{}: {} not in {}".format(u[0], val, all_cells[u[0]][1][1])
+                    )
+            # Recording container index, single unit group at that index, group units
+            final_units.append([all_cells[u[0]][0], all_cells[u[0]][1][0], u[1]])
+
+       return final_units
+
+    def set_chosen_cells(self, final_units, cell_location):
+        """
+        Set the cells available to final_units, and write chosen to cell_location.
+
+        Parameters
+        ----------
+        final_units : list of tuple
+            Each tuple should be layed out as
+            Recording container index, single unit group at that index, group units
+        cell_location : str
+            Path to a file to write the choice to
+
+        Returns
+        -------
+        None
+
+        """        
+        with open(cell_location, "w") as f:
+            max_num = max([len(u[2]) for u in final_units])
+            unit_as_string = ["Unit_{}".format(i) for i in range(max_num)]
+            unit_str = ",".join(unit_as_string)
+            f.write("Recording,Group,{}\n".format(unit_str))
+            for u in final_units:
+                units_as_str = [str(val) for val in u[2]]
+                unit_str = ",".join(units_as_str)
+                f.write("{},{},{}\n".format(u[0], u[1], unit_str))
+                recording = self[u[0]]
+                record_unit_idx = recording.units.group_by_property("group", u[1])[1][0]
+                recording.units[record_unit_idx].units_to_use = u[2]
+            print("Saved cells to {}".format(cell_location))
+
+    def print_units(self, f=None):
+        """
+        Print all the units in this container, optionally to a file
+
+        Also returns all the units found.
+
+        Parameters
+        ----------
+        f : file, optional
+            An open writable file, by default None
+
+        Returns
+        -------
+        total : int
+            The total number of groups in this container
+        all_cells : list of tuples
+            The first item in the tuple is the index of the recording in the container,
+            The second item in the tuple is some of the units found for that recording,
+            which is a tuple consisting of (group, units_in_group).
+
+        """
+        total = 0
+        all_cells = []
+        for i in range(len(self)):
+            was_available = self[i].available
+            self[i].available = ["units"]
+            recording = self.get(i)
+            available_units = recording.get_available_units()
+            out_str = "--------{}--------".format(
+                os.path.basename(recording.source_file)
+            )
+            self[i].available = was_available
+            if f is not None:
+                f.write(out_str)
+            else:
+                print(out_str)
+
+            for available_unit in available_units:
+                if len(available_unit[1]) != 0:
+                    out_str = "    {}: Group {} with Units {}".format(
+                        total, available_unit[0], available_unit[1]
+                    )
+                    if f is not None:
+                        f.write(out_str)
+                    else:
+                        print(out_str)
+                    all_cells.append([i, available_unit])
+                    total += 1
+
+        return total, all_cells
+
     def _create_new(self, params):
         """
         Create a new recording with the given parameters.

@@ -244,22 +244,8 @@ def write_cells_in_container(
     help_out_loc = os.path.join(in_dir, "all_cells.txt")
     if (not os.path.isfile(help_out_loc)) or overwrite:
         print("Printing all units to {}".format(help_out_loc))
-        total = 0
         with open(help_out_loc, "w") as f:
-            for i in range(len(recording_container)):
-                recording_container[i].available = ["units"]
-                recording = recording_container.get(i)
-                available_units = recording.get_available_units()
-                f.write("----{}----\n".format(os.path.basename(recording.source_file)))
-                for available_unit in available_units:
-                    if len(available_unit[1]) != 0:
-                        f.write(
-                            "        "
-                            + "{}: Group {} with Units {}\n".format(
-                                total, available_unit[0], available_unit[1]
-                            )
-                        )
-                        total += 1
+            recording_container.print_units(f)
     else:
         print(
             "All units already available at {}, delete this to update".format(
@@ -437,6 +423,8 @@ def main(
         Non-existant cells are tried to be selected.
 
     """
+    in_dir = location if os.path.isdir(location) else os.path.dirname(location)
+    cell_location = os.path.join(in_dir, cell_list_name)
     batch_setup = check_input_params(location, batch_name)
     batch_params = batch_setup.ph
 
@@ -449,113 +437,15 @@ def main(
     )
 
     if print_all_cells:
-        in_dir = location if os.path.isdir(location) else os.path.dirname(location)
         write_cells_in_container(recording_container, in_dir, overwrite=False)
 
     subsample_container(
         recording_container, select_recordings, file_list_name, overwrite=False
     )
-    # Select which cells to consider
-    # TODO move cell picking helper
-    # TODO provide loaders with get list of cell only methods
-    # TODO get this to work from saved list of cells
-    # TODO this makes no sense if only LFP needed.
-    cell_location = os.path.join(in_dir, cell_list_name)
-    if not os.path.isfile(cell_location):
-        if do_cell_picker:
-            print("Starting unit select helper")
-            total = 0
-            ok = []
-            for i in range(len(recording_container)):
-                recording_container[i].available = ["units"]
-                recording = recording_container.get(i)
-                available_units = recording.get_available_units()
-                print(
-                    "--------{}--------".format(os.path.basename(recording.source_file))
-                )
-                for available_unit in available_units:
-                    if len(available_unit[1]) != 0:
-                        print(
-                            "    {}: Group {} with Units {}".format(
-                                total, available_unit[0], available_unit[1]
-                            )
-                        )
-                        ok.append([i, available_unit])
-                        total += 1
-            input_str = (
-                "Please enter the units to analyse "
-                + "or enter the word all or a single number\n"
-                + "Format: Idx: Unit, Unit, Unit | Idx: Unit, Unit, Unit\n"
-            )
-            user_inp = input(input_str)
-            while user_inp == "":
-                print("No user input entered, please enter something.\n")
-                user_inp = input(input_str)
-            if user_inp != "all":
-                final_units = []
-                try:
-                    parts = user_inp.strip().split("_")
-                    if len(parts) == 2:
-                        group, unit_number = parts
-                        group = int(group.strip())
-                        unit_number = int(unit_number.strip())
-                        unit_spec_list = [
-                            [i, [unit_number]]
-                            for i in range(total)
-                            if ok[i][1][0] == group
-                        ]
-                    else:
-                        value = int(user_inp.strip())
-                        unit_spec_list = [[i, [value]] for i in range(total)]
-                except BaseException:
-                    unit_spec_list = []
-                    unit_specifications = user_inp.split("|")
-                    for u in unit_specifications:
-                        parts = u.split(":")
-                        idx = int(parts[0].strip())
-                        units = [int(x.strip()) for x in parts[1].split(",")]
-                        unit_spec_list.append([idx, units])
-                for u in unit_spec_list:
-                    for val in u[1]:
-                        if val not in ok[u[0]][1][1]:
-                            raise LookupError(
-                                "{}: {} not in {}".format(u[0], val, ok[u[0]][1][1])
-                            )
-                    final_units.append([ok[u[0]][0], ok[u[0]][1][0], u[1]])
 
-                with open(cell_location, "w") as f:
-                    max_num = max([len(u[2]) for u in final_units])
-                    unit_as_string = ["Unit_{}".format(i) for i in range(max_num)]
-                    unit_str = ",".join(unit_as_string)
-                    f.write("Recording,Group,{}\n".format(unit_str))
-                    for u in final_units:
-                        units_as_str = [str(val) for val in u[2]]
-                        unit_str = ",".join(units_as_str)
-                        f.write("{},{},{}\n".format(u[0], u[1], unit_str))
-                        recording = recording_container[u[0]]
-                        record_unit_idx = recording.units.group_by_property(
-                            "group", u[1]
-                        )[1][0]
-                        recording.units[record_unit_idx].units_to_use = u[2]
-                    print("Saved cells to {}".format(cell_location))
-            else:
-                # TODO check the logic for using all units
-                with open(cell_location, "w") as f:
-                    f.write("all")
-
-    else:
-        print("Loading cells from {}".format(cell_location))
-        with open(cell_location, "r") as f:
-            if f.readline().strip().lower() != "all":
-                reader = csv.reader(f, delimiter=",")
-                next(reader)
-                for row in reader:
-                    row = [int(x.strip()) for x in row]
-                    recording = recording_container[row[0]]
-                    record_unit_idx = recording.units.group_by_property(
-                        "group", row[1]
-                    )[1][0]
-                    recording.units[record_unit_idx].units_to_use = row[2:]
+    recording_container.select_cells(
+        cell_location, do_cell_picker=do_cell_picker, overwrite=False
+    )
 
     # Set the output folder
     now = datetime.now()
