@@ -1,7 +1,6 @@
 import os
 import shutil
 import subprocess
-import csv
 from copy import copy
 from datetime import datetime
 
@@ -318,6 +317,125 @@ def subsample_container(
                 recording_container.subsample_by_name(select_recordings, inplace=True)
 
 
+def set_output_locations(batch_name, function_config_path):
+    """
+    Set up the output directory and name based on the input.
+
+    Parameters
+    ----------
+    batch_name : str
+        Path to a configuration file
+    function_config_path : str
+        Path to the function configuration file
+
+    Returns
+    -------
+    out_dir : str
+        The path to the output directory
+    out_name : str
+        The name of the results file to use
+
+    """
+    now = datetime.now()
+    current_time = now.strftime("%H-%M-%S")
+    out_name = "sim_results_" + current_time + ".csv"
+    whole_time = now.strftime("%Y-%m-%d--%H-%M-%S")
+    out_dirname = whole_time
+
+    try:
+        start_str = os.path.splitext(os.path.basename(batch_name))[0]
+        if function_config_path is not None:
+            start_str = (
+                start_str
+                + "--"
+                + os.path.splitext(os.path.basename(function_config_path))[0]
+            )
+        out_dirname = start_str
+        out_name = "sim_results--" + start_str + ".csv"
+    except BaseException:
+        pass
+
+    out_dir = os.path.abspath(
+        os.path.join(os.path.dirname(batch_name), "..", "sim_results", out_dirname)
+    )
+
+    return out_dir, out_name
+
+
+def run_all_analysis(
+    recording_container,
+    functions,
+    args_fn,
+    figures,
+    figure_names,
+    load_all,
+    to_load,
+    out_dir,
+):
+    """
+    Run all of the analysis functions on the recording container.
+
+    Parameters
+    ----------
+    recording_container : simuran.recording_container.RecordingContainer
+        The recording container to run the analysis on.
+    functions : list of functions
+        The functions to run
+    args_fn : function
+        A function to retrive the arguments to use for the functions.
+    figures : list of matplotlib.figure.Figure or simuran.plot.figure.SimuranFigure
+        The figures to plot
+    figure_names : list of str
+        The names of the figures
+    load_all : bool
+        Whether to load the full recording or load as needed
+    to_load : list of str
+        The items to load if load_all is True
+    out_dir : str
+        The directory to save the figures to 
+
+    Returns
+    -------
+    figures : list of simuran.plot.figure.SimuranFigure
+        The figures to plot
+    figure_names : list of str
+        The names of the figures to plot
+    """
+    analysis_handler = simuran.analysis.analysis_handler.AnalysisHandler()
+    pbar = tqdm(range(len(recording_container)))
+
+    for i in pbar:
+        if args_fn is not None:
+            function_args = args_fn(recording_container, i, figures)
+        disp_name = recording_container[i].source_file[
+            len(recording_container.base_dir + os.sep) :
+        ]
+        # Can include [fn.__name__ for fn in functions] below if more info desired
+        pbar.set_description("Running on {}".format(disp_name))
+        if load_all:
+            recording_container[i].available = to_load
+            recording = recording_container.get(i)
+        else:
+            recording = recording_container[i]
+        for fn in functions:
+            fn_args = function_args.get(fn.__name__, [])
+
+            # This allows for multiple runs of the same function
+            if isinstance(fn_args, dict):
+                for key, value in fn_args.items():
+                    analysis_handler.add_fn(fn, recording, *value)
+            else:
+                analysis_handler.add_fn(fn, recording, *fn_args)
+        analysis_handler.run_all_fns()
+        recording_container[i].results = copy(analysis_handler.results)
+        analysis_handler.reset()
+        figures = save_figures(
+            figures, out_dir, figure_names=figure_names, verbose=False
+        )
+
+    return figures, figure_names
+
+
 def main(
     location,
     functions,
@@ -409,7 +527,10 @@ def main(
 
     Returns
     -------
-    None
+    results : list of dict
+        The results obtained from the analysis for each recording in the container.
+    recording_names : list of str
+        The source files for each of the recordings in the container.
 
     Raises
     ------
@@ -424,9 +545,10 @@ def main(
 
     """
     in_dir = location if os.path.isdir(location) else os.path.dirname(location)
-    cell_location = os.path.join(in_dir, cell_list_name)
     batch_setup = check_input_params(location, batch_name)
     batch_params = batch_setup.ph
+    out_dir, out_name = set_output_locations()
+    out_loc = os.path.join(out_dir, out_name)
 
     if do_batch_setup:
         if not batch_control_setup(batch_setup, only_check, verbose=verbose):
@@ -443,69 +565,23 @@ def main(
         recording_container, select_recordings, file_list_name, overwrite=False
     )
 
-    recording_container.select_cells(
-        cell_location, do_cell_picker=do_cell_picker, overwrite=False
-    )
-
-    # Set the output folder
-    now = datetime.now()
-    current_time = now.strftime("%H-%M-%S")
-    out_name = "sim_results_" + current_time + ".csv"
-    whole_time = now.strftime("%Y-%m-%d--%H-%M-%S")
-    out_dirname = whole_time
-
-    try:
-        start_str = os.path.splitext(os.path.basename(batch_name))[0]
-        if function_config_path is not None:
-            start_str = (
-                start_str
-                + "--"
-                + os.path.splitext(os.path.basename(function_config_path))[0]
-            )
-        out_dirname = start_str
-        out_name = "sim_results--" + start_str + ".csv"
-    except BaseException:
-        pass
-
-    out_dir = os.path.abspath(
-        os.path.join(os.path.dirname(batch_name), "..", "sim_results", out_dirname)
-    )
-
-    # Run the analysis on all the loaded recordings
-    # TODO make _0 be the default if no number
-    analysis_handler = simuran.analysis.analysis_handler.AnalysisHandler()
-    pbar = tqdm(range(len(recording_container)))
-    for i in pbar:
-        if args_fn is not None:
-            function_args = args_fn(recording_container, i, figures)
-        disp_name = recording_container[i].source_file[
-            len(recording_container.base_dir + os.sep) :
-        ]
-        # Can include [fn.__name__ for fn in functions] below if more info desired
-        pbar.set_description("Running on {}".format(disp_name))
-        if load_all:
-            recording_container[i].available = to_load
-            recording = recording_container.get(i)
-        else:
-            recording = recording_container[i]
-        for fn in functions:
-            fn_args = function_args.get(fn.__name__, [])
-
-            # This allows for multiple runs of the same function
-            if isinstance(fn_args, dict):
-                for key, value in fn_args.items():
-                    analysis_handler.add_fn(fn, recording, *value)
-            else:
-                analysis_handler.add_fn(fn, recording, *fn_args)
-        analysis_handler.run_all_fns()
-        recording_container[i].results = copy(analysis_handler.results)
-        analysis_handler.reset()
-        figures = save_figures(
-            figures, out_dir, figure_names=figure_names, verbose=False
+    cell_location = os.path.join(in_dir, cell_list_name)
+    if os.path.isfile(cell_location) or do_cell_picker:
+        recording_container.select_cells(
+            cell_location, do_cell_picker=do_cell_picker, overwrite=False
         )
 
-    # out_dir = os.path.join(recording_container.base_dir, "sim_results", whole_time)
-    out_loc = os.path.join(out_dir, out_name)
+    run_all_analysis(
+        recording_container,
+        functions,
+        args_fn,
+        figures,
+        figure_names,
+        load_all,
+        to_load,
+        out_dir,
+    )
+
     recording_container.save_summary_data(
         out_loc,
         attr_list=attributes_to_save,
@@ -513,16 +589,17 @@ def main(
         decimals=decimals,
     )
 
-    # Save any plots that have not been saved yet
     save_figures(
         figures, out_dir, figure_names=figure_names, verbose=False, set_done=True
     )
     save_unclosed_figures(out_dir)
 
-    # TODO this should probably be a dict with the name as the key
-    return recording_container.data_from_attr_list(
+    results = recording_container.data_from_attr_list(
         attributes_to_save, friendly_names=friendly_names, decimals=decimals
     )
+    recording_names = recording_container.get_property("source_file")
+
+    return results, recording_names
 
 
 def run(

@@ -261,7 +261,9 @@ class AbstractContainer(ABC):
 
         Returns
         -------
-        None
+        list of dict or dict
+            A dict is returned if idx is not None, otherwise list of dict.
+            This contains the data retrieved from the attributes list.
 
         Raises
         ------

@@ -2,6 +2,7 @@
 
 import os
 from copy import deepcopy
+import csv
 
 from simuran.base_container import AbstractContainer
 from simuran.recording import Recording
@@ -316,10 +317,31 @@ class RecordingContainer(AbstractContainer):
             self.set_chosen_cells(units_to_use, cell_location)
         else:
             print("Loading cells from {}".format(cell_location))
-            load_cells(cell_location)
-            
+            self.load_cells(cell_location)
+
     def load_cells(self, cell_location):
-        """Load cells from a csv file at the given location."""
+        """
+        Load cells from a csv file at the given location.
+
+        Parameters
+        ----------
+        cell_location : str
+            Path to a csv file listing the cells to use.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        FileNotFoundError
+            If the file passed does not exist.
+
+        """
+        if not os.path.isfile(cell_location):
+            raise FileNotFoundError(
+                "No cell list available at {}.".format(cell_location)
+            )
         with open(cell_location, "r") as f:
             if f.readline().strip().lower() != "all":
                 reader = csv.reader(f, delimiter=",")
@@ -422,7 +444,7 @@ class RecordingContainer(AbstractContainer):
             # Recording container index, single unit group at that index, group units
             final_units.append([all_cells[u[0]][0], all_cells[u[0]][1][0], u[1]])
 
-       return final_units
+        return final_units
 
     def set_chosen_cells(self, final_units, cell_location):
         """
@@ -440,7 +462,7 @@ class RecordingContainer(AbstractContainer):
         -------
         None
 
-        """        
+        """
         with open(cell_location, "w") as f:
             max_num = max([len(u[2]) for u in final_units])
             unit_as_string = ["Unit_{}".format(i) for i in range(max_num)]
