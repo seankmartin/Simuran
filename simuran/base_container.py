@@ -434,7 +434,11 @@ class GenericContainer(AbstractContainer):
             The created object, has type self.cls
 
         """
-        new = self.cls(*params)
+        try:
+            new = self.cls()
+        except BaseException:
+            new = self.cls(*params)
+
         if hasattr(new, "setup"):
             new.setup(params)
             return new
