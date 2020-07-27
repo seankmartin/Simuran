@@ -5,7 +5,7 @@ import time
 
 from skm_pyutils.py_log import log_exception
 
-from simuran.main.main import run
+from simuran.main.main import run, modify_path
 from simuran.param_handler import ParamHandler
 from simuran.main.merge import merge_files, csv_merge
 
@@ -60,7 +60,7 @@ def batch_main(
         info = run(batch_param_loc, fn_param_loc, **full_kwargs)
         return info
 
-    all_info = []
+    all_info = ([], [])
     for i in range(len(run_dict_list)):
         print(
             "--------------------SIMURAN Batch Iteration {}--------------------".format(
@@ -85,11 +85,12 @@ def batch_main(
             )
 
         if save_info:
+            all_info[0].append(results)
             if keep_container:
-                all_info.append((results, recording_container))
+                all_info[1].append(recording_container)
             else:
                 container_filenames = recording_container.get_property("source_file")
-                all_info.append((results, container_filenames))
+                all_info[1].append(container_filenames)
 
     return all_info
 
@@ -128,6 +129,10 @@ def batch_run(
 
     """
     start_time = time.monotonic()
+    modify_path(
+        os.path.abspath(os.path.join(os.path.dirname(run_dict_loc), "..", "analysis")),
+        verbose=kwargs.get("verbose", False),
+    )
     run_dict = ParamHandler(in_loc=run_dict_loc, name="params")
     after_batch_function = run_dict.get("after_batch_fn", None)
     keep_container = run_dict.get("keep_all_data", False)
@@ -159,8 +164,9 @@ def batch_run(
             function_to_use=function_to_use,
             idx=idx,
             handle_errors=handle_errors,
-            save_info=(after_batch_function is not None),
+            save_info=(not kwargs.get("only_check", False)),
             keep_container=keep_container,
+            should_modify_path=False,
             **kwargs,
         )
         if not kwargs.get("only_check", False) and (idx is None):
@@ -169,6 +175,7 @@ def batch_run(
                 pickle.dump(all_info, f)
 
             if merge:
+                print("--------------------Merging results--------------------")
                 csv_merge(out_dir)
                 merge_files(out_dir)
     if (
@@ -176,11 +183,12 @@ def batch_run(
         and (after_batch_function is not None)
         and (after_batch_function != "save")
     ):
+        print("Running {}".format(after_batch_function.__name__))
         after_batch_function(all_info, out_dir)
 
     print(
         "Batch operation completed in {:.2f}mins".format(
-            (time.monotonic() - start_time) / 3600
+            (time.monotonic() - start_time) / 60
         )
     )
 

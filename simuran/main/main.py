@@ -188,7 +188,7 @@ def batch_control_setup(batch_setup, only_check, do_interactive=True, verbose=Fa
             "Done checking batch setup. "
             + "Change only_check to False in {} to run".format(batch_setup.file_loc)
         )
-    else:
+    elif only_check:
         print("Done checking batch setup. " + "Pass only_check as False in main to run")
 
     return not (batch_setup.ph["only_check"] or only_check)
@@ -593,6 +593,7 @@ def main(
     decimals=3,
     function_config_path=None,
     only_check=False,
+    should_modify_path=True,
 ):
     """
     Run the main control functionality.
@@ -657,6 +658,9 @@ def main(
         This is only used for naming purposes, currently.
     only_check : bool, optional
         Only checks what would run if True (default False)
+    should_modify_path : bool, optional
+        If True, the directory batch_script_dir/../analysis
+        is added to path, by default True.
 
     Returns
     -------
@@ -682,10 +686,12 @@ def main(
     batch_params = batch_setup.ph
     out_dir, out_name = set_output_locations(batch_name, function_config_path)
     out_loc = os.path.join(out_dir, out_name)
-    site_dir = os.path.abspath(
-        os.path.join(os.path.dirname(batch_setup.file_loc), "..", "analysis")
-    )
-    modify_path(site_dir, verbose=verbose)
+
+    if should_modify_path:
+        site_dir = os.path.abspath(
+            os.path.join(os.path.dirname(batch_setup.file_loc), "..", "analysis")
+        )
+        modify_path(site_dir, verbose=verbose)
 
     if do_batch_setup:
         # TODO let the interactive be controllable
@@ -756,6 +762,7 @@ def run(
     do_cell_picker=True,
     verbose=False,
     only_check=False,
+    should_modify_path=True,
 ):
     """
     Run main more readily without having to set as many params.
@@ -800,6 +807,9 @@ def run(
         Whether to print extra information about batch parameters (default False).
     only_check : bool, optional
         Only checks what would run if True (default False)
+    should_modify_path : bool, optional
+        If True, the directory batch_script_dir/../analysis
+        is added to path, by default True.
 
     Returns
     -------
@@ -880,4 +890,5 @@ def run(
         verbose=verbose,
         function_config_path=fn_param_loc,
         only_check=only_check,
+        should_modify_path=should_modify_path,
     )
