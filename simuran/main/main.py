@@ -142,8 +142,6 @@ def modify_path(path_dir, verbose=False):
     None
 
     """
-    if verbose:
-        print("----------Updating PATH----------")
     if os.path.isdir(path_dir):
         if verbose:
             print("Adding {} to path".format(path_dir))
@@ -690,7 +688,10 @@ def main(
     modify_path(site_dir, verbose=verbose)
 
     if do_batch_setup:
-        if not batch_control_setup(batch_setup, only_check, verbose=verbose):
+        # TODO let the interactive be controllable
+        if not batch_control_setup(
+            batch_setup, only_check, do_interactive=False, verbose=verbose
+        ):
             return [], []
 
     recording_container = container_setup(

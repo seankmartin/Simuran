@@ -1,6 +1,7 @@
 """Run a full analysis set."""
 import os
 import pickle
+import time
 
 from skm_pyutils.py_log import log_exception
 
@@ -126,6 +127,7 @@ def batch_run(
         the output of batch_main
 
     """
+    start_time = time.monotonic()
     run_dict = ParamHandler(in_loc=run_dict_loc, name="params")
     after_batch_function = run_dict.get("after_batch_fn", None)
     keep_container = run_dict.get("keep_all_data", False)
@@ -140,7 +142,15 @@ def batch_run(
         os.path.splitext(os.path.basename(run_dict_loc))[0] + fn_name + "_dump.pickle",
     )
 
-    if (idx is None) and os.path.isfile(pickle_name) and (not overwrite):
+    if (
+        (idx is None)
+        and (not kwargs.get("only_check", False))
+        and os.path.isfile(pickle_name)
+        and (not overwrite)
+    ):
+        print(
+            "Loading data from {}, please delete it to run instead".format(pickle_name)
+        )
         with open(pickle_name, "rb") as f:
             all_info = pickle.load(f)
     else:
@@ -153,15 +163,25 @@ def batch_run(
             keep_container=keep_container,
             **kwargs,
         )
-        os.makedirs(out_dir, exist_ok=True)
-        with open(pickle_name, "wb") as f:
-            pickle.dump(all_info, f)
+        if not kwargs.get("only_check", False) and (idx is None):
+            os.makedirs(out_dir, exist_ok=True)
+            with open(pickle_name, "wb") as f:
+                pickle.dump(all_info, f)
 
-        if merge:
-            csv_merge(out_dir)
-            merge_files(out_dir)
-
-    if (after_batch_function is not None) and (after_batch_function != "save"):
+            if merge:
+                csv_merge(out_dir)
+                merge_files(out_dir)
+    if (
+        (not kwargs.get("only_check", False))
+        and (after_batch_function is not None)
+        and (after_batch_function != "save")
+    ):
         after_batch_function(all_info, out_dir)
+
+    print(
+        "Batch operation completed in {:.2f}mins".format(
+            (time.monotonic() - start_time) / 3600
+        )
+    )
 
     return all_info
