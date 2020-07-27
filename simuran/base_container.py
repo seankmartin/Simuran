@@ -133,6 +133,16 @@ class AbstractContainer(ABC):
         """
         return [getattr(val, prop) for val in self.container]
 
+    def get_possible_values(self, prop):
+        used = set()
+        to_return = []
+        for val in self.container:
+            x = getattr(val, prop)
+            if x not in used:
+                to_return.append(x)
+                used.add(x)
+        return to_return
+
     def save_single_data(
         self,
         attr_list,
@@ -349,10 +359,6 @@ class AbstractContainer(ABC):
         list of int, or simuran.base_container.AbstractContainer
             A container with the subsampled items if inplace is False.
             The indices of the items subsampled from the container if inplace is True
-
-        TODO
-        ----
-        Test using inplace as False
 
         """
         if interactive:

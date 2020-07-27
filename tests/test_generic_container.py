@@ -26,6 +26,9 @@ def test_numpy_container():
     assert np.all(container[0] == 0)
     assert np.all(container[1] == 6)
 
+    container.append(np.zeros(200))
+    assert container.get_possible_values("size") == [100, 200]
+
 
 if __name__ == "__main__":
     test_numpy_container()
