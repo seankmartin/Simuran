@@ -53,7 +53,7 @@ def test_recording_setup():
     assert ex.signals.group_by_property("region", "BLA")[1] == [30, 31]
 
 
-def test_nc_recording_loading(delete=True):
+def test_nc_recording_loading(delete=False):
     from neurochat.nc_lfp import NLfp
     from neurochat.nc_spike import NSpike
     from neurochat.nc_spatial import NSpatial

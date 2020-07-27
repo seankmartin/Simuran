@@ -129,7 +129,8 @@ dmypy.json
 .pyre/
 
 # Custom
-large_test_resources/
+tests/large_resources/
+tests/resources/temp
 
 profiling/profile.out
 
