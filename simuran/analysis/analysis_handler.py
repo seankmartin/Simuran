@@ -1,6 +1,7 @@
 """This module provides functionality for performing large batch analysis."""
 
 from indexed import IndexedOrderedDict
+from skm_pyutils import log_exception
 
 
 class AnalysisHandler(object):
@@ -20,21 +21,27 @@ class AnalysisHandler(object):
         The results of the function calls
     verbose : bool
         Whether to print more information while running the functions.
+    handle_errors : bool
+        Whether to handle errors during runtime of underlying functions,
+        or to crash on error.
 
     Parameters
     ----------
     verbose : bool, optional
         Sets the value of the verbose attribute, defaults to False.
+    handle_errors : bool, optional
+        Sets the value of the handle_errors attribute, defaults to False.
 
     """
 
-    def __init__(self, verbose=False):
+    def __init__(self, verbose=False, handle_errors=False):
         """See help(AnalysisHandler)."""
         self.fns_to_run = []
         self.fn_params_list = []
         self.fn_kwargs_list = []
         self.results = IndexedOrderedDict()
         self.verbose = False
+        self.handle_errors = False
 
     def run_all_fns(self):
         """Run all of the established functions."""
@@ -99,7 +106,16 @@ class AnalysisHandler(object):
         """
         if self.verbose:
             print("Running {} with params {} kwargs {}".format(fn, *args, **kwargs))
-        result = fn(*args, **kwargs)
+        if self.handle_errors:
+            try:
+                result = fn(*args, **kwargs)
+            except BaseException as e:
+                log_exception(
+                    e, "Running {} with args {} and kwargs {}".format(fn, args, kwargs),
+                )
+        else:
+            result = fn(*args, **kwargs)
+
         ctr = 1
         save_result = kwargs.get("simuran_save_result", True)
         save_name = str(fn.__name__)
