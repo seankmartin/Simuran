@@ -99,7 +99,6 @@ def main():
         if not os.path.isfile(parsed.function_config_path):
             parsed.function_config_path = None
 
-        # TODO add ability to select the after batch function here
         return simuran.main.batch_main.batch_run(
             parsed.batch_config_path,
             function_to_use=parsed.function_config_path,
