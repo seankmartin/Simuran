@@ -4,7 +4,6 @@ import numpy as np
 def powers(recording):
     results = {}
 
-    # TODO a good way to do this in different regions
     sub_signals = recording.signals.group_by_property("region", "SUB")[0]
     # Remove dead channels
     sub_signals = [s for s in sub_signals if not np.all((s.samples == 0))]

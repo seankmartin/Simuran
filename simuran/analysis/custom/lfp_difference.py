@@ -19,18 +19,19 @@ def compare_lfp(
     recording, out_base_dir=None, ch_to_use="all", save_result=True, plot=False
 ):
     """
-    TODO support different ch_to_use.
+    Compare LFP channels for differences.
 
     Parameters
     ----------
     recording : simuran.recording.Recording
         Recording holding data
     out_base_dir : str, None
-        Path for desired output location. Default - Saves output to folder named !LFP in base directory.
+        Path for desired output location.
+        Default - Saves output to folder named !LFP in base directory.
     ch: int
         Number of LFP channels in session
-    """
 
+    """
     # Do the actual calculation
     if ch_to_use == "all":
         ch_labels = recording.get_signal_channels()

@@ -466,7 +466,6 @@ def calc_wPowerSpectrum(
     t = np.asarray(sample_times)
     dt = np.mean(np.diff(t))
     dj = resolution
-    # TODO correct calculation below. Convert freq to period and work with that first?
     s0 = min_freq * dt
     if s0 < 2 * dt:
         s0 = 2 * dt

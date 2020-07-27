@@ -1,7 +1,5 @@
 """
 This package holds custom analysis functions.
 
-Your own analysis should be placed in here.
-
-TODO I need to clean this up.
+TODO move this to a git submodule.
 """

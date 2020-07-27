@@ -814,7 +814,6 @@ def run(
         If the batch configuration path or function config path are invalid.
 
     """
-    # TODO extract this into another function
     here = os.path.dirname(__file__)
     if default_param_folder is None:
         default_param_folder = os.path.join(here, "..", "params")

@@ -42,7 +42,6 @@ class RecordingContainer(AbstractContainer):
         self.last_loaded_idx = None
         self.base_dir = None
 
-    # TODO removing subset parameter but probably need it back
     def auto_setup(
         self,
         start_dir,
@@ -220,10 +219,6 @@ class RecordingContainer(AbstractContainer):
             A container with the subsampled items if inplace is False.
             The indices of the items subsampled from the container if inplace is True
 
-        TODO
-        ----
-        Test with inplace set to False
-
         """
         if prop is None:
             prop = "source_file"
@@ -282,10 +277,6 @@ class RecordingContainer(AbstractContainer):
         list of int, or simuran.recording_container.RecordingContainer
             A container with the subsampled items if inplace is False.
             The indices of the items subsampled from the container if inplace is True
-
-        TODO
-        ----
-        Test with inplace set to False
 
         """
         indexes = [self.find_recording_with_source(s) for s in source_files]
@@ -374,10 +365,6 @@ class RecordingContainer(AbstractContainer):
         ------
         LookupError
             If any unit in the user input is not found.
-
-        TODO
-        ----
-        Make sure the "all" selection works as expected.
 
         Returns
         -------

@@ -13,7 +13,6 @@ def plot_all_lfp(info, out_dir):
     sns.set_style("ticks")
     sns.set_palette("colorblind")
 
-    # TODO this should be a helper probably
     parsed_info = []
     control_data = []
     lesion_data = []

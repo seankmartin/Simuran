@@ -44,7 +44,6 @@ def plot_psd(x, ax, fs=250, group="ATNx", fmax=100):
 
 
 def plot_recording_coherence(recording, figures, base_dir):
-    # TODO turn this naming into a helper function
     location = os.path.splitext(recording.source_file)[0]
 
     dirs = base_dir.split(os.sep)
@@ -63,7 +62,6 @@ def plot_recording_coherence(recording, figures, base_dir):
         + ".png"
     )
 
-    # TODO a good way to do this in different regions
     sub_signals = recording.signals.group_by_property("region", "SUB")[0]
     # Remove dead channels
     sub_signals = [s for s in sub_signals if not np.all((s.samples == 0))]

@@ -3,8 +3,6 @@ import matplotlib.pyplot as plt
 
 from copy import deepcopy
 
-# TODO log these exceptions - also maybe build them into analysis handler?? Nah prob not
-
 
 def frate(recording, tetrode_num, unit_num):
     try:
