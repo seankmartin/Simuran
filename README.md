@@ -50,6 +50,12 @@ Interface with other programs such as SpikeInterface to allow for many different
 2. Add more unit test cases
 3. Make unit test cases with small data and store that data.
 
+## Using custom analysis code
+SIMURAN can use any code that is on the Python path. The easiest way to manage this is to either:
+1. Fork SIMURAN and place your custom analysis code in the SIMURAN package under the directory labelled custom.
+2. Place your code on path separately, such as by creating a `setup.py` file for your code, or a `pyproject.toml` file for installation.
+3. If you place python code and/or a file with the `.pth` extension in a directory named analysis in the same directory that batch_config_path is in, this `.pth` file will be automatically processed and its contents placed on path. If this option is chosen, it is recommended to store the analysis functions directly so that anyone can run the code without modification.
+
 ## Inspiration
 1. https://github.com/seankmartin/NeuroChaT
 2. https://github.com/SpikeInterface

@@ -3,6 +3,8 @@
 import os
 import shutil
 import subprocess
+import site
+import sys
 from copy import copy
 from datetime import datetime
 
@@ -122,6 +124,36 @@ def check_input_params(location, batch_name):
 
     if record_params["loader"] == "params_only":
         raise ValueError("The only params loader is not supported for loading files")
+
+
+def modify_path(path_dir, verbose=False):
+    """
+    Add a folder to path and process any .pth files in it.
+
+    Parameters
+    ----------
+    path_dir : str
+        Path to the directory to add to python path.
+    verbose : bool, optional
+        Whether to print the new path, by default False
+
+    Returns
+    -------
+    None
+
+    """
+    if verbose:
+        print("----------Updating PATH----------")
+    if os.path.isdir(path_dir):
+        if verbose:
+            print("Adding {} to path".format(path_dir))
+        site.addsitedir(path_dir)
+    elif verbose:
+        print("WARNING: {} does not exist, not adding to path".format(path_dir))
+    if verbose:
+        print("The path is now:")
+        for line in sys.path:
+            print(line)
 
 
 def batch_control_setup(batch_setup, only_check, do_interactive=True, verbose=False):
@@ -650,8 +682,12 @@ def main(
     in_dir = location if os.path.isdir(location) else os.path.dirname(location)
     batch_setup = check_input_params(location, batch_name)
     batch_params = batch_setup.ph
-    out_dir, out_name = set_output_locations()
+    out_dir, out_name = set_output_locations(batch_name, function_config_path)
     out_loc = os.path.join(out_dir, out_name)
+    site_dir = os.path.abspath(
+        os.path.join(os.path.dirname(batch_setup.file_loc), "..", "analysis")
+    )
+    modify_path(site_dir, verbose=verbose)
 
     if do_batch_setup:
         if not batch_control_setup(batch_setup, only_check, verbose=verbose):
