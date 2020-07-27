@@ -2,7 +2,7 @@
 import os
 import pickle
 
-from skm_pyutils.py_path import log_exception
+from skm_pyutils.py_log import log_exception
 
 from simuran.main.main import run
 from simuran.param_handler import ParamHandler

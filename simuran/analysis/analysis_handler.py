@@ -3,7 +3,7 @@
 import logging
 
 from indexed import IndexedOrderedDict
-from skm_pyutils import log_exception
+from skm_pyutils.py_log import log_exception
 
 
 class AnalysisHandler(object):
@@ -42,8 +42,16 @@ class AnalysisHandler(object):
         self.fn_params_list = []
         self.fn_kwargs_list = []
         self.results = IndexedOrderedDict()
-        self.verbose = False
-        self.handle_errors = False
+        self.verbose = verbose
+        self.handle_errors = handle_errors
+
+    def set_handle_errors(self, handle_errors):
+        """Set the value of self.handle_errors."""
+        self.handle_errors = handle_errors
+
+    def set_verbose(self, verbose):
+        """Set the value of self.verbose."""
+        self.verbose = verbose
 
     def run_all_fns(self):
         """Run all of the established functions."""
@@ -52,9 +60,7 @@ class AnalysisHandler(object):
         for (fn, fn_params, fn_kwargs) in fn_zipped:
             self._run_fn(fn, *fn_params, **fn_kwargs)
         if self._was_error:
-            logging.warning(
-                "------------An error occurred while running analysis---------"
-            )
+            logging.warning("A handled error occurred while running analysis")
         self._was_error = False
 
     def reset(self):
@@ -119,9 +125,13 @@ class AnalysisHandler(object):
                 result = fn(*args, **kwargs)
             except BaseException as e:
                 log_exception(
-                    e, "Running {} with args {} and kwargs {}".format(fn, args, kwargs),
+                    e,
+                    "Running {} with args {} and kwargs {}".format(
+                        fn.__name__, args, kwargs
+                    ),
                 )
                 self._was_error = True
+                result = "SIMURAN-ERROR"
         else:
             result = fn(*args, **kwargs)
 
