@@ -88,6 +88,12 @@ def main():
         action="store_true",
         help="Whether to do a full run or a dummy run",
     )
+    parser.add_argument(
+        "--merge",
+        "-m",
+        action="store_true",
+        help="Whether to merge files in recursive mode after running",
+    )
 
     parsed, unparsed = parser.parse_known_args()
     if len(unparsed) > 0:
@@ -108,6 +114,7 @@ def main():
             do_cell_picker=parsed.do_cell_picker,
             verbose=parsed.verbose,
             only_check=parsed.dummy,
+            merge=parsed.merge,
         )
 
     elif parsed.grab_params:
@@ -136,5 +143,10 @@ def main():
         )
 
 
-if __name__ == "__main__":
+def cli_entry():
     main()
+    return None
+
+
+if __name__ == "__main__":
+    cli_entry()
