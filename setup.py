@@ -36,6 +36,7 @@ CLASSIFIERS = [
     "Operating System :: Windows",
 ]
 
+ENTRY_POINTS = {"console_scripts": ["simuran = simuran.cli:main"]}
 
 if __name__ == "__main__":
 
@@ -55,4 +56,5 @@ if __name__ == "__main__":
         include_package_data=True,
         packages=find_packages(),
         classifiers=CLASSIFIERS,
+        entry_points=ENTRY_POINTS,
     )

@@ -24,7 +24,7 @@ def main():
         The output of running analysis from the specified configuration.
 
     """
-    description = "Command line arguments"
+    description = "simuran"
     parser = argparse.ArgumentParser(description)
     parser.add_argument(
         "batch_config_path",
