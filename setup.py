@@ -36,7 +36,7 @@ CLASSIFIERS = [
     "Operating System :: Windows",
 ]
 
-ENTRY_POINTS = {"console_scripts": ["simuran = simuran.cli:main"]}
+ENTRY_POINTS = {"console_scripts": ["simuran = simuran.cli:cli_entry"]}
 
 if __name__ == "__main__":
 
