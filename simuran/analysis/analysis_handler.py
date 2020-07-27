@@ -106,6 +106,7 @@ class AnalysisHandler(object):
         if save_result:
             while save_name in self.results.keys():
                 save_name = str(fn.__name__) + "_{}".format(ctr)
+                ctr = ctr + 1
             self.results[save_name] = result
 
         return result
