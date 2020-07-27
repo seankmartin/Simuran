@@ -98,7 +98,13 @@ class BatchSetup(object):
 
     def interactive_refilt(self):
         """Launch an interactive prompt to design REGEX filters for batch operation."""
-        regex_filts, _ = self.ph.interactive_refilt(self.in_dir)
+        if self._bad_file:
+            new_ph = ParamHandler(params=self.ph["mapping"])
+        else:
+            new_ph = ParamHandler(in_loc=self.ph["mapping_file"])
+        regex_filts, _ = new_ph.interactive_refilt(
+            self.in_dir, self.ph["regex_filters"]
+        )
         neuro_file = open(self.file_loc, "r")
         temp_file = open("temp.txt", "w")
         for line in neuro_file:

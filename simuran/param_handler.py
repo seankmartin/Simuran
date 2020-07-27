@@ -243,7 +243,7 @@ class ParamHandler:
 
         return dirs
 
-    def interactive_refilt(self, start_dir):
+    def interactive_refilt(self, start_dir, starting_filt=None):
         """
         Launch an interactive prompt to select regex filters.
 
@@ -262,7 +262,7 @@ class ParamHandler:
         """
         re_filt = ""
         dirs = self.batch_write(
-            start_dir, re_filters=None, check_only=True, return_absolute=False
+            start_dir, re_filters=starting_filt, check_only=True, return_absolute=False
         )
         while True:
             this_re_filt = input(
@@ -282,8 +282,12 @@ class ParamHandler:
             dirs = self.batch_write(
                 start_dir, re_filters=re_filt, check_only=True, return_absolute=False
             )
+
         if re_filt == "":
-            re_filt = []
+            re_filt = starting_filt
+            if re_filt is None:
+                re_filt = []
+
         print("The final regex was: {}".format(re_filt))
         return re_filt, dirs
 
