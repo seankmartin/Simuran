@@ -1,5 +1,7 @@
 """This module provides functionality for performing large batch analysis."""
 
+import logging
+
 from indexed import IndexedOrderedDict
 from skm_pyutils import log_exception
 
@@ -46,8 +48,14 @@ class AnalysisHandler(object):
     def run_all_fns(self):
         """Run all of the established functions."""
         fn_zipped = zip(self.fns_to_run, self.fn_params_list, self.fn_kwargs_list)
+        self._was_error = False
         for (fn, fn_params, fn_kwargs) in fn_zipped:
             self._run_fn(fn, *fn_params, **fn_kwargs)
+        if self._was_error:
+            logging.warning(
+                "------------An error occurred while running analysis---------"
+            )
+        self._was_error = False
 
     def reset(self):
         """Reset this object, clearing results and function list."""
@@ -113,6 +121,7 @@ class AnalysisHandler(object):
                 log_exception(
                     e, "Running {} with args {} and kwargs {}".format(fn, args, kwargs),
                 )
+                self._was_error = True
         else:
             result = fn(*args, **kwargs)
 

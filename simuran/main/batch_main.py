@@ -2,6 +2,8 @@
 import os
 import pickle
 
+from skm_pyutils.py_path import log_exception
+
 from simuran.main.main import run
 from simuran.param_handler import ParamHandler
 from simuran.main.merge import merge_files, csv_merge
@@ -70,13 +72,14 @@ def batch_main(
         run_dict, batch_param_loc, fn_param_loc = get_dict_entry(i)
         full_kwargs = {**run_dict, **kwargs}
         if handle_errors:
-            with open("output_log.txt", "w") as f:
-                try:
-                    info = run(batch_param_loc, fn_param_loc, **full_kwargs)
-                    all_info.append(info)
-                except Exception as e:
-                    print("ERROR: check output_log.txt for details")
-                    f.write("Error on {} was {}\n".format(i, e))
+            try:
+                info = run(batch_param_loc, fn_param_loc, **full_kwargs)
+                all_info.append(info)
+            except BaseException as e:
+                log_exception(
+                    e,
+                    "Running batch on iteration {} using {}".format(i, batch_param_loc),
+                )
         else:
             info = run(batch_param_loc, fn_param_loc, **full_kwargs)
 
