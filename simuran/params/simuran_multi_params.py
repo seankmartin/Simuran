@@ -58,6 +58,12 @@ def set_fixed_params(in_dict):
     # For example, it could plot a summary of all the data
     in_dict["after_batch_fn"] = None
 
+    # If the after batch function needs the full dataset
+    # Pass this as true
+    # For example, this could be used to concatenate
+    # EEG signals that were recorded in two second long trials
+    in_dict["keep_all_data"] = False
+
     return in_dict
 
 

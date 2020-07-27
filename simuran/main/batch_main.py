@@ -15,6 +15,7 @@ def batch_main(
     idx=None,
     handle_errors=False,
     save_info=False,
+    keep_container=False,
     **kwargs
 ):
     """
@@ -32,19 +33,15 @@ def batch_main(
     handle_errors : bool, optional
         If True, don't crash on errors, write them to file instead, by default False
     save_info : bool, optional
-        If True, pickle the output of the analysis, by default False
+        If True, append the output of analysis to a list, by default False
+    keep_container : bool, optional
+        If True, keeps the container made in main, by default False
+        False just keeps the results and the filenames
 
     Returns
     -------
     list of tuple or tuple
         Each entry is the output of simuran.main.main
-
-    TODO
-    ----
-    Allow for extra options, such as merging or concatenating
-    All in all, it needs a way to define the relationship between the recordings
-    For example, you may want to concatenate them, or take the average of them
-    and then run the analysis
 
     """
 
@@ -73,18 +70,25 @@ def batch_main(
         full_kwargs = {**run_dict, **kwargs}
         if handle_errors:
             try:
-                info = run(batch_param_loc, fn_param_loc, **full_kwargs)
-                all_info.append(info)
+                results, recording_container = run(
+                    batch_param_loc, fn_param_loc, **full_kwargs
+                )
             except BaseException as e:
                 log_exception(
                     e,
                     "Running batch on iteration {} using {}".format(i, batch_param_loc),
                 )
         else:
-            info = run(batch_param_loc, fn_param_loc, **full_kwargs)
+            results, recording_container = run(
+                batch_param_loc, fn_param_loc, **full_kwargs
+            )
 
         if save_info:
-            all_info.append(info)
+            if keep_container:
+                all_info.append((results, recording_container))
+            else:
+                container_filenames = recording_container.get_property("source_file")
+                all_info.append((results, container_filenames))
 
     return all_info
 
@@ -124,6 +128,7 @@ def batch_run(
     """
     run_dict = ParamHandler(in_loc=run_dict_loc, name="params")
     after_batch_function = run_dict.get("after_batch_fn", None)
+    keep_container = run_dict.get("keep_all_data", False)
     out_dir = os.path.abspath(
         os.path.join(os.path.dirname(run_dict_loc), "..", "sim_results")
     )
@@ -145,6 +150,7 @@ def batch_run(
             idx=idx,
             handle_errors=handle_errors,
             save_info=(after_batch_function is not None),
+            keep_container=keep_container,
             **kwargs,
         )
         os.makedirs(out_dir, exist_ok=True)
@@ -155,7 +161,7 @@ def batch_run(
             csv_merge(out_dir)
             merge_files(out_dir)
 
-    if after_batch_function is not None:
+    if (after_batch_function is not None) and (after_batch_function != "save"):
         after_batch_function(all_info, out_dir)
 
     return all_info

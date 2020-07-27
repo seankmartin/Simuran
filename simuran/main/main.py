@@ -426,7 +426,7 @@ def run_all_analysis(
     to_load : list of str
         The items to load if load_all is True
     out_dir : str
-        The directory to save the figures to 
+        The directory to save the figures to
 
     Returns
     -------
@@ -664,8 +664,8 @@ def main(
     -------
     results : list of dict
         The results obtained from the analysis for each recording in the container.
-    recording_names : list of str
-        The source files for each of the recordings in the container.
+    recording_container : simuran.recording_container.RecordingContainer
+        The container that was used to obtain the results.
 
     Raises
     ------
@@ -736,9 +736,8 @@ def main(
     results = recording_container.data_from_attr_list(
         attributes_to_save, friendly_names=friendly_names, decimals=decimals
     )
-    recording_names = recording_container.get_property("source_file")
 
-    return results, recording_names
+    return results, recording_container
 
 
 def run(
@@ -805,8 +804,8 @@ def run(
     -------
     results : list of dict
         The results obtained from the analysis for each recording in the container.
-    recording_names : list of str
-        The source files for each of the recordings in the container.
+    recording_container : simuran.recording_container.RecordingContainer
+        The container that was used to obtain the results.
 
     Raises
     ------
