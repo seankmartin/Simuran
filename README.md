@@ -45,10 +45,8 @@ Interface with other programs such as SpikeInterface to allow for many different
 9. Duration
 10. Data type
 
-## TODO
-1. Add build system.
-2. Add more unit test cases
-3. Make unit test cases with small data and store that data.
+## Considerations
+1. Add more unit test cases
 
 ## Using custom analysis code
 SIMURAN can use any code that is on the Python path. The easiest way to manage this is to either:

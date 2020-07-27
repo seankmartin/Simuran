@@ -309,7 +309,7 @@ class AbstractContainer(ABC):
             data_out = get_single(self[idx], attr_list)
         return data_out
 
-    def sort(self, sort_fn, reverse=False):
+    def sort(self, key, reverse=False):
         """
         Sort the container in place.
 
@@ -325,7 +325,7 @@ class AbstractContainer(ABC):
         None
 
         """
-        self.container = sorted(self.container, key=sort_fn, reverse=reverse)
+        self.container = sorted(self.container, key=key, reverse=reverse)
 
     def subsample(self, idx_list=None, interactive=False, prop=None, inplace=False):
         """
@@ -383,6 +383,10 @@ class AbstractContainer(ABC):
         """Retrive the object at the specified index from the container."""
         return self.container[idx]
 
+    def __setitem__(self, idx, value):
+        """Set the value at the specified index."""
+        self.container[idx] = value
+
     def __len__(self):
         """Get the number of items in the container."""
         return len(self.container)
@@ -422,7 +426,7 @@ class GenericContainer(AbstractContainer):
         ----------
         params : object
             The parameters to use if class has a setup function,
-            otherwise this object is just returned back.
+            otherwise self.cls(*params) is called.
 
         Returns
         -------
@@ -430,9 +434,9 @@ class GenericContainer(AbstractContainer):
             The created object, has type self.cls
 
         """
-        new = self.cls()
+        new = self.cls(*params)
         if hasattr(new, "setup"):
             new.setup(params)
             return new
         else:
-            return params
+            return new
