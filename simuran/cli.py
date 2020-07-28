@@ -127,7 +127,7 @@ def main():
         )
         simuran.batch_setup.BatchSetup.copy_params(parsed.location, output_location)
     else:
-        if not os.path.isfile(parsed.function_config_path):
+        if parsed.function_config_path == "":
             raise ValueError(
                 "In non recursive mode, the function configuration path must be a file"
             )

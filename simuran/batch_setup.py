@@ -158,7 +158,7 @@ class BatchSetup(object):
         re_filts = self.ph["regex_filters"]
         delete_old_files = self.ph["delete_old_files"]
 
-        if delete_old_files:
+        if delete_old_files and not check_only:
             BatchSetup.clear_params(self.in_dir, to_remove=self.ph["out_basename"])
 
         if verbose_params and not check_only:

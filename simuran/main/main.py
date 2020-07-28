@@ -178,7 +178,11 @@ def batch_control_setup(batch_setup, only_check, do_interactive=True, verbose=Fa
     batch_setup.set_only_check(only_check)
 
     if batch_setup.ph["interactive"] or do_interactive:
-        print("Interactive mode selected")
+        print(
+            "Interactive mode selected, starting REGEX design at {}".format(
+                batch_setup.ph["start_dir"]
+            )
+        )
         batch_setup.interactive_refilt()
 
     print("Running batch setup from {}".format(batch_setup.file_loc))
