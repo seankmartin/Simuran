@@ -124,9 +124,13 @@ def batch_main(
 
     pool.close()
     pool.join()
-    print(all_info)
+    all_info = sorted(all_info, key=lambda x: x[0])
+    final_res = [[], []]
+    for item in all_info:
+        final_res[0].append(item[1])
+        final_res[1].append(item[2])
 
-    return all_info
+    return final_res
 
 
 def batch_run(
@@ -172,7 +176,7 @@ def batch_run(
 
     """
     if num_cpus > multiprocessing.cpu_count():
-        raise ValueError("Entered more CPUs than available.")
+        raise ValueError("Entered more CPUs than available, detected {}.".format(multiprocessing.cpu_count()))
 
     start_time = time.monotonic()
     modify_path(
