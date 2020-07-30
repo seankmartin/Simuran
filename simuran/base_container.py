@@ -131,7 +131,10 @@ class AbstractContainer(ABC):
             The value of the property for each item in the container.
 
         """
-        return [getattr(val, prop) for val in self.container]
+        try:
+            return [getattr(val, prop) for val in self.container]
+        except BaseException:
+            return []
 
     def get_possible_values(self, prop):
         used = set()

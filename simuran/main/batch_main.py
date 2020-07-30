@@ -2,12 +2,59 @@
 import os
 import pickle
 import time
+import multiprocessing
 
 from skm_pyutils.py_log import log_exception
 
 from simuran.main.main import run, modify_path
 from simuran.param_handler import ParamHandler
 from simuran.main.merge import merge_files, csv_merge
+
+
+def get_dict_entry(run_dict_list, function_to_use, index):
+    run_dict = run_dict_list[index]
+    batch_param_loc = run_dict.pop("batch_param_loc")
+    fn_param_loc = run_dict.pop("fn_param_loc")
+    if function_to_use is not None:
+        fn_param_loc = function_to_use
+    return run_dict, os.path.abspath(batch_param_loc), os.path.abspath(fn_param_loc)
+
+
+def multiprocessing_func(
+    i, run_dict_list, function_to_use, kwargs, handle_errors, save_info, keep_container,
+):
+    # TODO printing would have to be stored and done at the end
+    print(
+        "--------------------SIMURAN Batch Iteration {}--------------------".format(i)
+    )
+    run_dict, batch_param_loc, fn_param_loc = get_dict_entry(
+        run_dict_list, function_to_use, i
+    )
+    full_kwargs = {**run_dict, **kwargs}
+    if handle_errors:
+        try:
+            results, recording_container = run(
+                batch_param_loc, fn_param_loc, **full_kwargs
+            )
+        except BaseException as e:
+            log_exception(
+                e, "Running batch on iteration {} using {}".format(i, batch_param_loc),
+            )
+    else:
+        results, recording_container = run(batch_param_loc, fn_param_loc, **full_kwargs)
+
+    if save_info:
+        if keep_container:
+            to_use = recording_container
+        else:
+            if type(recording_container) is list:
+                to_use = []
+            else:
+                to_use = recording_container.get_property("source_file")
+    else:
+        to_use = None
+
+    return i, results, to_use
 
 
 def batch_main(
@@ -17,6 +64,7 @@ def batch_main(
     handle_errors=False,
     save_info=False,
     keep_container=False,
+    num_cpus=4,
     **kwargs
 ):
     """
@@ -38,6 +86,9 @@ def batch_main(
     keep_container : bool, optional
         If True, keeps the container made in main, by default False
         False just keeps the results and the filenames
+    num_cpus : int, optional
+        The number of worker CPUs to launch, by default 4.
+        Enter 1 to disable multiprocessing.
 
     Returns
     -------
@@ -45,14 +96,7 @@ def batch_main(
         Each entry is the output of simuran.main.main
 
     """
-
-    def get_dict_entry(index):
-        run_dict = run_dict_list[index]
-        batch_param_loc = run_dict.pop("batch_param_loc")
-        fn_param_loc = run_dict.pop("fn_param_loc")
-        if function_to_use is not None:
-            fn_param_loc = function_to_use
-        return run_dict, os.path.abspath(batch_param_loc), os.path.abspath(fn_param_loc)
+    all_info = []
 
     if idx is not None:
         run_dict, batch_param_loc, fn_param_loc = get_dict_entry(idx)
@@ -60,37 +104,27 @@ def batch_main(
         info = run(batch_param_loc, fn_param_loc, **full_kwargs)
         return info
 
-    all_info = ([], [])
-    for i in range(len(run_dict_list)):
-        print(
-            "--------------------SIMURAN Batch Iteration {}--------------------".format(
-                i
-            )
-        )
-        run_dict, batch_param_loc, fn_param_loc = get_dict_entry(i)
-        full_kwargs = {**run_dict, **kwargs}
-        if handle_errors:
-            try:
-                results, recording_container = run(
-                    batch_param_loc, fn_param_loc, **full_kwargs
-                )
-            except BaseException as e:
-                log_exception(
-                    e,
-                    "Running batch on iteration {} using {}".format(i, batch_param_loc),
-                )
-        else:
-            results, recording_container = run(
-                batch_param_loc, fn_param_loc, **full_kwargs
-            )
+    pool = multiprocessing.get_context("spawn").Pool(num_cpus)
 
-        if save_info:
-            all_info[0].append(results)
-            if keep_container:
-                all_info[1].append(recording_container)
-            else:
-                container_filenames = recording_container.get_property("source_file")
-                all_info[1].append(container_filenames)
+    print("Launching {} workers for {} iterations".format(num_cpus, len(run_dict_list)))
+    for i in range(len(run_dict_list)):
+        pool.apply_async(
+            multiprocessing_func,
+            args=(
+                i,
+                run_dict_list,
+                function_to_use,
+                kwargs,
+                handle_errors,
+                save_info,
+                keep_container,
+            ),
+            callback=all_info.append,
+        )
+
+    pool.close()
+    pool.join()
+    print(all_info)
 
     return all_info
 
@@ -102,6 +136,7 @@ def batch_run(
     handle_errors=False,
     overwrite=False,
     merge=True,
+    num_cpus=4,
     **kwargs
 ):
     """
@@ -121,13 +156,24 @@ def batch_run(
         Whether to overwrite an existing pickle of data, by default False
     merge: bool, optional
         Whether to merge output data, by default False
+    num_cpus : int, optional
+        The number of worker CPUs to launch, by default 4.
+        Enter 1 to disable multiprocessing.
 
     Returns
     -------
     list of tuples or tuple
         the output of batch_main
 
+    Raises
+    ------
+    ValueError
+        More CPUs than available were entered.
+
     """
+    if num_cpus > multiprocessing.cpu_count():
+        raise ValueError("Entered more CPUs than available.")
+
     start_time = time.monotonic()
     modify_path(
         os.path.abspath(os.path.join(os.path.dirname(run_dict_loc), "..", "analysis")),
@@ -167,6 +213,7 @@ def batch_run(
             save_info=(not kwargs.get("only_check", False)),
             keep_container=keep_container,
             should_modify_path=False,
+            num_cpus=num_cpus,
             **kwargs,
         )
         if not kwargs.get("only_check", False) and (idx is None):

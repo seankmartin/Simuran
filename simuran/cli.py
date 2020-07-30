@@ -94,6 +94,13 @@ def main():
         action="store_true",
         help="Whether to merge files in recursive mode after running",
     )
+    parser.add_argument(
+        "--num_workers",
+        "-n",
+        type=int,
+        default=4,
+        help="Number of worker threads to launch"
+    )
 
     parsed, unparsed = parser.parse_known_args()
     if len(unparsed) > 0:
@@ -115,6 +122,7 @@ def main():
             verbose=parsed.verbose,
             only_check=parsed.dummy,
             merge=parsed.merge,
+            num_cpus=parsed.num_workers,
         )
 
     elif parsed.grab_params:
