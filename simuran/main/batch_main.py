@@ -176,7 +176,11 @@ def batch_run(
 
     """
     if num_cpus > multiprocessing.cpu_count():
-        raise ValueError("Entered more CPUs than available, detected {}.".format(multiprocessing.cpu_count()))
+        raise ValueError(
+            "Entered more CPUs than available, detected {}.".format(
+                multiprocessing.cpu_count()
+            )
+        )
 
     start_time = time.monotonic()
     modify_path(
