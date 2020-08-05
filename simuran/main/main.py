@@ -459,9 +459,11 @@ def run_all_analysis(
             # This allows for multiple runs of the same function
             if isinstance(fn_args, dict):
                 for key, value in fn_args.items():
-                    analysis_handler.add_fn(fn, recording, *value)
+                    args, kwargs = value
+                    analysis_handler.add_fn(fn, recording, *args, **kwargs)
             else:
-                analysis_handler.add_fn(fn, recording, *fn_args)
+                args, kwargs = fn_args
+                analysis_handler.add_fn(fn, recording, *args, **kwargs)
         analysis_handler.run_all_fns()
         recording_container[i].results = copy(analysis_handler.results)
         analysis_handler.reset()
