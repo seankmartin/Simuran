@@ -101,6 +101,12 @@ def main():
         default=1,
         help="Number of worker threads to launch, default is 1",
     )
+    parser.add_argument(
+        "--overwrite",
+        "-o",
+        action="store_true",
+        help="Whether to overwrite existing output",
+    )
 
     parsed, unparsed = parser.parse_known_args()
     if len(unparsed) > 0:
@@ -123,6 +129,7 @@ def main():
             only_check=parsed.dummy,
             merge=parsed.merge,
             num_cpus=parsed.num_workers,
+            overwrite=parsed.overwrite,
         )
 
     elif parsed.grab_params:
