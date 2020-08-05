@@ -454,22 +454,40 @@ def run_all_analysis(
         else:
             recording = recording_container[i]
         for fn in functions:
-            fn_args = function_args.get(fn.__name__, [])
+            # TODO get this right
+            if not isinstance(fn, (tuple, list)):
+                fn_args = function_args.get(fn.__name__, [])
 
-            # This allows for multiple runs of the same function
-            if isinstance(fn_args, dict):
-                for key, value in fn_args.items():
-                    args, kwargs = value
+                # This allows for multiple runs of the same function
+                if isinstance(fn_args, dict):
+                    for key, value in fn_args.items():
+                        args, kwargs = value
+                        analysis_handler.add_fn(fn, recording, *args, **kwargs)
+                else:
+                    args, kwargs = fn_args
                     analysis_handler.add_fn(fn, recording, *args, **kwargs)
-            else:
-                args, kwargs = fn_args
-                analysis_handler.add_fn(fn, recording, *args, **kwargs)
         analysis_handler.run_all_fns()
         recording_container[i].results = copy(analysis_handler.results)
         analysis_handler.reset()
         figures = save_figures(
             figures, out_dir, figure_names=figure_names, verbose=False
         )
+
+    for func in functions:
+        if isinstance(func, (tuple, list)):
+            fn, _ = func
+            fn_args = function_args.get(fn.__name__, [])
+
+            # This allows for multiple runs of the same function
+            if isinstance(fn_args, dict):
+                for key, value in fn_args.items():
+                    args, kwargs = value
+                    analysis_handler.add_fn(fn, recording_container, *args, **kwargs)
+            else:
+                args, kwargs = fn_args
+                analysis_handler.add_fn(fn, recording_container, *args, **kwargs)
+                analysis_handler.run_all_fns()
+                recording_container.results = copy(analysis_handler.results)
 
     return figures, figure_names
 
