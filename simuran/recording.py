@@ -161,7 +161,7 @@ class Recording(BaseSimuran):
 
     def get_np_signals(self):
         """Return a 2D array of signals as a numpy array."""
-        return np.array([s.samples for s in self.signals])
+        return np.array([s.samples for s in self.signals], float)
 
     def _parse_source_files(self):
         """

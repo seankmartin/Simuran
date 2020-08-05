@@ -845,6 +845,12 @@ def run(
         return [], []
 
     if os.path.isfile(param_names["fn"]):
+        if should_modify_path:
+            site_dir = os.path.abspath(
+                os.path.join(os.path.dirname(batch_param_loc), "..", "analysis")
+            )
+            modify_path(site_dir, verbose=verbose)
+            should_modify_path = False
         setup_ph = simuran.param_handler.ParamHandler(
             in_loc=param_names["fn"], name="fn_params"
         )
