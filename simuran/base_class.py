@@ -250,6 +250,30 @@ class BaseSimuran(ABC):
         )
         return loaded
 
+    def get(self, key, default=None):
+        """
+        Retrieve the value of key from the attributes.
+
+        This mimics regular dictionary get, but on attributes.
+
+        Parameters
+        ----------
+        key : str
+            The attribute to retrieve
+        default : object, optional
+            What to return if the key is not found, default is None
+
+        Returns
+        -------
+        object
+            The value of the key
+
+        """
+        if hasattr(self, key):
+            return self.key
+        else:
+            return default
+
     def data_dict_from_attr_list(self, attr_list, friendly_names=None):
         """
         From a list of attributes, return a dictionary.
