@@ -265,7 +265,13 @@ def batch_run(
         and (after_batch_function != "save")
     ):
         print("Running {}".format(after_batch_function.__name__))
-        after_batch_function(all_info, out_dir)
+        after_batch_function(
+            all_info,
+            extra_info=(
+                out_dir,
+                os.path.splitext(os.path.basename(run_dict_loc))[0] + fn_name,
+            ),
+        )
 
     print(
         "Batch operation completed in {:.2f}mins".format(
