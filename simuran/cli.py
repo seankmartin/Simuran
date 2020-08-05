@@ -44,7 +44,7 @@ def main():
         "-e",
         type=str,
         default="nano",
-        help="the text editor to use for any file changes",
+        help="the text editor to use for any file changes, default is nano",
     )
     parser.add_argument(
         "--recursive",
@@ -98,8 +98,8 @@ def main():
         "--num_workers",
         "-n",
         type=int,
-        default=4,
-        help="Number of worker threads to launch"
+        default=1,
+        help="Number of worker threads to launch, default is 1",
     )
 
     parsed, unparsed = parser.parse_known_args()

@@ -92,8 +92,11 @@ def batch_main(
 
     Returns
     -------
-    list of tuple or tuple
-        Each entry is the output of simuran.main.main
+    tuple of lists or tuple
+        A single tuple is returned if idx is not None
+        Otherwise, tuple[0] is the list of results
+        while tuple[1] is the name of the recording,
+        or the recording container, depending on the configuration.
 
     """
     all_info = []
@@ -104,13 +107,42 @@ def batch_main(
         info = run(batch_param_loc, fn_param_loc, **full_kwargs)
         return info
 
-    pool = multiprocessing.get_context("spawn").Pool(num_cpus)
+    if num_cpus > 1:
+        pool = multiprocessing.get_context("spawn").Pool(num_cpus)
 
-    print("Launching {} workers for {} iterations".format(num_cpus, len(run_dict_list)))
-    for i in range(len(run_dict_list)):
-        pool.apply_async(
-            multiprocessing_func,
-            args=(
+        print(
+            "Launching {} workers for {} iterations".format(
+                num_cpus, len(run_dict_list)
+            )
+        )
+        for i in range(len(run_dict_list)):
+            pool.apply_async(
+                multiprocessing_func,
+                args=(
+                    i,
+                    run_dict_list,
+                    function_to_use,
+                    kwargs,
+                    handle_errors,
+                    save_info,
+                    keep_container,
+                ),
+                callback=all_info.append,
+            )
+
+        pool.close()
+        pool.join()
+        all_info = sorted(all_info, key=lambda x: x[0])
+        final_res = ([], [])
+        for item in all_info:
+            final_res[0].append(item[1])
+            final_res[1].append(item[2])
+
+    else:
+        print("Starting a loop over {} iterations".format(len(run_dict_list)))
+        final_res = ([], [])
+        for i in range(len(run_dict_list)):
+            info = multiprocessing_func(
                 i,
                 run_dict_list,
                 function_to_use,
@@ -118,17 +150,9 @@ def batch_main(
                 handle_errors,
                 save_info,
                 keep_container,
-            ),
-            callback=all_info.append,
-        )
-
-    pool.close()
-    pool.join()
-    all_info = sorted(all_info, key=lambda x: x[0])
-    final_res = [[], []]
-    for item in all_info:
-        final_res[0].append(item[1])
-        final_res[1].append(item[2])
+            )
+            final_res[0].append(info[1])
+            final_res[1].append(info[2])
 
     return final_res
 
@@ -194,7 +218,9 @@ def batch_run(
         os.path.join(os.path.dirname(run_dict_loc), "..", "sim_results")
     )
     fn_name = (
-        "" if function_to_use is None else "--" + os.path.basename(function_to_use)
+        ""
+        if function_to_use is None
+        else "--" + os.path.splitext(os.path.basename(function_to_use))[0]
     )
     pickle_name = os.path.join(
         out_dir,
