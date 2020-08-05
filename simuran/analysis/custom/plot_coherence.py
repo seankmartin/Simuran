@@ -43,7 +43,7 @@ def plot_psd(x, ax, fs=250, group="ATNx", fmax=100):
     return np.array([f, Pxx, [group] * len(f)])
 
 
-def plot_recording_coherence(recording, figures, base_dir):
+def plot_recording_coherence(recording, figures, base_dir, sig_type="first"):
     location = os.path.splitext(recording.source_file)[0]
 
     dirs = base_dir.split(os.sep)
@@ -71,12 +71,19 @@ def plot_recording_coherence(recording, figures, base_dir):
     # filter signals to use
     _filter = [10, 1.5, 100, "bandpass"]
 
-    sub_signal = butter_filter(
-        sub_signals[0].samples, sub_signals[0].sampling_rate, *_filter
-    )
-    rsc_signal = butter_filter(
-        rsc_signals[0].samples, rsc_signals[0].sampling_rate, *_filter
-    )
+    if sig_type == "first":
+        sub_signal = butter_filter(
+            sub_signals[0].samples, sub_signals[0].sampling_rate, *_filter
+        )
+        rsc_signal = butter_filter(
+            rsc_signals[0].samples, rsc_signals[0].sampling_rate, *_filter
+        )
+    elif sig_type == "avg":
+        # TODO make sure this average is right
+        sub_signal = np.mean(np.array([s.samples for s in sub_signals]), axis=0)
+        sub_signal = butter_filter(sub_signal, sub_signals[0].sampling_rate, *_filter)
+        rsc_signal = np.mean(np.array([s.samples for s in rsc_signals]), axis=0)
+        rsc_signal = butter_filter(rsc_signal, rsc_signals[0].sampling_rate, *_filter)
 
     fig, ax = plt.subplots()
     result = plot_coherence(
