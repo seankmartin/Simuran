@@ -227,7 +227,6 @@ def batch_run(
         "pickles",
         os.path.splitext(os.path.basename(run_dict_loc))[0] + fn_name + "_dump.pickle",
     )
-
     if (
         (idx is None)
         and (not kwargs.get("only_check", False))
@@ -252,7 +251,7 @@ def batch_run(
             **kwargs,
         )
         if not kwargs.get("only_check", False) and (idx is None):
-            os.makedirs(out_dir, exist_ok=True)
+            os.makedirs(os.path.dirname(pickle_name), exist_ok=True)
             with open(pickle_name, "wb") as f:
                 pickle.dump(all_info, f)
 
