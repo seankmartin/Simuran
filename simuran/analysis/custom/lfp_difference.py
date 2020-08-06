@@ -17,7 +17,13 @@ def get_normalised_diff(s1, s2, s1_sq=None, s2_sq=None):
 
 
 def compare_lfp(
-    recording, figures, out_base_dir=None, ch_to_use="all", save_result=True, plot=False
+    recording,
+    figures,
+    out_base_dir=None,
+    rel_dir=None,
+    ch_to_use="all",
+    save_result=True,
+    plot=False,
 ):
     """
     Compare LFP channels for differences.
@@ -59,7 +65,10 @@ def compare_lfp(
     # Save out a csv and do plotting
     if out_base_dir is None:
         out_base_dir = os.path.dirname(recording.source_file)
-    base_name_part = recording.get_name_for_save(rel_dir=out_base_dir)
+    if rel_dir is None:
+        rel_dir = out_base_dir
+
+    base_name_part = recording.get_name_for_save(rel_dir=rel_dir)
 
     if save_result:
         out_name = base_name_part + "_LFP_Comp.csv"
