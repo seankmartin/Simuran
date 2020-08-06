@@ -224,6 +224,7 @@ def batch_run(
     )
     pickle_name = os.path.join(
         out_dir,
+        "pickles",
         os.path.splitext(os.path.basename(run_dict_loc))[0] + fn_name + "_dump.pickle",
     )
 
