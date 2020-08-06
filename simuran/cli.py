@@ -163,5 +163,12 @@ def cli_entry():
     return None
 
 
+def merge_entry():
+    from simuran.main.merge import cli as merge_cli
+
+    merge_cli()
+    return None
+
+
 if __name__ == "__main__":
     cli_entry()
