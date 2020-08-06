@@ -84,11 +84,29 @@ def compare_lfp(
         fig = simuran.plot.custom.lfp_plot.plot_compare_lfp(result_a, ch, save=False)
         figures.append(SimuranFigure(fig, out_name, dpi=400, done=True, format="png"))
 
-    return result_a
+    regions = recording.signals.get_property("region")
+    results = np.reshape(result_a, newshape=[len(ch), len(ch)])
+    results_dict = {"sub_diff": 0, "rsc_diff": 0}
+    sub_count, rsc_count = 0, 0
+    current = "START"
+    for i in range(len(regions)):
+        if regions[i] == "RSC":
+            rsc_count += 1
+            if current == "MIDDLE":
+                raise ValueError("Regions must be in continuous blocks")
+        elif regions[i] == "SUB":
+            sub_count += 1
+            if current == "START":
+                current = "MIDDLE"
+
+    results_dict["sub_diff"] = np.mean(results[:rsc_count, :rsc_count])
+    results_dict["rsc_diff"] = np.mean(results[rsc_count:, rsc_count:])
+
+    return {"full": result_a, "summary": results_dict}
 
 
 def average_difference(recording_container, figures, plot=False):
-    results_list = [r["compare_lfp"] for r in recording_container.get_results()]
+    results_list = [r["compare_lfp"]["full"] for r in recording_container.get_results()]
     save_name = os.path.basename(recording_container.base_dir)
     results = None
     ch = [i for i in range(len(recording_container[0].get_signal_channels()))]
@@ -97,7 +115,8 @@ def average_difference(recording_container, figures, plot=False):
         if results is None:
             results = np.zeros(result_a.shape)
         results = results + result_a
-    results = result_a / len(results_list)
+    results = results / len(results_list)
+    results = np.reshape(results, newshape=[len(ch), len(ch)])
 
     if plot:
         print("should save to {}".format(save_name))
