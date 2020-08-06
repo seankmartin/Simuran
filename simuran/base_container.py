@@ -288,8 +288,9 @@ class AbstractContainer(ABC):
         simuran.base_class.data_dict_from_attr_list
 
         """
-        if len(friendly_names) != len(attr_list):
-            friendly_names = None
+        if friendly_names is not None:
+            if len(friendly_names) != len(attr_list):
+                friendly_names = None
 
         def get_single(item, attr_list):
             if isinstance(item, BaseSimuran):
