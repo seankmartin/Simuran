@@ -485,9 +485,7 @@ def run_all_analysis(
             if isinstance(fn_args, dict):
                 for key, value in fn_args.items():
                     args, kwargs = value
-                    analysis_handler.add_fn(
-                        fn, recording_container, *args, **kwargs
-                    )
+                    analysis_handler.add_fn(fn, recording_container, *args, **kwargs)
             else:
                 args, kwargs = fn_args
                 analysis_handler.add_fn(fn, recording_container, *args, **kwargs)
@@ -495,9 +493,7 @@ def run_all_analysis(
     analysis_handler.run_all_fns()
     recording_container.results = copy(analysis_handler.results)
 
-    figures = save_figures(
-        figures, out_dir, figure_names=figure_names, verbose=False
-    )
+    figures = save_figures(figures, out_dir, figure_names=figure_names, verbose=False)
 
     return figures, figure_names
 
