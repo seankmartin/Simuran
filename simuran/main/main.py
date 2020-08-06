@@ -473,6 +473,9 @@ def run_all_analysis(
             figures, out_dir, figure_names=figure_names, verbose=False
         )
 
+    if args_fn is not None:
+        function_args = args_fn(recording_container, i, figures)
+
     for func in functions:
         if isinstance(func, (tuple, list)):
             fn, _ = func
@@ -482,12 +485,19 @@ def run_all_analysis(
             if isinstance(fn_args, dict):
                 for key, value in fn_args.items():
                     args, kwargs = value
-                    analysis_handler.add_fn(fn, recording_container, *args, **kwargs)
+                    analysis_handler.add_fn(
+                        fn, recording_container, *args, **kwargs
+                    )
             else:
                 args, kwargs = fn_args
                 analysis_handler.add_fn(fn, recording_container, *args, **kwargs)
-                analysis_handler.run_all_fns()
-                recording_container.results = copy(analysis_handler.results)
+
+    analysis_handler.run_all_fns()
+    recording_container.results = copy(analysis_handler.results)
+
+    figures = save_figures(
+        figures, out_dir, figure_names=figure_names, verbose=False
+    )
 
     return figures, figure_names
 
@@ -741,6 +751,7 @@ def main(
             cell_location, do_cell_picker=do_cell_picker, overwrite=False
         )
 
+    recording_container.output_dir = out_dir
     run_all_analysis(
         recording_container,
         functions,
