@@ -380,20 +380,32 @@ def set_output_locations(batch_name, function_config_path):
 
     try:
         start_str = os.path.splitext(os.path.basename(batch_name))[0]
+        out_dirname2 = start_str
         if function_config_path is not None:
+            out_dirname1 = os.path.splitext(os.path.basename(function_config_path))[0]
             start_str = (
                 start_str
                 + "--"
                 + os.path.splitext(os.path.basename(function_config_path))[0]
             )
-        out_dirname = start_str
+
+        else:
+            out_dirname1 = whole_time
+
+        out_dir = os.path.abspath(
+            os.path.join(
+                os.path.dirname(batch_name),
+                "..",
+                "sim_results",
+                out_dirname1,
+                out_dirname2,
+            )
+        )
         out_name = "sim_results--" + start_str + ".csv"
     except BaseException:
-        pass
-
-    out_dir = os.path.abspath(
-        os.path.join(os.path.dirname(batch_name), "..", "sim_results", out_dirname)
-    )
+        out_dir = os.path.abspath(
+            os.path.join(os.path.dirname(batch_name), "..", "sim_results", out_dirname)
+        )
 
     return out_dir, out_name
 
