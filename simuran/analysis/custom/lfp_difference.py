@@ -4,6 +4,7 @@ import numpy as np
 
 from skm_pyutils.py_path import make_path_if_not_exists
 import simuran.plot.custom.lfp_plot
+from simuran.plot.figure import SimuranFigure
 
 
 def get_normalised_diff(s1, s2, s1_sq=None, s2_sq=None):
@@ -16,7 +17,7 @@ def get_normalised_diff(s1, s2, s1_sq=None, s2_sq=None):
 
 
 def compare_lfp(
-    recording, out_base_dir=None, ch_to_use="all", save_result=True, plot=False
+    recording, figures, out_base_dir=None, ch_to_use="all", save_result=True, plot=False
 ):
     """
     Compare LFP channels for differences.
@@ -59,7 +60,6 @@ def compare_lfp(
     if out_base_dir is None:
         out_base_dir = os.path.dirname(recording.source_file)
     base_name_part = recording.get_name_for_save(rel_dir=out_base_dir)
-    out_base_dir = os.path.join(out_base_dir, "sim_results", "lfp")
 
     if save_result:
         out_name = base_name_part + "_LFP_Comp.csv"
@@ -81,10 +81,28 @@ def compare_lfp(
 
     if plot:
         out_name = base_name_part + "_LFP_Comp.png"
-        out_loc = os.path.join(out_base_dir, "plots", out_name)
-        fig = simuran.plot.custom.lfp_plot.plot_compare_lfp(
-            result_a, ch, save=True, save_loc=out_loc
-        )
-        return result_a, fig
+        fig = simuran.plot.custom.lfp_plot.plot_compare_lfp(result_a, ch, save=False)
+        figures.append(SimuranFigure(fig, out_name, dpi=400, done=True, format="png"))
 
     return result_a
+
+
+def average_difference(recording_container, figures, plot=False):
+    results_list = [r["compare_lfp"] for r in recording_container.get_results()]
+    save_name = os.path.basename(recording_container.base_dir)
+    results = None
+    ch = [i for i in range(len(recording_container[0].get_signal_channels()))]
+
+    for result_a in results_list:
+        if results is None:
+            results = np.zeros(result_a.shape)
+        results = results + result_a
+    results = result_a / len(results_list)
+
+    if plot:
+        print("should save to {}".format(save_name))
+        save_name = save_name + "_LFP_AVG_Comp.png"
+        fig = simuran.plot.custom.lfp_plot.plot_compare_lfp(results, ch, save=False)
+        figures.append(SimuranFigure(fig, save_name, dpi=400, done=True, format="png"))
+
+    return results

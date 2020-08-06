@@ -16,7 +16,7 @@ from neurochat.nc_utils import butter_filter
 def plot_compare_lfp(matrix_data, chans, save=True, save_loc=None, **kwargs):
     ch = len(chans)
     default = {
-        "title": "LFP Similarity",
+        "title": "LFP Difference",
         "xlabel": "LFP Channels",
         "ylabel": "LFP Channels",
         "xticks": np.arange(0.5, ch + 0.5),
