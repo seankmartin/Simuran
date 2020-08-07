@@ -336,13 +336,13 @@ class RecordingContainer(AbstractContainer):
         with open(cell_location, "r") as f:
             if f.readline().strip().lower() != "all":
                 reader = csv.reader(f, delimiter=",")
-                next(reader)
                 for row in reader:
                     row = [int(x.strip()) for x in row]
                     recording = self[row[0]]
                     record_unit_idx = recording.units.group_by_property(
                         "group", row[1]
                     )[1][0]
+                    print(row[1], record_unit_idx)
                     recording.units[record_unit_idx].units_to_use = row[2:]
 
     def pick_cells(self, cell_location):
@@ -492,8 +492,8 @@ class RecordingContainer(AbstractContainer):
             self[i].available = ["units"]
             recording = self.get(i)
             available_units = recording.get_available_units()
-            out_str = "--------{}--------\n".format(
-                os.path.basename(recording.source_file)
+            out_str = "--------{}: {}--------\n".format(
+                i, os.path.basename(recording.source_file)
             )
             self[i].available = was_available
             if f is not None:
