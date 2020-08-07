@@ -337,8 +337,13 @@ class RecordingContainer(AbstractContainer):
             if f.readline().strip().lower() != "all":
                 reader = csv.reader(f, delimiter=",")
                 for row in reader:
-                    row = [int(x.strip()) for x in row]
-                    recording = self[row[0]]
+                    row = [x.strip() for x in row]
+                    row[1:] = [int(x) for x in row[1:]]
+                    try:
+                        row[0] = int(row[0])
+                        recording = self[row[0]]
+                    except ValueError:
+                        recording = self[self.find_recording_with_source(row[0])]
                     record_unit_idx = recording.units.group_by_property(
                         "group", row[1]
                     )[1][0]
@@ -379,7 +384,7 @@ class RecordingContainer(AbstractContainer):
             + "\t 1. Enter the word all to select every single unit.\n"
             + "\t 2. Enter a single number to select that unit from everything.\n"
             + "\t 3. Enter <group>_<unit-num> to analyse one unit.\n"
-            + "\t 4. Enter Idx: Unit, Unit, Unit | Idx, Unit, Unit, ... "
+            + "\t 4. Enter Idx: Unit, Unit, Unit | Idx: Unit, Unit, ... "
             + "to select anything\n"
         )
 
@@ -457,8 +462,14 @@ class RecordingContainer(AbstractContainer):
             for u in final_units:
                 units_as_str = [str(val) for val in u[2]]
                 unit_str = ",".join(units_as_str)
-                f.write("{},{},{}\n".format(u[0], u[1], unit_str))
                 recording = self[u[0]]
+                f.write(
+                    "{},{},{}\n".format(
+                        recording.source_file[len(self.base_dir + os.sep) :],
+                        u[1],
+                        unit_str,
+                    )
+                )
                 record_unit_idx = recording.units.group_by_property("group", u[1])[1][0]
                 recording.units[record_unit_idx].units_to_use = u[2]
             print("Saved cells to {}".format(cell_location))
