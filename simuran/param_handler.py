@@ -230,7 +230,8 @@ class ParamHandler:
             if exact_file is None:
                 if verbose:
                     print("Writing params to {}".format(write_loc))
-                self.write(write_loc, out_str=out_str)
+                if overwrite or not os.path.isfile(write_loc):
+                    self.write(write_loc, out_str=out_str)
             else:
                 if not os.path.isfile(exact_file):
                     raise ValueError(
