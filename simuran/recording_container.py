@@ -342,7 +342,6 @@ class RecordingContainer(AbstractContainer):
                     record_unit_idx = recording.units.group_by_property(
                         "group", row[1]
                     )[1][0]
-                    print(row[1], record_unit_idx)
                     recording.units[record_unit_idx].units_to_use = row[2:]
 
     def pick_cells(self, cell_location):
