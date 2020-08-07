@@ -101,6 +101,27 @@ def count_cells(recording):
         return output
 
 
+def stat_per_cell(recording):
+    output = {}
+    all_analyse = recording.get_set_units()
+    for unit, to_analyse in zip(recording.units, all_analyse):
+        if len(to_analyse) == 0:
+            continue
+        unit.load()
+        if unit.underlying is None:
+            continue
+        out_str_start = str(unit.group)
+        for cell in unit.underlying.get_unit_list():
+            if cell in to_analyse:
+                unit.underlying.set_unit_no(cell)
+                unit.underlying.wave_property()
+                output[out_str_start + "_" + str(cell)] = unit.underlying.get_results()[
+                    "Mean Spiking Freq"
+                ]
+                unit.underlying.reset_results()
+    return output
+
+
 from collections import OrderedDict as oDict
 
 from neurochat.nc_utils import (
