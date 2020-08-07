@@ -384,9 +384,9 @@ def set_output_locations(batch_name, function_config_path):
         if function_config_path is not None:
             out_dirname1 = os.path.splitext(os.path.basename(function_config_path))[0]
             start_str = (
-                start_str
+                os.path.splitext(os.path.basename(function_config_path))[0]
                 + "--"
-                + os.path.splitext(os.path.basename(function_config_path))[0]
+                + start_str
             )
 
         else:
@@ -468,7 +468,7 @@ def run_all_analysis(
         for fn in functions:
             # TODO get this right
             if not isinstance(fn, (tuple, list)):
-                fn_args = function_args.get(fn.__name__, [])
+                fn_args = function_args.get(fn.__name__, ([], {}))
 
                 # This allows for multiple runs of the same function
                 if isinstance(fn_args, dict):
@@ -491,7 +491,7 @@ def run_all_analysis(
     for func in functions:
         if isinstance(func, (tuple, list)):
             fn, _ = func
-            fn_args = function_args.get(fn.__name__, [])
+            fn_args = function_args.get(fn.__name__, ([], {}))
 
             # This allows for multiple runs of the same function
             if isinstance(fn_args, dict):
@@ -578,7 +578,8 @@ def setup_default_params(
         param_names["base"] = batch_handler.get("mapping_file", param_names["base"])
         in_dir = batch_handler.get("start_dir", in_dir)
 
-    os.makedirs(in_dir, exist_ok=True)
+    if in_dir != "":
+        os.makedirs(in_dir, exist_ok=True)
     new = False
     made_files = []
     for key, value in param_names.items():

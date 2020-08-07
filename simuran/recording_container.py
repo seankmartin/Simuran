@@ -492,7 +492,7 @@ class RecordingContainer(AbstractContainer):
             self[i].available = ["units"]
             recording = self.get(i)
             available_units = recording.get_available_units()
-            out_str = "--------{}--------".format(
+            out_str = "--------{}--------\n".format(
                 os.path.basename(recording.source_file)
             )
             self[i].available = was_available
@@ -501,9 +501,10 @@ class RecordingContainer(AbstractContainer):
             else:
                 print(out_str)
 
+            any_units = False
             for available_unit in available_units:
                 if len(available_unit[1]) != 0:
-                    out_str = "    {}: Group {} with Units {}".format(
+                    out_str = "    {}: Group {} with Units {}\n".format(
                         total, available_unit[0], available_unit[1]
                     )
                     if f is not None:
@@ -512,6 +513,14 @@ class RecordingContainer(AbstractContainer):
                         print(out_str)
                     all_cells.append([i, available_unit])
                     total += 1
+                    any_units = True
+
+            if not any_units:
+                out_str = "    NONE\n"
+                if f is not None:
+                    f.write(out_str)
+                else:
+                    print(out_str)
 
         return total, all_cells
 
