@@ -155,7 +155,7 @@ def main():
             do_cell_picker=parsed.do_cell_picker,
             verbose=parsed.verbose,
             only_check=parsed.dummy,
-            num_cpus=parsed.num_workers
+            num_cpus=parsed.num_workers,
         )
 
 

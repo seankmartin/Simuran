@@ -527,8 +527,7 @@ def run_all_analysis(
     else:
         for i in pbar:
             disp_name = os.path.relpath(
-                recording_container[i].source_file,
-                recording_container.base_dir
+                recording_container[i].source_file, recording_container.base_dir
             )
             pbar.set_description("Running on {}".format(disp_name))
             multiprocessing_func(
@@ -854,9 +853,7 @@ def main(
     )
 
     print(
-        "Operation completed in {:.2f}mins".format(
-            (time.monotonic() - start_time) / 60
-        )
+        "Operation completed in {:.2f}mins".format((time.monotonic() - start_time) / 60)
     )
 
     return results, recording_container

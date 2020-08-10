@@ -76,7 +76,7 @@ class NCLoader(BaseLoader):
                 "date": self.single_unit.get_date(),
                 "time": self.single_unit.get_time(),
                 "available_units": self.single_unit.get_unit_list(),
-                "units_to_use": self.single_unit.get_unit_list()
+                "units_to_use": self.single_unit.get_unit_list(),
             }
         else:
             return None
