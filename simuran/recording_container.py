@@ -538,6 +538,17 @@ class RecordingContainer(AbstractContainer):
 
         return total, all_cells
 
+    def set_all_units_on(self):
+        """Flag all cells as to be analysed."""
+        for i in range(len(self)):
+            was_available = self[i].available
+            self[i].available = ["units"]
+            recording = self.get(i)
+            available_units = recording.get_available_units()
+            self[i].available = was_available
+            for j in range(len(recording.units)):
+                self[i].units[j].units_to_use = available_units[j][1]
+
     def _create_new(self, params):
         """
         Create a new recording with the given parameters.
