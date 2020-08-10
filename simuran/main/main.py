@@ -455,9 +455,9 @@ def run_all_analysis(
     for i in pbar:
         if args_fn is not None:
             function_args = args_fn(recording_container, i, figures)
-        disp_name = recording_container[i].source_file[
-            len(recording_container.base_dir + os.sep) :
-        ]
+        disp_name = os.path.relpath(
+            recording_container[i].source_file, recording_container.base_dir
+        )
         # Can include [fn.__name__ for fn in functions] below if more info desired
         pbar.set_description("Running on {}".format(disp_name))
         if load_all:

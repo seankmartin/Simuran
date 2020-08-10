@@ -249,7 +249,7 @@ class RecordingContainer(AbstractContainer):
         found = False
         for i, recording in enumerate(self):
             compare = recording.source_file[-len(source_file) :]
-            if source_file == compare:
+            if os.path.normpath(source_file) == os.path.normpath(compare):
                 if not found:
                     found = True
                     location = i
@@ -343,7 +343,9 @@ class RecordingContainer(AbstractContainer):
                         row[0] = int(row[0])
                         recording = self[row[0]]
                     except ValueError:
-                        recording = self[self.find_recording_with_source(row[0])]
+                        recording = self[
+                            self.find_recording_with_source(os.path.normpath(row[0]))
+                        ]
                     record_unit_idx = recording.units.group_by_property(
                         "group", row[1]
                     )[1][0]
@@ -465,7 +467,9 @@ class RecordingContainer(AbstractContainer):
                 recording = self[u[0]]
                 f.write(
                     "{},{},{}\n".format(
-                        recording.source_file[len(self.base_dir + os.sep) :],
+                        os.path.normpath(
+                            os.path.relpath(recording.source_file, self.base_dir,)
+                        ),
                         u[1],
                         unit_str,
                     )
