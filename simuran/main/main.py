@@ -5,6 +5,8 @@ import shutil
 import subprocess
 import site
 import sys
+import time
+import multiprocessing
 from copy import copy
 from datetime import datetime
 
@@ -410,6 +412,46 @@ def set_output_locations(batch_name, function_config_path):
     return out_dir, out_name
 
 
+def multiprocessing_func(
+    i,
+    recording_container,
+    functions,
+    args_fn,
+    figures,
+    figure_names,
+    load_all,
+    to_load,
+    out_dir,
+):
+    analysis_handler = simuran.analysis.analysis_handler.AnalysisHandler()
+    if args_fn is not None:
+        function_args = args_fn(recording_container, i, figures)
+    if load_all:
+        recording_container[i].available = to_load
+        recording = recording_container.get(i)
+    else:
+        recording = recording_container[i]
+    for fn in functions:
+        # TODO get this right
+        if not isinstance(fn, (tuple, list)):
+            fn_args = function_args.get(fn.__name__, ([], {}))
+
+            # This allows for multiple runs of the same function
+            if isinstance(fn_args, dict):
+                for key, value in fn_args.items():
+                    args, kwargs = value
+                    analysis_handler.add_fn(fn, recording, *args, **kwargs)
+            else:
+                args, kwargs = fn_args
+                analysis_handler.add_fn(fn, recording, *args, **kwargs)
+    analysis_handler.run_all_fns()
+    recording_container[i].results = copy(analysis_handler.results)
+    analysis_handler.reset()
+    figures = save_figures(figures, out_dir, figure_names=figure_names, verbose=False)
+
+    return figures
+
+
 def run_all_analysis(
     recording_container,
     functions,
@@ -419,6 +461,7 @@ def run_all_analysis(
     load_all,
     to_load,
     out_dir,
+    num_cpus=1,
 ):
     """
     Run all of the analysis functions on the recording container.
@@ -441,6 +484,8 @@ def run_all_analysis(
         The items to load if load_all is True
     out_dir : str
         The directory to save the figures to
+    num_cpus : int, optional
+        The number of CPUs to use, default is 1.
 
     Returns
     -------
@@ -448,46 +493,60 @@ def run_all_analysis(
         The figures to plot
     figure_names : list of str
         The names of the figures to plot
+
     """
-    analysis_handler = simuran.analysis.analysis_handler.AnalysisHandler()
     pbar = tqdm(range(len(recording_container)))
 
-    for i in pbar:
-        if args_fn is not None:
-            function_args = args_fn(recording_container, i, figures)
-        disp_name = os.path.relpath(
-            recording_container[i].source_file, recording_container.base_dir
+    final_figs = []
+    if num_cpus > 1:
+        pool = multiprocessing.get_context("spawn").Pool(num_cpus)
+        print(
+            "Launching {} workers for {} iterations".format(
+                num_cpus, len(recording_container)
+            )
         )
-        # Can include [fn.__name__ for fn in functions] below if more info desired
-        pbar.set_description("Running on {}".format(disp_name))
-        if load_all:
-            recording_container[i].available = to_load
-            recording = recording_container.get(i)
-        else:
-            recording = recording_container[i]
-        for fn in functions:
-            # TODO get this right
-            if not isinstance(fn, (tuple, list)):
-                fn_args = function_args.get(fn.__name__, ([], {}))
+        for i in pbar:
+            pool.apply_async(
+                multiprocessing_func(
+                    i,
+                    recording_container,
+                    functions,
+                    args_fn,
+                    figures,
+                    figure_names,
+                    load_all,
+                    to_load,
+                    out_dir,
+                ),
+                callback=final_figs.append,
+            )
 
-                # This allows for multiple runs of the same function
-                if isinstance(fn_args, dict):
-                    for key, value in fn_args.items():
-                        args, kwargs = value
-                        analysis_handler.add_fn(fn, recording, *args, **kwargs)
-                else:
-                    args, kwargs = fn_args
-                    analysis_handler.add_fn(fn, recording, *args, **kwargs)
-        analysis_handler.run_all_fns()
-        recording_container[i].results = copy(analysis_handler.results)
-        analysis_handler.reset()
-        figures = save_figures(
-            figures, out_dir, figure_names=figure_names, verbose=False
-        )
+        pool.close()
+        pool.join()
+
+    else:
+        for i in pbar:
+            disp_name = os.path.relpath(
+                recording_container[i].source_file,
+                recording_container.base_dir
+            )
+            pbar.set_description("Running on {}".format(disp_name))
+            multiprocessing_func(
+                i,
+                recording_container,
+                functions,
+                args_fn,
+                figures,
+                figure_names,
+                load_all,
+                to_load,
+                out_dir,
+            ),
 
     if args_fn is not None:
-        function_args = args_fn(recording_container, i, figures)
+        function_args = args_fn(recording_container, i, final_figs)
 
+    analysis_handler = simuran.analysis.analysis_handler.AnalysisHandler()
     for func in functions:
         if isinstance(func, (tuple, list)):
             fn, _ = func
@@ -507,7 +566,7 @@ def run_all_analysis(
 
     figures = save_figures(figures, out_dir, figure_names=figure_names, verbose=False)
 
-    return figures, figure_names
+    return figures
 
 
 def setup_default_params(
@@ -637,6 +696,7 @@ def main(
     function_config_path=None,
     only_check=False,
     should_modify_path=True,
+    num_cpus=1,
 ):
     """
     Run the main control functionality.
@@ -704,6 +764,8 @@ def main(
     should_modify_path : bool, optional
         If True, the directory batch_script_dir/../analysis
         is added to path, by default True.
+    num_cpus : int, optional
+        The number of worker CPUs to launch, by default 1.
 
     Returns
     -------
@@ -755,13 +817,17 @@ def main(
     )
 
     cell_location = os.path.join(in_dir, cell_list_name)
+    # TODO improve this to load the info from write cells.
     if os.path.isfile(cell_location) or do_cell_picker:
         recording_container.select_cells(
             cell_location, do_cell_picker=do_cell_picker, overwrite=False
         )
+    else:
+        recording_container.set_all_units_on()
 
+    start_time = time.monotonic()
     recording_container.output_dir = out_dir
-    run_all_analysis(
+    figures = run_all_analysis(
         recording_container,
         functions,
         args_fn,
@@ -770,6 +836,7 @@ def main(
         load_all,
         to_load,
         out_dir,
+        num_cpus=num_cpus,
     )
 
     recording_container.save_summary_data(
@@ -779,13 +846,19 @@ def main(
         decimals=decimals,
     )
 
-    save_figures(
+    figures = save_figures(
         figures, out_dir, figure_names=figure_names, verbose=False, set_done=True
     )
     save_unclosed_figures(out_dir)
 
     results = recording_container.data_from_attr_list(
         attributes_to_save, friendly_names=friendly_names, decimals=decimals
+    )
+
+    print(
+        "Operation completed in {:.2f}mins".format(
+            (time.monotonic() - start_time) / 60
+        )
     )
 
     return results, recording_container
@@ -807,6 +880,7 @@ def run(
     verbose=False,
     only_check=False,
     should_modify_path=True,
+    num_cpus=1,
 ):
     """
     Run main more readily without having to set as many params.
@@ -854,6 +928,8 @@ def run(
     should_modify_path : bool, optional
         If True, the directory batch_script_dir/../analysis
         is added to path, by default True.
+    num_cpus : int, optional
+        The number of worker CPUs to launch, by default 1.
 
     Returns
     -------
@@ -941,4 +1017,5 @@ def run(
         function_config_path=fn_param_loc,
         only_check=only_check,
         should_modify_path=should_modify_path,
+        num_cpus=num_cpus,
     )
