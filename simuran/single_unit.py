@@ -34,7 +34,7 @@ class SingleUnit(BaseSimuran):
         self.unit_tags = None
         self.waveforms = None
         self.available_units = []
-        self.units_to_use = []
+        self.units_to_use = None
 
     def load(self, *args, **kwargs):
         """Load the object."""
