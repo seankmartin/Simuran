@@ -822,8 +822,6 @@ def main(
         recording_container.select_cells(
             cell_location, do_cell_picker=do_cell_picker, overwrite=False
         )
-    else:
-        recording_container.set_all_units_on()
 
     start_time = time.monotonic()
     recording_container.output_dir = out_dir

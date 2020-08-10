@@ -105,9 +105,15 @@ def stat_per_cell(recording):
     output = {}
     all_analyse = recording.get_set_units()
     for unit, to_analyse in zip(recording.units, all_analyse):
+        loaded = False
+        if to_analyse is None:
+            unit.load()
+            to_analyse = unit.available_units
+            loaded = True
         if len(to_analyse) == 0:
             continue
-        unit.load()
+        if not loaded:
+            unit.load()
         if unit.underlying is None:
             continue
         out_str_start = str(unit.group)
@@ -115,9 +121,8 @@ def stat_per_cell(recording):
             if cell in to_analyse:
                 unit.underlying.set_unit_no(cell)
                 unit.underlying.wave_property()
-                output[out_str_start + "_" + str(cell)] = unit.underlying.get_results()[
-                    "Mean Spiking Freq"
-                ]
+                results = unit.underlying.get_results()
+                output[out_str_start + "_" + str(cell)] = results["Mean width"]
                 unit.underlying.reset_results()
     return output
 
