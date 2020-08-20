@@ -40,6 +40,13 @@ def merge_files(in_dir, all_result_ext=None):
         all_files = get_all_files_in_dir(
             d, ext=all_result_ext, recursive=True, return_absolute=True
         )
+        if all_result_ext is None:
+            all_files = [
+                f
+                for f in all_files
+                if os.path.splitext(f)[1]
+                in [".png", ".jpg", ".svg", ".png", ".gif", ".tiff"]
+            ]
 
         all_names = [
             "--".join(f[len(in_dir + os.sep) :].split(os.sep)) for f in all_files
@@ -125,10 +132,10 @@ def cli():
         "--do_images", "-i", action="store_true", help="should merge images"
     )
     parser.add_argument(
-        "--image-extension",
+        "--image_extension",
         "-e",
         type=str,
-        default="png",
+        default=None,
         help="the image extension to look for (without .)",
     )
 
@@ -142,7 +149,7 @@ def cli():
 
     if parsed.do_images:
         print("----------IMAGE MERGE-----------")
-        merge_files(parsed.directory, all_result_ext="png")
+        merge_files(parsed.directory, all_result_ext=parsed.image_extension)
 
 
 if __name__ == "__main__":
