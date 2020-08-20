@@ -43,6 +43,23 @@ def plot_psd(x, ax, fs=250, group="ATNx", fmax=100):
     return np.array([f, Pxx, [group] * len(f)])
 
 
+def sig_avg(arr, at, _filter):
+    dead_first = np.all((arr[4 * at].samples == 0))
+    dead_second = np.all((arr[4 * at + 1].samples == 0))
+
+    if dead_first and dead_second:
+        return None
+
+    sig1 = butter_filter(arr[4 * at].samples, arr[0].sampling_rate, *_filter)
+    sig2 = butter_filter(arr[4 * at + 1].samples, arr[0].sampling_rate, *_filter)
+
+    if dead_first:
+        return sig2
+    if dead_second:
+        return sig1
+    return (sig1 + sig2) / 2
+
+
 def plot_recording_coherence(recording, figures, base_dir, sig_type="first"):
     location = os.path.splitext(recording.source_file)[0]
 
@@ -63,27 +80,59 @@ def plot_recording_coherence(recording, figures, base_dir, sig_type="first"):
     )
 
     sub_signals = recording.signals.group_by_property("region", "SUB")[0]
-    # Remove dead channels
-    sub_signals = [s for s in sub_signals if not np.all((s.samples == 0))]
     rsc_signals = recording.signals.group_by_property("region", "RSC")[0]
-    rsc_signals = [s for s in rsc_signals if not np.all((s.samples == 0))]
 
     # filter signals to use
     _filter = [10, 1.5, 100, "bandpass"]
 
     if sig_type == "first":
-        sub_signal = butter_filter(
-            sub_signals[0].samples, sub_signals[0].sampling_rate, *_filter
-        )
-        rsc_signal = butter_filter(
-            rsc_signals[0].samples, rsc_signals[0].sampling_rate, *_filter
-        )
+        # Remove dead channels
+        sub_signals = [s for s in sub_signals if not np.all((s.samples == 0))]
+        rsc_signals = [s for s in rsc_signals if not np.all((s.samples == 0))]
+
+        rsc_signal = sig_avg(rsc_signals, 0, _filter)
+        sub_signal = sig_avg(sub_signals, 0, _filter)
     elif sig_type == "avg":
         # TODO make sure this average is right
+
+        # Remove dead channels
+        sub_signals = [s for s in sub_signals if not np.all((s.samples == 0))]
+        rsc_signals = [s for s in rsc_signals if not np.all((s.samples == 0))]
+
         sub_signal = np.mean(np.array([s.samples for s in sub_signals]), axis=0)
         sub_signal = butter_filter(sub_signal, sub_signals[0].sampling_rate, *_filter)
         rsc_signal = np.mean(np.array([s.samples for s in rsc_signals]), axis=0)
         rsc_signal = butter_filter(rsc_signal, rsc_signals[0].sampling_rate, *_filter)
+    elif sig_type == "dist":
+        result = {}
+        fs = sub_signals[0].sampling_rate
+        # Get the main result
+        rsc_signal = sig_avg(rsc_signals, 0, _filter)
+        sub_signal = sig_avg(sub_signals, 0, _filter)
+        f, main_result = coherence(rsc_signal, sub_signal, fs, nperseg=1024)
+
+        for i in range(len(main_result)):
+            result["Coh_{:.2f}".format(f[i])] = main_result[i]
+
+        # Compute the other results
+        if len(sub_signals) > 2:
+            matrix_data = np.zeros((int(len(recording.signals) / 4), len(main_result)))
+            matrix_data[0] = main_result
+            for i in range(1, 8):
+                sub_signal = sig_avg(sub_signals, i, _filter)
+                _, matrix_data[i] = coherence(rsc_signal, sub_signal, fs, nperseg=1024)
+
+            # Compare results by getting the variance of each col
+            var_res = np.var(matrix_data, axis=1)
+
+            for i in range(len(main_result)):
+                result["Var_{:.2f}".format(f[i])] = var_res[i]
+
+        else:
+            for i in range(len(main_result)):
+                result["Var_{:.2f}".format(f[i])] = np.nan
+
+        return result
 
     fig, ax = plt.subplots()
     result = plot_coherence(
