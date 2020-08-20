@@ -563,9 +563,10 @@ def run_all_analysis(
     analysis_handler.run_all_fns()
     recording_container.results = copy(analysis_handler.results)
 
-    figures = save_figures(figures, out_dir, figure_names=figure_names, verbose=False)
+    final_figs = save_figures(
+        final_figs, out_dir, figure_names=figure_names, verbose=False)
 
-    return figures
+    return final_figs
 
 
 def setup_default_params(
