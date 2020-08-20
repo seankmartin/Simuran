@@ -114,7 +114,7 @@ def compare_lfp(
     return {"full": result_a, "summary": results_dict}
 
 
-def average_difference(recording_container, figures, plot=False):
+def average_difference(recording_container, figures, plot=False, fmt="png"):
     results_list = [r["compare_lfp"]["full"] for r in recording_container.get_results()]
     save_name = os.path.basename(recording_container.base_dir)
     results = None
@@ -131,6 +131,6 @@ def average_difference(recording_container, figures, plot=False):
         print("should save to {}".format(save_name))
         save_name = save_name + "_LFP_AVG_Comp.png"
         fig = simuran.plot.custom.lfp_plot.plot_compare_lfp(results, ch, save=False)
-        figures.append(SimuranFigure(fig, save_name, dpi=400, done=True, format="png"))
+        figures.append(SimuranFigure(fig, save_name, dpi=400, done=True, format=fmt))
 
     return results
