@@ -564,7 +564,8 @@ def run_all_analysis(
     recording_container.results = copy(analysis_handler.results)
 
     final_figs = save_figures(
-        final_figs, out_dir, figure_names=figure_names, verbose=False)
+        final_figs, out_dir, figure_names=figure_names, verbose=False
+    )
 
     return final_figs
 

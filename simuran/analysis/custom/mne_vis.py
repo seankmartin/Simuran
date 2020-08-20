@@ -39,7 +39,7 @@ def create_mne_array(recording, ch_names=None):
     # Convert LFP data into mne format
     example_lfp = recording.get_signals()[0]
     sfreq = example_lfp.get_sampling_rate()
-    ch_types = (["eeg"] * len(recording.get_signals()))
+    ch_types = ["eeg"] * len(recording.get_signals())
     info = mne.create_info(ch_names=ch_names, sfreq=sfreq, ch_types=ch_types)
     raw = mne.io.RawArray(raw_data, info)
 
