@@ -44,20 +44,19 @@ def plot_psd(x, ax, fs=250, group="ATNx", fmax=100):
 
 
 def sig_avg(arr, at, _filter):
-    dead_first = np.all((arr[4 * at].samples == 0))
-    dead_second = np.all((arr[4 * at + 1].samples == 0))
+    sig1 = arr[4 * at].samples
+    sig2 = arr[4 * at + 1].samples
+    dead_first = np.all(sig1 == 0)
+    dead_second = np.all(sig2 == 0)
 
     if dead_first and dead_second:
         return None
 
-    sig1 = butter_filter(arr[4 * at].samples, arr[0].sampling_rate, *_filter)
-    sig2 = butter_filter(arr[4 * at + 1].samples, arr[0].sampling_rate, *_filter)
-
     if dead_first:
-        return sig2
+        return butter_filter(sig2, arr[0].sampling_rate, *_filter)
     if dead_second:
-        return sig1
-    return (sig1 + sig2) / 2
+        return butter_filter(sig1, arr[0].sampling_rate, *_filter)
+    return butter_filter((sig1 + sig2) / 2, arr[0].sampling_rate, *_filter)
 
 
 def plot_recording_coherence(recording, figures, base_dir, sig_type="first"):
@@ -90,8 +89,10 @@ def plot_recording_coherence(recording, figures, base_dir, sig_type="first"):
         sub_signals = [s for s in sub_signals if not np.all((s.samples == 0))]
         rsc_signals = [s for s in rsc_signals if not np.all((s.samples == 0))]
 
-        rsc_signal = sig_avg(rsc_signals, 0, _filter)
         sub_signal = sig_avg(sub_signals, 0, _filter)
+        # sub_signal2 = np.mean(np.array([s.samples for s in sub_signals[:2]]), axis=0)
+        # sub_signal2 = butter_filter(sub_signal2, sub_signals[0].sampling_rate, *_filter)
+        rsc_signal = sig_avg(rsc_signals, 0, _filter)
     elif sig_type == "avg":
         # TODO make sure this average is right
 
