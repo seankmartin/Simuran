@@ -15,4 +15,4 @@ SIMURAN stands for **Si**\ multaneous **Mu**\ lti-\ **R**\ egion **An**\ alysis.
 Contact and contributing
 ------------------------
 Feel free to contact me in any way about this project. 
-The easiest way to get in touch would be to raise an issue on `GitHub <https://github.com/seankmartin/SIMURAN>`_ or pop a message to me on `my website <seankmartin.netlify.app/contact/>`_.
+The easiest way to get in touch would be to raise an issue on `GitHub <https://github.com/seankmartin/SIMURAN>`_ or pop a message to me on `my website <https://seankmartin.netlify.app/contact/>`_.
