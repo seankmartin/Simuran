@@ -11,6 +11,24 @@ from simuran.param_handler import ParamHandler
 
 
 def create_task(batch_file, analysis_functions=[], num_workers=1):
+    """
+    Create a doit task.
+
+    Parameters
+    ----------
+    batch_file : str
+        The path to file to use for batch running SIMURAN.
+    analysis_functions : list, optional
+        List of strings of python files containing dependent functions, by default []
+    num_workers : int, optional
+        The number of workers to use for the task, by default 1
+
+    Returns
+    -------
+    dict
+        A python doit dictionary.
+
+    """
     modify_path(
         os.path.abspath(os.path.join(os.path.dirname(batch_file), "..", "analysis")),
         verbose=False,
@@ -38,11 +56,11 @@ def create_task(batch_file, analysis_functions=[], num_workers=1):
                         fnames.append(fn.__name__)
 
     for fname in analysis_functions:
-        dependencies.append(
-            os.path.abspath(
-                os.path.join(os.path.dirname(in_dir), "..", "analysis", fname)
-            )
+        path = os.path.abspath(
+            os.path.join(os.path.dirname(in_dir), "..", "analysis", fname)
         )
+        if os.path.isfile(path):
+            dependencies.append(path)
 
     targets = [
         os.path.join(
