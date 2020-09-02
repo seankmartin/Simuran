@@ -72,11 +72,12 @@ def create_task(batch_file, analysis_functions=[], num_workers=1):
     action = "simuran -r -m -n {} {}".format(num_workers, batch_file)
 
     def clean():
-        for name in fnames:
-            to_remove = os.path.join("sim_results", name)
-            if os.path.isdir(to_remove):
-                print("Removing folder {}".format(to_remove))
-                shutil.rmtree(to_remove)
+        to_remove = os.path.join(
+            "sim_results", os.path.splitext(os.path.basename(function_loc))[0]
+        )
+        if os.path.isdir(to_remove):
+            print("Removing folder {}".format(to_remove))
+            shutil.rmtree(to_remove)
 
         for fname in targets:
             if os.path.isfile(fname):
