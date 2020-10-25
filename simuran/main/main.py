@@ -646,6 +646,11 @@ def setup_default_params(
         full_name = value
         made_files.append(False)
         if not os.path.isfile(full_name):
+            print(
+                "{} does not exist, will create it with {}".format(
+                    full_name, text_editor
+                )
+            )
             sim_p = default_param_names[key]
             shutil.copy(sim_p, full_name)
             made_files[-1] = True
