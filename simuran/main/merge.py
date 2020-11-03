@@ -3,6 +3,7 @@
 import os
 import shutil
 import argparse
+import re
 
 import numpy as np
 
@@ -88,16 +89,22 @@ def csv_merge(in_dir, keep_headers=True, insert_newline=True, stats=True, delim=
         for i, f in enumerate(csv_files):
             print("Merging {}".format(f))
             with open(f, "r") as open_file:
-                lines = open_file.readlines()
+                file_data = open_file.read()
+                lines = file_data.split("\n")
                 if keep_headers or (i == 0):
                     for line in lines:
-                        output.write(line)
+                        output.write(line + "\n")
                 else:
                     for line in lines[1:]:
-                        output.write(line)
+                        output.write(line + "\n")
 
                 if stats:
-                    split_up = [line.split(",")[data_start_col:] for line in lines[1:]]
+                    file_data = re.sub('"[^"]+"', "NAN", file_data)
+                    lines = file_data.split("\n")[:-1]
+                    split_up = []
+                    for line in lines[1:]:
+                        if line != "":
+                            split_up.append(line.split(",")[data_start_col:])
                     data = np.zeros(shape=(len(split_up), len(split_up[0])))
                     for i, row in enumerate(split_up):
                         for j, val in enumerate(row):
@@ -106,6 +113,11 @@ def csv_merge(in_dir, keep_headers=True, insert_newline=True, stats=True, delim=
                             except BaseException:
                                 to_write = np.nan
                             data[i, j] = to_write
+                    check = data[-1]
+                    if np.sum(check) == 0:
+                        raise RuntimeError(
+                            "Excel sheet to merge has trailing blank lines"
+                        )
                     avg = np.nanmean(data, axis=0)
                     std = np.nanstd(data, axis=0)
                     avg_str = (
