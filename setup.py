@@ -27,6 +27,7 @@ INSTALL_REQUIRES = [
     "more_itertools",
     "indexed",
     "tqdm",
+    "doit",
 ]
 
 CLASSIFIERS = [
