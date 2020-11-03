@@ -1,7 +1,12 @@
+from copy import deepcopy
+
 import numpy as np
 
+from scipy.signal import welch
 
-def powers(recording):
+
+def powers(recording, **kwargs):
+    # TODO move into other LFP repo
     results = {}
 
     sub_signals = recording.signals.group_by_property("region", "SUB")[0]
@@ -13,7 +18,6 @@ def powers(recording):
     names = ["sub", "rsc"]
 
     # For now, lets just take the first non dead channels
-    # TODO get averaging or similar working
     for sig_list, name in zip(all_signals, names):
         results["{} delta".format(name)] = np.nan
         results["{} theta".format(name)] = np.nan
@@ -28,7 +32,14 @@ def powers(recording):
 
         if len(sig_list) > 0:
             window_sec = 2
+            # TODO check averaging
+            avg_sig = np.zeros(shape=(len(sig_list[0].samples),))
+            for val in sig_list:
+                avg_sig += val.samples / len(sig_list)
+            # This uses the first signal
             sig_in_use = sig_list[0]
+            temp = deepcopy(sig_in_use.samples)
+            sig_in_use.samples = avg_sig
             # TODO find good bands from a paper
             delta_power = sig_in_use.underlying.bandpower(
                 [1.5, 4], window_sec=window_sec, band_total=True
@@ -42,6 +53,7 @@ def powers(recording):
             high_gamma_power = sig_in_use.underlying.bandpower(
                 [65, 90], window_sec=window_sec, band_total=True
             )
+            sig_in_use.samples = temp
 
             if not (
                 delta_power["total_power"]
@@ -63,5 +75,18 @@ def powers(recording):
             results["{} high gamma rel".format(name)] = high_gamma_power[
                 "relative_power"
             ]
+
+            low, high = [0.5, 120]
+            window_sec = kwargs.get("window_sec", 2 / (low + 0.000001))
+            unit = kwargs.get("unit", "micro")
+            scale = 1000 if unit == "micro" else 1
+            sf = sig_list[0].get_sampling_rate()
+            lfp_samples = avg_sig * scale
+
+            # Compute the modified periodogram (Welch)
+            nperseg = int(window_sec * sf)
+            freqs, psd = welch(lfp_samples, sf, nperseg=nperseg)
+            idx_band = np.logical_and(freqs >= low, freqs <= high)
+            results["{} welch".format(name)] = [freqs[idx_band], psd[idx_band]]
 
     return results
