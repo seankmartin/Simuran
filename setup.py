@@ -22,6 +22,11 @@ VERSION = "0.0.1"
 INSTALL_REQUIRES = [
     "matplotlib >= 3.0.2",
     "numpy >= 1.15.0",
+    "skm_pyutils",
+    "seaborn",
+    "more_itertools",
+    "indexed",
+    "tqdm",
 ]
 
 CLASSIFIERS = [
