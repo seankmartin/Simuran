@@ -4,6 +4,7 @@ import os
 import shutil
 import argparse
 import re
+import warnings
 
 import numpy as np
 
@@ -33,7 +34,7 @@ def merge_files(in_dir, all_result_ext=None):
         os.path.join(in_dir, o)
         for o in os.listdir(in_dir)
         if os.path.isdir(os.path.join(in_dir, o)) and o != "all_results_merged"
-    ][::-1]
+    ]
     for d in dirs:
         name = d[len(in_dir) :]
         name = "--".join(name.split(os.sep))
@@ -92,11 +93,15 @@ def csv_merge(in_dir, keep_headers=True, insert_newline=True, stats=True, delim=
                 file_data = open_file.read()
                 lines = file_data.split("\n")
                 if keep_headers or (i == 0):
-                    for line in lines:
-                        output.write(line + "\n")
+                    for i, line in enumerate(lines):
+                        output.write(line)
+                        if i != len(lines) - 1:
+                            output.write("\n")
                 else:
-                    for line in lines[1:]:
-                        output.write(line + "\n")
+                    for i, line in enumerate(lines[1:]):
+                        output.write(line)
+                        if i != len(lines) - 2:
+                            output.write("\n")
 
                 if stats:
                     file_data = re.sub('"[^"]+"', "NAN", file_data)
@@ -118,14 +123,20 @@ def csv_merge(in_dir, keep_headers=True, insert_newline=True, stats=True, delim=
                         raise RuntimeError(
                             "Excel sheet to merge has trailing blank lines"
                         )
-                    avg = np.nanmean(data, axis=0)
-                    std = np.nanstd(data, axis=0)
+                    with warnings.catch_warnings():
+                        warnings.filterwarnings(
+                            action="ignore", message="Mean of empty slice"
+                        )
+                        warnings.filterwarnings(
+                            action="ignore",
+                            message="Degrees of freedom <= 0 for slice.",
+                        )
+                        avg = np.nanmean(data, axis=0)
+                        std = np.nanstd(data, axis=0)
                     avg_str = (
-                        "Average," + "," + ",".join(str(val) for val in avg)[:-1] + "\n"
+                        "Average," + "," + ",".join(str(val) for val in avg) + "\n"
                     )
-                    std_str = (
-                        "Std," + "," + ",".join(str(val) for val in std)[:-1] + "\n"
-                    )
+                    std_str = "Std," + "," + ",".join(str(val) for val in std) + "\n"
                     output.write(avg_str)
                     output.write(std_str)
 
