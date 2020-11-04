@@ -214,6 +214,9 @@ def batch_run(
     run_dict = ParamHandler(in_loc=run_dict_loc, name="params")
     after_batch_function = run_dict.get("after_batch_fn", None)
     keep_container = run_dict.get("keep_all_data", False)
+    to_merge = run_dict.get("to_merge", [])
+    if isinstance(to_merge, str):
+        to_merge = [to_merge]
     out_dir = os.path.abspath(
         os.path.join(os.path.dirname(run_dict_loc), "..", "sim_results")
     )
@@ -257,8 +260,19 @@ def batch_run(
 
             if merge:
                 print("--------------------Merging results--------------------")
-                csv_merge(out_dir)
-                merge_files(out_dir)
+                if len(to_merge) == 0:
+                    print("Merging everything in {}".format(out_dir))
+                    csv_merge(out_dir)
+                    merge_files(out_dir)
+                else:
+                    for folder in to_merge:
+                        print(
+                            "Merging in the folder {}".format(
+                                os.path.join(out_dir, folder)
+                            )
+                        )
+                        csv_merge(os.path.join(out_dir, folder))
+                        merge_files(os.path.join(out_dir, folder))
     if (
         (not kwargs.get("only_check", False))
         and (after_batch_function is not None)
