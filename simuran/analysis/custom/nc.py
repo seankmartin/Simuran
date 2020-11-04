@@ -1,7 +1,12 @@
+from collections import OrderedDict as oDict
+from copy import deepcopy
+
 import neurochat.nc_plot as ncplot
 import matplotlib.pyplot as plt
+import numpy as np
 
-from copy import deepcopy
+from neurochat.nc_utils import histogram, histogram2d, smooth_2d
+from neurochat.nc_spatial import NSpatial
 
 
 def frate(recording, tetrode_num, unit_num):
@@ -125,34 +130,6 @@ def stat_per_cell(recording):
                 output[out_str_start + "_" + str(cell)] = results["Mean width"]
                 unit.underlying.reset_results()
     return output
-
-
-from collections import OrderedDict as oDict
-
-from neurochat.nc_utils import (
-    chop_edges,
-    corr_coeff,
-    extrema,
-    find,
-    find2d,
-    find_chunk,
-    histogram,
-    histogram2d,
-    linfit,
-    residual_stat,
-    rot_2d,
-    smooth_1d,
-    smooth_2d,
-    centre_of_mass,
-    find_true_ranges,
-)
-
-import numpy as np
-
-from neurochat.nc_spatial import NSpatial
-from neurochat.nc_spike import NSpike
-from neurochat.nc_utils import histogram
-import neurochat.nc_plot as nc_plot
 
 
 def bin_downsample(

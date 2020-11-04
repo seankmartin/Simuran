@@ -148,7 +148,7 @@ def plot_mne_signal(recording, do_ica=True):
                 badchans = val["Bad Chs"]
                 exclude = val["Bad ICs"]
 
-    if date_found == False:
+    if date_found is False:
         print("No session specific mne config found.")
         badchans = []
         exclude = None
