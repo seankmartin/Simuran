@@ -109,6 +109,9 @@ def main():
     )
 
     parsed, unparsed = parser.parse_known_args()
+    if parsed.dummy is True:
+        parsed.skip_batch_setup = False
+
     if len(unparsed) > 0:
         raise ValueError("Unrecognized arguments passed {}".format(unparsed))
 
