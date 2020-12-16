@@ -33,6 +33,7 @@ class NCLoader(BaseLoader):
             "samples": self.signal.get_samples(),
             "date": self.signal.get_date(),
             "time": self.signal.get_time(),
+            "channel": self.signal.get_channel_id(),
         }
 
     def load_spatial(self, *args, **kwargs):

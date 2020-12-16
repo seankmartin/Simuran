@@ -32,6 +32,7 @@ class BaseSignal(BaseSimuran):
         self.sampling_rate = None
         self.region = None
         self.group = None
+        self.channel = None
         super().__init__()
 
     def load(self, *args, **kwargs):
