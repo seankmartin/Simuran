@@ -100,7 +100,14 @@ def test_nc_recording_loading(delete=False):
     ncl.load_params["system"] = "Axona"
     loc = os.path.join(main_dir, "tests", "resources", "temp", "axona")
     file_locs, _ = ncl.auto_fname_extraction(
-        loc, verbose=False, unit_groups=[2,], sig_channels=[1,]
+        loc,
+        verbose=False,
+        unit_groups=[
+            2,
+        ],
+        sig_channels=[
+            1,
+        ],
     )
     clust_locs = [os.path.basename(f) for f in file_locs["Clusters"] if f is not None]
     assert "010416b-LS3-50Hz10.V5.ms_2.cut" in clust_locs

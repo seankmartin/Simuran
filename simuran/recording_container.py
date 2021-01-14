@@ -468,7 +468,10 @@ class RecordingContainer(AbstractContainer):
                 f.write(
                     "{},{},{}\n".format(
                         os.path.normpath(
-                            os.path.relpath(recording.source_file, self.base_dir,)
+                            os.path.relpath(
+                                recording.source_file,
+                                self.base_dir,
+                            )
                         ),
                         u[1],
                         unit_str,

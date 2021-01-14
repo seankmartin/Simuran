@@ -55,7 +55,7 @@ def plot_long_lfp(
         lfp (NLfp): The lfp signal to plot.
         out_name (str): The name of the output, including directory.
         nsamples (int, optional): Defaults to all samples.
-            The number of samples to plot. 
+            The number of samples to plot.
         offset (int, optional): Defaults to 0.
             The number of samples into the lfp to start plotting at.
         nsplits (int, optional): The number of rows in the resulting figure.
@@ -105,7 +105,7 @@ def plot_lfp(
     """
     Create a number of figures to display the lfp signal on multiple channels.
 
-    There will be one figure for each split of the total length 
+    There will be one figure for each split of the total length
     into segment_length, and a row for each signal passed.
 
     It is assumed that the input lfps are prefiltered if filtering is required.
@@ -114,7 +114,7 @@ def plot_lfp(
         signals (list): list of signals (BaseSignal) to plot.
         channels (list): list of channels (str or int) to plot.
         out_dir (str): The directory to plot the output to.
-        start_name (str): The start_part of the name to plot to. 
+        start_name (str): The start_part of the name to plot to.
             The Final name is start_name{}_to_{}s (start_time, end_time)
         segment_length (float): Time in seconds of LFP to plot in each figure.
         in_range (tuple(int, int), optional): Time(s) of LFP to plot overall.
