@@ -6,3 +6,5 @@ matplotlib
 more_itertools
 indexed
 tqdm
+doit
+mne
