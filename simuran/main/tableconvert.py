@@ -1,10 +1,13 @@
 """This module can convert directory structures into pandas and vice versa."""
 
 import os
-
+from pprint import pprint
 
 import pandas as pd
 import numpy as np
+
+from skm_pyutils.py_path import get_all_files_in_dir
+from skm_pyutils.py_path import get_base_dir_to_files
 
 
 def dir_to_table(dir):
@@ -49,8 +52,11 @@ def excel_convert(filename, start_dir, optional_func=None):
     """
     df = pd.read_excel(filename)
 
+    os.makedirs(start_dir, exist_ok=True)
     f_out = os.path.join(start_dir, "file_list.txt")
     c_out = os.path.join(start_dir, "cell_list.txt")
+
+    start_dir = (os.sep).join(start_dir.split(os.sep)[:-1])
     ffile = open(f_out, "w")
     cfile = open(c_out, "w")
     cfile.write("Recording,Group,Unit\n")
@@ -79,13 +85,73 @@ def excel_convert(filename, start_dir, optional_func=None):
     cfile.close()
 
 
+def populate_table_directories(filename, dir_to_start, ext=None, re_filter=None):
+    df = pd.read_excel(filename)
+
+    if "Filename" not in df.columns:
+        raise ValueError("Filename must be a column of the dataset")
+
+    new_df = df.loc[:, "Filename":].copy()
+
+    def mod_col(item):
+        item = item.strip()
+        if ext is not None:
+            item += ext
+        return item
+
+    if ext is not None:
+        new_df["Filename"] = new_df["Filename"].apply(mod_col)
+
+    file_dict, no_match, multi_match = get_base_dir_to_files(
+        new_df["Filename"].values, dir_to_start, ext=ext
+    )
+
+    def new_col_maker(item):
+        to_use = file_dict.get(item, [])
+        if len(to_use) == 1:
+            return to_use[0]
+        else:
+            return ""
+
+    new_col = new_df["Filename"].apply(new_col_maker)
+
+    new_df.insert(0, "Directory", new_col)
+
+    base, out_ext = os.path.splitext(filename)
+    out_fname = base + "_filled" + out_ext
+
+    try:
+        new_df.to_excel(out_fname, index=False)
+    except PermissionError:
+        print("Please close {}".format(out_fname))
+    print("Wrote excel file to {}".format(out_fname))
+
+    out_fname = base + "_log" + ".txt"
+    with open(out_fname, "w") as f:
+        f.write("----------Missing files----------\n")
+        pprint(no_match, f)
+        f.write("\n")
+        f.write("----------Multiple Matches--------\n")
+        pprint(multi_match, f)
+        f.write("\n")
+        f.write("----------Full dictionary----------\n")
+        pprint(file_dict, f)
+    print("Wrote log file to {}".format(out_fname))
+
+    return new_df
+
+
 if __name__ == "__main__":
-    out_fname = r"D:\SubRet_recordings_imaging\SIMURAN\CTRL_Lesion_cells.xlsx"
+    out_fname = (
+        r"D:\SubRet_recordings_imaging\SIMURAN\cell_lists\CTRL_Lesion_cells.xlsx"
+    )
     out_start_dir = r"D:\SubRet_recordings_imaging\SIMURAN\new_folder"
+    in_start_dir = r"D:\SubRet_recordings_imaging"
 
     def opt_func(fnm):
         if fnm.endswith("_"):
             fnm = fnm[:-1]
         return fnm + ".set"
 
-    excel_convert(out_fname, out_start_dir, opt_func)
+    populate_table_directories(out_fname, in_start_dir, ".set", "^CS.*|^LS.*")
+    # excel_convert(out_fname, out_start_dir, opt_func, ext=".set")
