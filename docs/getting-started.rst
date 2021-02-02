@@ -23,7 +23,7 @@ Which functions to run on the data, what data and figures to save, and sort inpu
 
 Batch file
 ^^^^^^^^^^
-Which files to select from a directory to run on, for example by using a REGEX pattern (simuran_base_params).
+Which files to select from a directory to run on, for example by using a REGEX pattern (simuran_batch_params).
 
 Multi-batch file
 ^^^^^^^^^^^^^^^^
