@@ -108,17 +108,16 @@ def count_cells(recording):
 
 def stat_per_cell(recording):
     output = {}
-    all_analyse = recording.get_set_units()
+    all_analyse = deepcopy(recording.get_set_units())
     for unit, to_analyse in zip(recording.units, all_analyse):
         loaded = False
         if to_analyse is None:
-            unit.load()
-            to_analyse = unit.available_units
-            loaded = True
+            continue
         if len(to_analyse) == 0:
             continue
         if not loaded:
             unit.load()
+            unit.units_to_use = to_analyse
         if unit.underlying is None:
             continue
         out_str_start = str(unit.group)

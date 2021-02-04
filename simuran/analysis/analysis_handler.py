@@ -44,6 +44,7 @@ class AnalysisHandler(object):
         self.results = IndexedOrderedDict()
         self.verbose = verbose
         self.handle_errors = handle_errors
+        self._was_error = False
 
     def set_handle_errors(self, handle_errors):
         """Set the value of self.handle_errors."""
