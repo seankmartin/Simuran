@@ -139,3 +139,6 @@ profiling/profile.out
 # Sphinx documentation
 docs/_build/
 docs/reference/
+
+# Pycharm information
+.idea/

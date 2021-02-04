@@ -4,19 +4,17 @@ import os
 from pprint import pprint
 
 import pandas as pd
-import numpy as np
 
-from skm_pyutils.py_path import get_all_files_in_dir
 from skm_pyutils.py_path import get_base_dir_to_files
 
 
-def dir_to_table(dir):
+def dir_to_table(directory):
     """
     Convert directory structure into a table.
 
     Parameters
     ----------
-    dir : str
+    directory : str
         The starting directory.
 
     """
@@ -56,12 +54,12 @@ def excel_convert(filename, start_dir, optional_func=None):
     f_out = os.path.join(start_dir, "file_list.txt")
     c_out = os.path.join(start_dir, "cell_list.txt")
 
-    start_dir = (os.sep).join(start_dir.split(os.sep)[:-1])
+    start_dir = os.sep.join(start_dir.split(os.sep)[:-1])
     ffile = open(f_out, "w")
     cfile = open(c_out, "w")
     cfile.write("Recording,Group,Unit\n")
 
-    directories = df.iloc[:, : df.columns.get_loc("Filename")]
+    # directories = df.iloc[:, : df.columns.get_loc("Filename")]
     last_fname = ""
     curr_idx = -1
     for value in df.itertuples():
@@ -142,7 +140,7 @@ def populate_table_directories(filename, dir_to_start, ext=None, re_filter=None)
 
 
 if __name__ == "__main__":
-    out_fname = (
+    main_out_fname = (
         r"D:\SubRet_recordings_imaging\SIMURAN\cell_lists\CTRL_Lesion_cells.xlsx"
     )
     out_start_dir = r"D:\SubRet_recordings_imaging\SIMURAN\new_folder"
@@ -153,5 +151,5 @@ if __name__ == "__main__":
             fnm = fnm[:-1]
         return fnm + ".set"
 
-    populate_table_directories(out_fname, in_start_dir, ".set", "^CS.*|^LS.*")
+    populate_table_directories(main_out_fname, in_start_dir, ".set", "^CS.*|^LS.*")
     # excel_convert(out_fname, out_start_dir, opt_func, ext=".set")
