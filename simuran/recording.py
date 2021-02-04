@@ -155,6 +155,16 @@ class Recording(BaseSimuran):
         """Get the units which are set for analysis."""
         return [unit.units_to_use for unit in self.units]
 
+    def get_set_units_as_dict(self):
+        groups = [unit.group for unit in self.units]
+        units = self.get_set_units()
+        out_dict = {}
+
+        for g, u in zip(groups, units):
+            out_dict[g] = u
+
+        return out_dict
+
     def get_signals(self):
         """Get the signals."""
         return self.signals
