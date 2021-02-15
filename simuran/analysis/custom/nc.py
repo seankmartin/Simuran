@@ -29,6 +29,20 @@ def frate_file(recording):
         return -1
 
 
+def spike_width_file(recording):
+    output = {}
+    try:
+        spike = get_nc_unit(recording)
+        wave_prop = spike.get_waveform()
+        output["width_mean"] = wave_prop["Mean Width"]
+        output["width_std"] = wave_prop["Std Width"]
+        output["frate"] = spike.get_unit_spikes_count() / spike.get_duration()
+        return output
+
+    except:
+        return {"width_mean": -1, "width_std": -1, "frate": -1}
+
+
 def place_field(recording, grid_fig, tetrode_num, unit_num):
     try:
         units, _ = recording.units.group_by_property("group", tetrode_num)
@@ -412,8 +426,26 @@ NSpatial.chop_map = chop_map
 
 
 def get_nc_unit(recording):
+    """
+
+    Parameters
+    ----------
+    recording : simuran.recording.Recording
+        The recording to get the unit from.
+
+    Returns
+    -------
+    unit : neurochat.nc_spike.NSpike
+        The unit obtained from the recording
+
+    Raises
+    ------
+    ValueError: Two units are set on the recording
+
+    """
     available_units = recording.get_set_units()
     unit_num = -1
+    unit = None
     for i, a_unit in enumerate(available_units):
         if len(a_unit) != 0:
             if unit_num != -1:
