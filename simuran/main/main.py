@@ -343,7 +343,7 @@ def subsample_container(
                 )
                 with open(select_location, "r") as f:
                     name_list = [x.strip() for x in f.readlines() if x.strip() != ""]
-                    recording_container.subsample_by_name(name_list)
+                    recording_container.subsample_by_name(name_list, inplace=True)
         else:
             all_idx = True
             for val in select_recordings:
@@ -637,6 +637,9 @@ def setup_default_params(
         )
         param_names["base"] = batch_handler.get("mapping_file", param_names["base"])
         in_dir = batch_handler.get("start_dir", in_dir)
+
+    for k, v in param_names.items():
+        param_names[k] = os.path.normpath(v)
 
     if in_dir != "":
         os.makedirs(in_dir, exist_ok=True)
