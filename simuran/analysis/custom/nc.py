@@ -31,16 +31,27 @@ def frate_file(recording):
 
 def spike_width_file(recording):
     output = {}
+    output["tetrode"] = 0
+    output["unit"] = -1
     try:
         spike = get_nc_unit(recording)
-        wave_prop = spike.get_waveform()
-        output["width_mean"] = wave_prop["Mean Width"]
-        output["width_std"] = wave_prop["Std Width"]
-        output["frate"] = spike.get_unit_spikes_count() / spike.get_duration()
+        setup = recording.get_set_units_as_dict()
+        for tetrode, unit in setup.items():
+            if unit is not None:
+                output["tetrode"] = tetrode
+                output["unit"] = unit[0]
+        spike.wave_property()
+        wave_prop = spike.get_results()
+        output["width_mean"] = wave_prop["Mean width"]
+        output["width_std"] = wave_prop["Std width"]
+        output["firing_rate"] = spike.get_unit_spikes_count() / spike.get_duration()
         return output
 
     except:
-        return {"width_mean": -1, "width_std": -1, "frate": -1}
+        output["width_mean"] = -1
+        output["width_std"] = -1
+        output["firing_rate"] = -1
+        return output
 
 
 def place_field(recording, grid_fig, tetrode_num, unit_num):
@@ -443,10 +454,12 @@ def get_nc_unit(recording):
     ValueError: Two units are set on the recording
 
     """
-    available_units = recording.get_set_units()
+    set_units = recording.get_set_units()
     unit_num = -1
     unit = None
-    for i, a_unit in enumerate(available_units):
+    for i, a_unit in enumerate(set_units):
+        if a_unit is None:
+            continue
         if len(a_unit) != 0:
             if unit_num != -1:
                 raise ValueError(
