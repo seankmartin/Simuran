@@ -156,7 +156,7 @@ class BatchSetup(object):
         check_only = self.ph["only_check"] or self.only_check
         overwrite = self.ph["overwrite"]
         re_filts = self.ph["regex_filters"]
-        delete_old_files = self.ph["delete_old_files"]
+        delete_old_files = self.ph.get("delete_old_files", False)
 
         if delete_old_files and not check_only:
             BatchSetup.clear_params(self.in_dir, to_remove=self.ph["out_basename"])
