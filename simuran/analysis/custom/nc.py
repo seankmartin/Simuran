@@ -118,16 +118,20 @@ def stat_per_cell(recording):
         if not loaded:
             unit.load()
             unit.units_to_use = to_analyse
-        if unit.underlying is None:
-            continue
         out_str_start = str(unit.group)
-        for cell in unit.underlying.get_unit_list():
-            if cell in to_analyse:
-                unit.underlying.set_unit_no(cell)
-                unit.underlying.wave_property()
-                results = unit.underlying.get_results()
-                output[out_str_start + "_" + str(cell)] = results["Mean width"]
-                unit.underlying.reset_results()
+        if unit.underlying is None:
+            for cell in to_analyse:
+                output[out_str_start + "_" + str(cell)] = np.nan
+        else:
+            for cell in to_analyse:
+                if cell in unit.underlying.get_unit_list():
+                    unit.underlying.set_unit_no(cell)
+                    unit.underlying.wave_property()
+                    results = unit.underlying.get_results()
+                    output[out_str_start + "_" + str(cell)] = results["Mean width"]
+                    unit.underlying.reset_results()
+                else:
+                    output[out_str_start + "_" + str(cell)] = np.nan
     return output
 
 

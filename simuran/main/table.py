@@ -240,9 +240,6 @@ def analyse_cell_list(filename):
     out_fname = base + "_results" + ext
     df.to_excel(out_fname, index=False)
 
-    # Alternatively, process the list into the neurochat format and run this through.
-    # TBH, should do both and compare really.
-
     return df
 
 
