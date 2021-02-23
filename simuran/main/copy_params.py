@@ -1,3 +1,5 @@
+"""TODO update batch setup and this to match."""
+
 import os
 import shutil
 import argparse
