@@ -146,17 +146,33 @@ def stat_per_cell(recording):
         out_str_start = str(unit.group)
         if unit.underlying is None:
             for cell in to_analyse:
-                output[out_str_start + "_" + str(cell)] = np.nan
+                output[out_str_start + "_" + str(cell)] = [
+                    np.nan,
+                    np.nan,
+                    np.nan,
+                    np.nan,
+                ]
         else:
             for cell in to_analyse:
                 if cell in unit.underlying.get_unit_list():
                     unit.underlying.set_unit_no(cell)
                     unit.underlying.wave_property()
+                    unit.underlying.isi()
                     results = unit.underlying.get_results()
-                    output[out_str_start + "_" + str(cell)] = results["Mean width"]
+                    output[out_str_start + "_" + str(cell)] = [
+                        results["Mean width"],
+                        results["Mean Spiking Freq"],
+                        results["Mean ISI"],
+                        results["Std ISI"],
+                    ]
                     unit.underlying.reset_results()
                 else:
-                    output[out_str_start + "_" + str(cell)] = np.nan
+                    output[out_str_start + "_" + str(cell)] = [
+                        np.nan,
+                        np.nan,
+                        np.nan,
+                        np.nan,
+                    ]
     return output
 
 

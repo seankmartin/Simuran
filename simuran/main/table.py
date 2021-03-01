@@ -218,7 +218,16 @@ def analyse_cell_list(filename):
         ah.add_fn(fn_to_use, recording)
     ah.run_all_fns()
 
-    headers = ["Directory", "Filename", "Group", "Unit", "Mean Width"]
+    headers = [
+        "Directory",
+        "Filename",
+        "Group",
+        "Unit",
+        "Mean Width",
+        "Firing Rate",
+        "Mean ISI",
+        "Std ISI",
+    ]
     result_list = []
     last_order = -1
     for i, (key, val) in enumerate(ah.results.items()):
@@ -229,10 +238,22 @@ def analyse_cell_list(filename):
             last_order = order
         fname = rc[i].source_file
         dirname, basename = os.path.split(fname)
+        last = []
+        first = []
         for result_key, result_val in val.items():
             group, unit = result_key.split("_")
             group, unit = int(group), int(unit)
-            result_list.append([dirname, basename, group, unit, result_val])
+            first = [
+                dirname,
+                basename,
+                group,
+                unit,
+                result_val[0],
+                result_val[1],
+                result_val[2],
+                result_val[3],
+            ]
+            result_list.append(first)
 
     df = list_to_df(in_list=result_list, headers=headers)
 
@@ -245,12 +266,9 @@ def analyse_cell_list(filename):
 
 if __name__ == "__main__":
     main_out_fname = (
-        r"D:\SubRet_recordings_imaging\SIMURAN\cell_lists\CTRL_Lesion_cells.xlsx"
-    )
-    main_out_fname_filled = (
         r"D:\SubRet_recordings_imaging\SIMURAN\cell_lists\CTRL_Lesion_cells_filled.xlsx"
     )
-    out_start_dir = r"D:\SubRet_recordings_imaging\SIMURAN\new_folder"
+    main_out_fname_filled = r"D:\SubRet_recordings_imaging\SIMURAN\cell_lists\CTRL_Lesion_cells_filled_results.xlsx"
     in_start_dir = r"D:\SubRet_recordings_imaging"
 
     def opt_func(fnm):
@@ -258,11 +276,9 @@ if __name__ == "__main__":
             fnm = fnm[:-1]
         return fnm + ".set"
 
-    # excel_convert(out_fname, out_start_dir, opt_func, ext=".set")
+    # if not os.path.isfile(main_out_fname_filled):
+    #     populate_table_directories(
+    #         main_out_fname, in_start_dir, ".set", "^Can*"
+    #     )
 
-    if not os.path.isfile(main_out_fname_filled):
-        populate_table_directories(
-            main_out_fname_filled, in_start_dir, ".set", "^CS.*|^LS.*"
-        )
-
-    analyse_cell_list(main_out_fname_filled)
+    analyse_cell_list(main_out_fname)
