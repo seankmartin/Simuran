@@ -1,12 +1,16 @@
+import os
 from collections import OrderedDict as oDict
 from copy import deepcopy
 
 import neurochat.nc_plot as ncplot
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
 import numpy as np
+import seaborn as sns
 
-from neurochat.nc_utils import histogram, histogram2d, smooth_2d
+from neurochat.nc_utils import histogram, histogram2d, smooth_2d, find
 from neurochat.nc_spatial import NSpatial
+from neurochat.nc_plot import wave_property, largest_waveform
 
 
 def frate(recording, tetrode_num, unit_num):
@@ -130,10 +134,165 @@ def count_cells(recording):
         print("Error on {} was {}".format(recording, e))
         return output
 
+def plot_isi(isi_data, pdf_file, name, **kwargs):
+    title = name
+    xlabel = kwargs.get("xlabel1", 'ISI (ms)')
+    ylabel = kwargs.get("ylabel1", 'Spike count')
+    burst_ms = kwargs.get("burst_ms", 5)
+    s_color = kwargs.get("should_color", False)
+    raster = kwargs.get("raster", True)
+
+    if s_color:
+        color = "darkblue"
+        edgecolor = "darkblue"
+    else:
+        color = "k"
+        edgecolor = "k"
+    fig, ax = plt.subplots()
+    width = np.mean(np.diff(isi_data['isiBins']))
+    ax.bar(isi_data['isiBins'], isi_data['isiHist'], color=color,
+           edgecolor=edgecolor, rasterized=raster, align="edge",
+           width=width, linewidth=0)
+    ax.set_title(os.path.splitext(title)[0].split("--")[-1])
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+
+    pdf_file.savefig(fig, dpi=400)
+    plt.close(fig)
+
+
+def tetrode_sd(nc_unit, wave_prop, out_name, pdf_file):
+    max_channel = wave_prop["Max channel"]
+
+    waveforms = nc_unit.get_unit_waves()
+
+    _result = oDict()
+
+    def argpeak(data):
+        data = np.array(data)
+        peak_loc = [j for j in range(7, len(data)) if data[j] <= 0 and data[j - 1] > 0]
+        return peak_loc[0] if peak_loc else 0
+
+    def argtrough1(data, peak_loc):
+        data = data.tolist()
+        trough_loc = [
+            peak_loc - j
+            for j in range(peak_loc - 2)
+            if data[peak_loc - j] >= 0 and data[peak_loc - j - 1] <= 0
+        ]
+        return trough_loc[0] if trough_loc else 0
+
+    def wave_width(wave, peak, thresh=0.25):
+        p_loc, p_val = peak
+        Len = wave.size
+        if p_loc:
+            w_start = find(wave[:p_loc] <= thresh * p_val, 1, "last")
+            w_start = w_start[0] if w_start.size else 0
+            w_end = find(wave[p_loc:] <= thresh * p_val, 1, "first")
+            w_end = p_loc + w_end[0] if w_end.size else Len
+        else:
+            w_start = 1
+            w_end = Len
+
+        return w_end - w_start
+
+    num_spikes = nc_unit.get_unit_spikes_count()
+    _waves = nc_unit.get_unit_waves()
+    samples_per_spike = nc_unit.get_samples_per_spike()
+    tot_chans = nc_unit.get_total_channels()
+    meanWave = np.empty([samples_per_spike, tot_chans])
+    stdWave = np.empty([samples_per_spike, tot_chans])
+
+    width = np.empty([num_spikes, tot_chans])
+    amp = np.empty([num_spikes, tot_chans])
+    height = np.empty([num_spikes, tot_chans])
+    for i, (chan, wave) in enumerate(_waves.items()):
+        if wave.shape[0] == 1:
+            slope = np.array([(np.gradient(wave[0]))])
+        else:
+            slope = np.gradient(wave, axis=1)
+        meanWave[:, i] = np.mean(wave, 0)
+        stdWave[:, i] = np.std(wave, 0)
+        max_val = wave.max(1)
+
+        peak_val, trough1_val = 0, 0
+        if max_val.max() > 0:
+            peak_loc = [argpeak(slope[I, :]) for I in range(num_spikes)]
+            peak_val = [wave[I, peak_loc[I]] for I in range(num_spikes)]
+            trough1_loc = [
+                argtrough1(slope[I, :], peak_loc[I]) for I in range(num_spikes)
+            ]
+            trough1_val = [wave[I, trough1_loc[I]] for I in range(num_spikes)]
+            peak_loc = np.array(peak_loc)
+            peak_val = np.array(peak_val)
+            trough1_loc = np.array(trough1_loc)
+            trough1_val = np.array(trough1_val)
+            width[:, i] = np.array(
+                [
+                    wave_width(wave[I, :], (peak_loc[I], peak_val[I]), 0.25)
+                    for I in range(num_spikes)
+                ]
+            )
+
+        amp[:, i] = peak_val - trough1_val
+        height[:, i] = peak_val - wave.min(1)
+    max_chan = amp.mean(0).argmax()
+    # width = width[:, max_chan] * 10**6 / nc_unit.get_sampling_rate()
+    # amp = amp[:, max_chan]
+    # height = height[:, max_chan]
+
+    amp_per_chan = np.abs(amp.mean(axis=0))
+    max_amp = amp_per_chan[max_chan]
+    diffs = np.abs(np.abs(amp_per_chan) - max_amp)
+    diffs[max_chan] = 1000000000
+    diff = diffs.min() / max_amp
+    # average_amp = amp_per_chan.mean()
+    # diff_from_avg = np.abs(amp_per_chan - average_amp)
+    # diff = diff_from_avg / average_amp
+    # diff = np.sum(np.abs(diff))
+
+    fig, ax = plt.subplots()
+    fig.suptitle(os.path.splitext(out_name)[0].split("--")[-1])
+    ax.set_title("Difference {:.2f}".format(diff))
+    # fig = wave_property(wave_prop)
+    mw = wave_prop["Mean wave"]
+    sw = wave_prop["Std wave"]
+    max_v = np.abs(mw[:, max_chan]).max()
+    x = [1000 * float(i) / nc_unit.get_sampling_rate() for i in range(50)]
+    for i in range(4):
+        ax.plot(x, (max_v * i * 2.1) + mw[:, i], color="black", linewidth=2.0)
+        ax.plot(
+            x,
+            (max_v * i * 2.1) + mw[:, i] + sw[:, i],
+            color="green",
+            linestyle="dashed",
+        )
+        ax.plot(
+            x,
+            (max_v * i * 2.1) + mw[:, i] - sw[:, i],
+            color="green",
+            linestyle="dashed",
+        )
+
+    # os.makedirs("figs", exist_ok=True)
+    # save_loc = os.path.join("figs", out_name)
+    pdf_file.savefig(fig, dpi=400)
+    plt.close(fig)
+
+    # fig = largest_waveform(wave_prop)
+    # fig.savefig("wave_biggest.png")
+
+    return diff
+
 
 def stat_per_cell(recording):
     output = {}
     all_analyse = deepcopy(recording.get_set_units())
+    # os.makedirs("pdfs", exist_ok=True)
+    # i = 1
+    # while os.path.exists(os.path.join("pdfs", f"waveforms_{i}.pdf")):
+    #     i += 1
+    # pdf_file = PdfPages(os.path.join("pdfs", f"waveforms_{i}.pdf"))
     for unit, to_analyse in zip(recording.units, all_analyse):
         loaded = False
         if to_analyse is None:
@@ -151,20 +310,32 @@ def stat_per_cell(recording):
                     np.nan,
                     np.nan,
                     np.nan,
+                    np.nan,
                 ]
         else:
             for cell in to_analyse:
                 if cell in unit.underlying.get_unit_list():
                     unit.underlying.set_unit_no(cell)
-                    unit.underlying.wave_property()
-                    unit.underlying.isi()
+                    # print(unit.source_file, cell)
+                    out_name = (
+                        unit.source_file["Spike"][29:]
+                        .replace("\\", "--")
+                        .replace(".", "_tet-")
+                        + "_cell-"
+                        + str(cell)
+                        + ".png"
+                    )
+                    wave_prop = unit.underlying.wave_property()
+                    isi_data = unit.underlying.isi()
                     results = unit.underlying.get_results()
                     output[out_str_start + "_" + str(cell)] = [
                         results["Mean width"],
                         results["Mean Spiking Freq"],
-                        results["Mean ISI"],
+                        results["Median ISI"],
                         results["Std ISI"],
+                        results["CV ISI"],
                     ]
+                    # plot_isi(isi_data, pdf_file, out_name)
                     unit.underlying.reset_results()
                 else:
                     output[out_str_start + "_" + str(cell)] = [
@@ -172,7 +343,9 @@ def stat_per_cell(recording):
                         np.nan,
                         np.nan,
                         np.nan,
+                        np.nan,
                     ]
+    # pdf_file.close()
     return output
 
 

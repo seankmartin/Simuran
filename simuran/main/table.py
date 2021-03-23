@@ -5,6 +5,7 @@ from pprint import pprint
 from copy import copy
 
 import pandas as pd
+from PyPDF2 import PdfFileMerger, PdfFileReader
 
 from skm_pyutils.py_path import get_base_dir_to_files
 from skm_pyutils.py_table import list_to_df
@@ -225,11 +226,14 @@ def analyse_cell_list(filename):
         "Unit",
         "Mean Width",
         "Firing Rate",
-        "Mean ISI",
+        "Median ISI",
         "Std ISI",
+        "CV ISI",
     ]
     result_list = []
     last_order = -1
+
+    # merger = PdfFileMerger()
     for i, (key, val) in enumerate(ah.results.items()):
         if i != 0:
             order = int(key.split("_")[-1])
@@ -252,10 +256,14 @@ def analyse_cell_list(filename):
                 result_val[1],
                 result_val[2],
                 result_val[3],
+                result_val[4],
             ]
             result_list.append(first)
 
+        # merger.append(PdfFileReader(os.path.join("pdfs", f"waveforms_{i+1}.pdf")))
+
     df = list_to_df(in_list=result_list, headers=headers)
+    # merger.write(os.path.join("pdfs", f"merged_result_of_{i+1}.pdf"))
 
     base, ext = os.path.splitext(filename)
     out_fname = base + "_results" + ext
@@ -265,9 +273,7 @@ def analyse_cell_list(filename):
 
 
 if __name__ == "__main__":
-    main_out_fname = (
-        r"D:\SubRet_recordings_imaging\SIMURAN\cell_lists\CTRL_Lesion_cells_filled.xlsx"
-    )
+    main_out_fname = r"D:\SubRet_recordings_imaging\muscimol_data\cell_lists\cell list_musc_Sean_filled.xlsx"
     main_out_fname_filled = r"D:\SubRet_recordings_imaging\SIMURAN\cell_lists\CTRL_Lesion_cells_filled_results.xlsx"
     in_start_dir = r"D:\SubRet_recordings_imaging"
 
