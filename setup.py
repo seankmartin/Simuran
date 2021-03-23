@@ -9,7 +9,7 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 
-DESCRIPTION = "SIMURAN: Simulataneous Multi-Region Analysis"
+DESCRIPTION = "SIMURAN: Simultaneous Multi-Region Analysis"
 LONG_DESCRIPTION = """Simuran is a giant from Philippine Mythology."""
 
 DISTNAME = "simuran"
