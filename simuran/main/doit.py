@@ -91,6 +91,7 @@ def create_task(batch_file, analysis_functions=[], num_workers=1):
         "clean": [clean],
         "title": title_with_actions,
         "verbosity": 0,
+        "doc": action,
     }
 
 
