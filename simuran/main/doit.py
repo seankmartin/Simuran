@@ -62,8 +62,11 @@ def create_task(batch_file, analysis_functions=[], num_workers=1):
         if os.path.isfile(path):
             dependencies.append(path)
 
+    batch_param_loc = os.path.abspath(run_dict["batch_param_loc"])
     targets = [
         os.path.join(
+            batch_file,
+            "..",
             "sim_results",
             "pickles",
             os.path.splitext(os.path.basename(batch_file))[0] + "_dump.pickle",
@@ -72,12 +75,18 @@ def create_task(batch_file, analysis_functions=[], num_workers=1):
     action = "simuran -r -m -n {} {}".format(num_workers, batch_file)
 
     def clean():
-        to_remove = os.path.join(
-            "sim_results", os.path.splitext(os.path.basename(function_loc))[0]
-        )
-        if os.path.isdir(to_remove):
-            print("Removing folder {}".format(to_remove))
-            shutil.rmtree(to_remove)
+        run_dict = ParamHandler(in_loc=batch_file, name="params")
+        for run_dict in run_dict["run_list"]:
+            function_loc = os.path.abspath(run_dict["fn_param_loc"])
+            to_remove = os.path.join(
+                batch_file,
+                "..",
+                "sim_results",
+                os.path.splitext(os.path.basename(function_loc))[0],
+            )
+            if os.path.isdir(to_remove):
+                print("Removing folder {}".format(to_remove))
+                shutil.rmtree(to_remove)
 
         for fname in targets:
             if os.path.isfile(fname):

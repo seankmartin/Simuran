@@ -22,8 +22,6 @@ import simuran.plot.figure
 import matplotlib
 import matplotlib.pyplot as plt
 
-matplotlib.use("Qt4agg")
-
 
 def save_figures(figures, out_dir, figure_names=[], verbose=False, set_done=False):
     """
