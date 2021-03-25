@@ -116,6 +116,26 @@ class AbstractContainer(ABC):
                 indices.append(i)
         return group, indices
 
+    def spilt_into_groups(self, prop):
+        """
+        Split into groups based on property.
+
+        Parameters
+        ----------
+        prop : str
+            The name of the attribute to group by.
+
+        Returns
+        -------
+        dict : key : (group, index), for key in set(self.get_property(prop))
+
+        """
+        out_dict = {}
+        for key in list(set(self.get_property(prop))):
+            group, indices = self.group_by_property(prop, key)
+            out_dict[key] = (group, indices)
+        return out_dict
+
     def get_property(self, prop):
         """
         Return a list as item.prop for prop in self.
