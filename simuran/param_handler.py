@@ -32,16 +32,21 @@ class ParamHandler:
     name : str, optional
         The name of the variable describing the parameters, default is "mapping".
         This is only used if in_loc is not None.
+    dirname_replacement : str, optional
+        The directory name to replace __dirname__ by.
+        By default, replaces it by dirname(param_file)
 
     """
 
-    def __init__(self, params=None, in_loc=None, name="mapping"):
+    def __init__(
+        self, params=None, in_loc=None, name="mapping", dirname_replacement=""
+    ):
         """See help(ParamHandler)."""
         self.set_param_dict(params)
         self.location = ""
         self._param_name = name
         if in_loc is not None:
-            self.read(in_loc)
+            self.read(in_loc, dirname_replacement=dirname_replacement)
             self.location = in_loc
 
     def set_param_dict(self, params):
@@ -112,7 +117,7 @@ class ParamHandler:
                 out_str = self.params_to_str()
             f.write(out_str)
 
-    def read(self, in_loc):
+    def read(self, in_loc, dirname_replacement=""):
         """
         Read the parameters from in_loc.
 
@@ -120,13 +125,18 @@ class ParamHandler:
         ----------
         in_loc : str
             Path to a file to read parameters from.
+        dirname_replacement : str, optional
+            What to replace __dirname__ by in files, by default "".
 
         Returns
         -------
         None
 
         """
-        self.set_param_dict(read_python(in_loc)[self._param_name])
+        param_dict = read_python(in_loc, dirname_replacement=dirname_replacement)[
+            self._param_name
+        ]
+        self.set_param_dict(param_dict)
 
     def get(self, key, default=None):
         """

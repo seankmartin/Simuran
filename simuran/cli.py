@@ -107,6 +107,12 @@ def main():
         action="store_true",
         help="Whether to overwrite existing output",
     )
+    parser.add_argument(
+        "--dirname",
+        type=str,
+        default="",
+        help="Directory to replace __dirname__ by in parameter files.",
+    )
 
     parsed, unparsed = parser.parse_known_args()
     if parsed.dummy is True:
@@ -133,6 +139,7 @@ def main():
             merge=parsed.merge,
             num_cpus=parsed.num_workers,
             overwrite=parsed.overwrite,
+            dirname=parsed.dirname,
         )
 
     elif parsed.grab_params:
@@ -159,6 +166,7 @@ def main():
             verbose=parsed.verbose,
             only_check=parsed.dummy,
             num_cpus=parsed.num_workers,
+            dirname=parsed.dirname,
         )
 
 

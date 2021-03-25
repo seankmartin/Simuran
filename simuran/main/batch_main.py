@@ -207,19 +207,21 @@ def batch_run(
         )
 
     start_time = time.monotonic()
+    dirname = kwargs.get("dirname", "")
+    run_path_to_use = os.path.dirname(run_dict_loc) if dirname == "" else dirname
     modify_path(
-        os.path.abspath(os.path.join(os.path.dirname(run_dict_loc), "..", "analysis")),
+        os.path.abspath(os.path.join(run_path_to_use, "..", "analysis")),
         verbose=kwargs.get("verbose", False),
     )
-    run_dict = ParamHandler(in_loc=run_dict_loc, name="params")
+    run_dict = ParamHandler(
+        in_loc=run_dict_loc, name="params", dirname_replacement=dirname
+    )
     after_batch_function = run_dict.get("after_batch_fn", None)
     keep_container = run_dict.get("keep_all_data", False)
     to_merge = run_dict.get("to_merge", [])
     if isinstance(to_merge, str):
         to_merge = [to_merge]
-    out_dir = os.path.abspath(
-        os.path.join(os.path.dirname(run_dict_loc), "..", "sim_results")
-    )
+    out_dir = os.path.abspath(os.path.join(run_path_to_use, "..", "sim_results"))
     fn_name = (
         ""
         if function_to_use is None

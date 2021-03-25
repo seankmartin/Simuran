@@ -113,17 +113,22 @@ def check_input_params(location, batch_name):
         record_params = simuran.param_handler.ParamHandler(
             in_loc=full_param_loc, name="mapping"
         )
+        if record_params["loader"] == "params_only":
+            raise ValueError(
+                "The only params loader is not supported for loading files"
+            )
         return batch_setup
     elif os.path.isfile(location):
         record_params = simuran.param_handler.ParamHandler(
             in_loc=location, name="mapping"
         )
+        if record_params["loader"] == "params_only":
+            raise ValueError(
+                "The only params loader is not supported for loading files"
+            )
         return None
     else:
         raise FileNotFoundError("location must be a file or a directory")
-
-    if record_params["loader"] == "params_only":
-        raise ValueError("The only params loader is not supported for loading files")
 
 
 def modify_path(path_dir, verbose=False):
@@ -575,6 +580,7 @@ def setup_default_params(
     base_param_name,
     text_editor,
     check_params,
+    dirname,
 ):
     """
     Set up the default parameters from the folder given.
@@ -594,6 +600,8 @@ def setup_default_params(
         The text editor to use for editing the default parameters.
     check_params : bool
         Whether to check the parameters.
+    dirname : str
+        Name to replace __dirname__ by.
 
     Returns
     -------
@@ -631,7 +639,7 @@ def setup_default_params(
 
     if os.path.isfile(param_names["batch"]):
         batch_handler = simuran.param_handler.ParamHandler(
-            in_loc=param_names["batch"], name="params"
+            in_loc=param_names["batch"], name="params", dirname_replacement=dirname,
         )
         param_names["base"] = batch_handler.get("mapping_file", param_names["base"])
         in_dir = batch_handler.get("start_dir", in_dir)
@@ -688,13 +696,12 @@ def main(
     friendly_names=None,
     sort_container_fn=None,
     reverse_sort=False,
-    param_name="simuran_params.py",
     batch_name="simuran_batch_params.py",
     load_all=True,
-    to_load=["signals", "spatial", "units"],
+    to_load=("signals", "spatial", "units"),
     select_recordings=None,
-    figures=[],
-    figure_names=[],
+    figures=(),
+    figure_names=(),
     cell_list_name="cell_list.csv",
     file_list_name="file_list.txt",
     print_all_cells=True,
@@ -704,6 +711,7 @@ def main(
     only_check=False,
     should_modify_path=True,
     num_cpus=1,
+    dirname="",
 ):
     """
     Run the main control functionality.
@@ -773,6 +781,8 @@ def main(
         is added to path, by default True.
     num_cpus : int, optional
         The number of worker CPUs to launch, by default 1.
+    dirname : str, optional
+        The directory name to replace __dirname__ by in param files.
 
     Returns
     -------
@@ -851,7 +861,7 @@ def main(
         decimals=decimals,
     )
 
-    figures = save_figures(
+    save_figures(
         figures, out_dir, figure_names=figure_names, verbose=False, set_done=True
     )
     save_unclosed_figures(out_dir)
@@ -873,8 +883,6 @@ def run(
     file_list_name="file_list.txt",
     cell_list_name="cell_list.csv",
     base_param_name="simuran_base_params.py",
-    batch_param_name="simuran_batch_params.py",
-    batch_find_name="simuran_params.py",
     default_param_folder=None,
     check_params=False,
     text_editor="nano",
@@ -884,6 +892,7 @@ def run(
     only_check=False,
     should_modify_path=True,
     num_cpus=1,
+    dirname="",
 ):
     """
     Run main more readily without having to set as many params.
@@ -933,6 +942,9 @@ def run(
         is added to path, by default True.
     num_cpus : int, optional
         The number of worker CPUs to launch, by default 1.
+    dirname : str, optional
+        The name to replace __dirname__ by in parameter files,
+        by default uses dirname(param_file).
 
     Returns
     -------
@@ -950,6 +962,7 @@ def run(
     here = os.path.dirname(__file__)
     if default_param_folder is None:
         default_param_folder = os.path.join(here, "..", "params")
+
     should_quit, param_names, in_dir = setup_default_params(
         default_param_folder,
         batch_param_loc,
@@ -957,6 +970,7 @@ def run(
         base_param_name,
         text_editor,
         check_params,
+        dirname,
     )
     if should_quit:
         return [], []
@@ -969,7 +983,7 @@ def run(
             modify_path(site_dir, verbose=verbose)
             should_modify_path = False
         setup_ph = simuran.param_handler.ParamHandler(
-            in_loc=param_names["fn"], name="fn_params"
+            in_loc=param_names["fn"], name="fn_params", dirname_replacement=dirname,
         )
         list_of_functions = setup_ph["run"]
         save_list = setup_ph["save"]
@@ -988,7 +1002,7 @@ def run(
 
     if os.path.isfile(param_names["batch"]):
         batch_handler = simuran.param_handler.ParamHandler(
-            in_loc=param_names["batch"], name="params"
+            in_loc=param_names["batch"], name="params", dirname_replacement=dirname,
         )
         in_dir = batch_handler.get("start_dir", in_dir)
     else:
@@ -1007,7 +1021,6 @@ def run(
         friendly_names=friendly_names,
         figure_names=figure_names,
         figures=figures,
-        param_name=os.path.basename(param_names["base"]),
         batch_name=param_names["batch"],
         cell_list_name=cell_list_name,
         file_list_name=file_list_name,
@@ -1021,4 +1034,5 @@ def run(
         only_check=only_check,
         should_modify_path=should_modify_path,
         num_cpus=num_cpus,
+        dirname=dirname,
     )

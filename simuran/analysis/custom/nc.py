@@ -134,10 +134,11 @@ def count_cells(recording):
         print("Error on {} was {}".format(recording, e))
         return output
 
+
 def plot_isi(isi_data, pdf_file, name, **kwargs):
     title = name
-    xlabel = kwargs.get("xlabel1", 'ISI (ms)')
-    ylabel = kwargs.get("ylabel1", 'Spike count')
+    xlabel = kwargs.get("xlabel1", "ISI (ms)")
+    ylabel = kwargs.get("ylabel1", "Spike count")
     burst_ms = kwargs.get("burst_ms", 5)
     s_color = kwargs.get("should_color", False)
     raster = kwargs.get("raster", True)
@@ -149,10 +150,17 @@ def plot_isi(isi_data, pdf_file, name, **kwargs):
         color = "k"
         edgecolor = "k"
     fig, ax = plt.subplots()
-    width = np.mean(np.diff(isi_data['isiBins']))
-    ax.bar(isi_data['isiBins'], isi_data['isiHist'], color=color,
-           edgecolor=edgecolor, rasterized=raster, align="edge",
-           width=width, linewidth=0)
+    width = np.mean(np.diff(isi_data["isiBins"]))
+    ax.bar(
+        isi_data["isiBins"],
+        isi_data["isiHist"],
+        color=color,
+        edgecolor=edgecolor,
+        rasterized=raster,
+        align="edge",
+        width=width,
+        linewidth=0,
+    )
     ax.set_title(os.path.splitext(title)[0].split("--")[-1])
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
