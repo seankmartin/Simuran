@@ -10,7 +10,7 @@ from simuran.main.main import modify_path
 from simuran.param_handler import ParamHandler
 
 
-def create_task(batch_file, analysis_functions=[], num_workers=1):
+def create_task(batch_file, analysis_functions=[], num_workers=1, dirname=""):
     """
     Create a doit task.
 
@@ -22,6 +22,8 @@ def create_task(batch_file, analysis_functions=[], num_workers=1):
         List of strings of python files containing dependent functions, by default []
     num_workers : int, optional
         The number of workers to use for the task, by default 1
+    dirname : str, optional
+        The directory name to replace __dirname__ by in SIMURAN.
 
     Returns
     -------
@@ -62,7 +64,6 @@ def create_task(batch_file, analysis_functions=[], num_workers=1):
         if os.path.isfile(path):
             dependencies.append(path)
 
-    batch_param_loc = os.path.abspath(run_dict["batch_param_loc"])
     targets = [
         os.path.join(
             batch_file,
@@ -72,26 +73,33 @@ def create_task(batch_file, analysis_functions=[], num_workers=1):
             os.path.splitext(os.path.basename(batch_file))[0] + "_dump.pickle",
         )
     ]
-    action = "simuran -r -m -n {} {}".format(num_workers, batch_file)
+    if dirname != "":
+        action = "simuran -r -m -n {} --dirname {} {}".format(
+            num_workers, dirname, batch_file
+        )
+    else:
+        action = "simuran -r -m -n {} {}".format(
+            num_workers, batch_file
+        )
 
     def clean():
-        run_dict = ParamHandler(in_loc=batch_file, name="params")
-        for run_dict in run_dict["run_list"]:
-            function_loc = os.path.abspath(run_dict["fn_param_loc"])
+        run_dict_ = ParamHandler(in_loc=batch_file, name="params")
+        for run_dict_i in run_dict_["run_list"]:
+            function_loc_ = os.path.abspath(run_dict_i["fn_param_loc"])
             to_remove = os.path.join(
                 batch_file,
                 "..",
                 "sim_results",
-                os.path.splitext(os.path.basename(function_loc))[0],
+                os.path.splitext(os.path.basename(function_loc_))[0],
             )
             if os.path.isdir(to_remove):
                 print("Removing folder {}".format(to_remove))
                 shutil.rmtree(to_remove)
 
-        for fname in targets:
-            if os.path.isfile(fname):
-                print("Removing file {}".format(fname))
-                os.remove(fname)
+        for fname_ in targets:
+            if os.path.isfile(fname_):
+                print("Removing file {}".format(fname_))
+                os.remove(fname_)
 
     return {
         "file_dep": dependencies,
