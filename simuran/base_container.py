@@ -116,7 +116,7 @@ class AbstractContainer(ABC):
                 indices.append(i)
         return group, indices
 
-    def spilt_into_groups(self, prop):
+    def split_into_groups(self, prop):
         """
         Split into groups based on property.
 
