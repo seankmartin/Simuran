@@ -1,5 +1,5 @@
 numpy
-skm_pyutils
+-e git+git://github.com/seankmartin/PythonUtils.git#egg=skm_pyutils
 seaborn
 matplotlib
 -e git+git://github.com/seankmartin/NeuroChaT.git#egg=neurochat
@@ -9,3 +9,4 @@ tqdm
 doit
 mne
 pandas
+pytest
