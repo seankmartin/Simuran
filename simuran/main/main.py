@@ -639,7 +639,9 @@ def setup_default_params(
 
     if os.path.isfile(param_names["batch"]):
         batch_handler = simuran.param_handler.ParamHandler(
-            in_loc=param_names["batch"], name="params", dirname_replacement=dirname,
+            in_loc=param_names["batch"],
+            name="params",
+            dirname_replacement=dirname,
         )
         param_names["base"] = batch_handler.get("mapping_file", param_names["base"])
         in_dir = batch_handler.get("start_dir", in_dir)
@@ -983,7 +985,9 @@ def run(
             modify_path(site_dir, verbose=verbose)
             should_modify_path = False
         setup_ph = simuran.param_handler.ParamHandler(
-            in_loc=param_names["fn"], name="fn_params", dirname_replacement=dirname,
+            in_loc=param_names["fn"],
+            name="fn_params",
+            dirname_replacement=dirname,
         )
         list_of_functions = setup_ph["run"]
         save_list = setup_ph["save"]
@@ -1002,7 +1006,9 @@ def run(
 
     if os.path.isfile(param_names["batch"]):
         batch_handler = simuran.param_handler.ParamHandler(
-            in_loc=param_names["batch"], name="params", dirname_replacement=dirname,
+            in_loc=param_names["batch"],
+            name="params",
+            dirname_replacement=dirname,
         )
         in_dir = batch_handler.get("start_dir", in_dir)
     else:
