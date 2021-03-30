@@ -22,6 +22,11 @@ class BaseSignal(BaseSimuran):
     group : object
         An optional value to group on.
         For example, if wires are bundled, this could indicate the bundle number.
+    channel : object
+        The channel id of the signal.
+    channel_type : str
+        The type of the signal channel, e.g. eeg.
+        Default is "eeg".
 
     """
 
@@ -33,6 +38,7 @@ class BaseSignal(BaseSimuran):
         self.region = None
         self.group = None
         self.channel = None
+        self.channel_type = "eeg"
         super().__init__()
 
     def load(self, *args, **kwargs):
