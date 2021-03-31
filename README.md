@@ -47,6 +47,8 @@ Interface with other programs such as SpikeInterface to allow for many different
 
 ## Considerations
 1. Add more unit test cases
+2. List front facing functions
+3. Clean up the naming in main
 
 ## Using custom analysis code
 SIMURAN can use any code that is on the Python path. The easiest way to manage this is to either:
@@ -58,3 +60,4 @@ SIMURAN can use any code that is on the Python path. The easiest way to manage t
 1. https://github.com/seankmartin/NeuroChaT
 2. https://github.com/SpikeInterface
 3. https://github.com/seankmartin/NeuroChaT_API_Scripts
+4. https://github.com/mne-tools/mne-python/
