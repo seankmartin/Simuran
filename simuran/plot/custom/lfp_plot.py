@@ -1,3 +1,4 @@
+"""Old functions used with NeuroChaT."""
 import math
 import os
 from collections import OrderedDict

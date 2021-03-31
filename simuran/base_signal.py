@@ -14,7 +14,8 @@ class BaseSignal(BaseSimuran):
     timestamps : array style object
         The timestamps of the signal sampling
     samples : array style object
-        The value of the signal at sample points
+        The value of the signal at sample points.
+        By default, this is assumed to be stored in mV.
     sampling_rate : int
         The sampling rate of the signal in Hz
     region : str
@@ -27,6 +28,8 @@ class BaseSignal(BaseSimuran):
     channel_type : str
         The type of the signal channel, e.g. eeg.
         Default is "eeg".
+    unit : astropy.unit.Unit
+        An SI unit measure of the signal. This is set at load time.
 
     """
 
@@ -64,3 +67,21 @@ class BaseSignal(BaseSimuran):
     def get_samples(self):
         """Return the samples."""
         return self.samples
+
+    def get_channel(self):
+        """Return the channel."""
+        return self.channel
+
+    def get_channel_type(self):
+        """Return the channel type."""
+        return self.channel_type
+
+    def default_name(self):
+        """Default name based on region."""
+        name = self.channel_type
+        if self.channel is not None:
+            name += " {}".format(self.channel)
+        if self.region is not None:
+            name = "{} - {}".format(self.region, name)
+
+        return name

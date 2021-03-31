@@ -1,5 +1,13 @@
 import simuran
 
+try:
+    from lfp_atn_simuran.analysis.lfp_clean import LFPClean
+
+    do_analysis = True
+except ImportError:
+    do_analysis = False
+
+
 def recording_info():
     def setup_signals():
         """Set up the signals (such as eeg or lfp)."""
@@ -33,7 +41,6 @@ def recording_info():
 
         return output_dict
 
-
     def setup_units():
         """Set up the single unit data."""
         # The number of tetrodes, probes, etc - any kind of grouping
@@ -53,7 +60,6 @@ def recording_info():
 
         return output_dict
 
-
     def setup_spatial():
         """Set up the spatial data."""
         arena_size = "default"
@@ -62,7 +68,6 @@ def recording_info():
             "arena_size": arena_size,
         }
         return output_dict
-
 
     def setup_loader():
         """
@@ -101,11 +106,14 @@ def recording_info():
     }
     return mapping
 
+
 def main(set_file_location):
     """Create a single recording for analysis."""
     recording = simuran.Recording(params=recording_info(), base_file=set_file_location)
-    print(recording)
 
-if __name__ == '__main__':
+    result = LFPClean.clean_lfp_signals(recording, verbose=True, vis=True)
+
+
+if __name__ == "__main__":
     main_set_file_location = r"D:\SubRet_recordings_imaging\LSubRet5\recording\Small sq up_small sq down\01122017\S1_small sq up\01122017_smallsqdownup_up_1_1.set"
     main(main_set_file_location)
