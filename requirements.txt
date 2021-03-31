@@ -10,3 +10,4 @@ doit
 mne
 pandas
 pytest
+astropy
