@@ -6,6 +6,7 @@ from neurochat.nc_lfp import NLfp
 from neurochat.nc_spatial import NSpatial
 from neurochat.nc_spike import NSpike
 from skm_pyutils.py_path import get_all_files_in_dir
+from astropy import units as u
 
 
 class NCLoader(BaseLoader):
@@ -29,8 +30,8 @@ class NCLoader(BaseLoader):
         self.signal.load(*args, self.load_params["system"])
         return {
             "underlying": self.signal,
-            "timestamps": self.signal.get_timestamp(),
-            "samples": self.signal.get_samples(),
+            "timestamps": self.signal.get_timestamp() * u.s,
+            "samples": self.signal.get_samples() * u.mV,
             "date": self.signal.get_date(),
             "time": self.signal.get_time(),
             "channel": self.signal.get_channel_id(),
@@ -69,11 +70,14 @@ class NCLoader(BaseLoader):
         if clust_name is not None:
             self.single_unit = NSpike()
             self.single_unit.load(fname, self.load_params["system"])
+            waveforms = self.single_unit.get_waveform()
+            for chan, val in waveforms.items():
+                waveforms[chan] = val * u.uV
             return {
                 "underlying": self.single_unit,
-                "timestamps": self.single_unit.get_timestamp(),
+                "timestamps": self.single_unit.get_timestamp() * u.s,
                 "unit_tags": self.single_unit.get_unit_tags(),
-                "waveforms": self.single_unit.get_waveform(),
+                "waveforms": waveforms,
                 "date": self.single_unit.get_date(),
                 "time": self.single_unit.get_time(),
                 "available_units": self.single_unit.get_unit_list(),
