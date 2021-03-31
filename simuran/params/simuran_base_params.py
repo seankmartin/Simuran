@@ -26,6 +26,7 @@ def setup_signals():
 
     # The sampling rate in Hz of each signal
     sampling_rate = [250] * num_signals
+    channel_type = ["eeg"] * num_signals
 
     # This just passes the information on
     output_dict = {
@@ -33,6 +34,7 @@ def setup_signals():
         "region": regions,
         "group": groups,
         "sampling_rate": sampling_rate,
+        "channel_type": channel_type,
     }
 
     return output_dict
