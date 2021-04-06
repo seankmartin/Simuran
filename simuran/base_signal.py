@@ -30,6 +30,8 @@ class BaseSignal(BaseSimuran):
         Default is "eeg".
     unit : astropy.unit.Unit
         An SI unit measure of the signal. This is set at load time.
+    source_file : str
+        The path to a source file containing the signal data.
 
     """
 
@@ -42,6 +44,7 @@ class BaseSignal(BaseSimuran):
         self.group = None
         self.channel = None
         self.channel_type = "eeg"
+        self.source_file = ""
         super().__init__()
 
     def load(self, *args, **kwargs):
@@ -85,3 +88,7 @@ class BaseSignal(BaseSimuran):
             name = "{} - {}".format(self.region, name)
 
         return name
+
+    def get_source_file(self):
+        """Return the name of the source file."""
+        return self.source_file

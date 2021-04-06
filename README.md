@@ -49,6 +49,7 @@ Interface with other programs such as SpikeInterface to allow for many different
 1. Add more unit test cases
 2. List front facing functions
 3. Clean up the naming in main
+4. Add copy operations to the primary classes
 
 ## Using custom analysis code
 SIMURAN can use any code that is on the Python path. The easiest way to manage this is to either:

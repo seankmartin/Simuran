@@ -28,7 +28,7 @@ INSTALL_REQUIRES = [
     "indexed",
     "tqdm",
     "doit",
-    "astropy"
+    "astropy",
 ]
 
 CLASSIFIERS = [
