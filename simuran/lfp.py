@@ -1,8 +1,27 @@
 import os
 
+from simuran.base_signal import BaseSignal
+
 import mne
 import numpy as np
 from astropy import units as u
+
+
+class LFP(BaseSignal):
+    """LFP class."""
+
+    def __init__(self):
+        super().__init__()
+
+    def default_name(self):
+        """Default name based on region."""
+        name = ""
+        if self.channel is not None:
+            name += "{}".format(self.channel)
+        if self.region is not None:
+            name = "{} - {}".format(self.region, name)
+
+        return name
 
 
 def convert_signals_to_mne(signals, ch_names=None):
