@@ -2,6 +2,9 @@
 
 from simuran.base_class import BaseSimuran
 
+import mne
+from astropy import units as u
+
 
 class BaseSignal(BaseSimuran):
     """
@@ -129,3 +132,34 @@ class BaseSignal(BaseSimuran):
     def set_region(self, region):
         """Set the value of self.region."""
         self.region = region
+
+
+def convert_signals_to_mne(signals, ch_names=None):
+    """
+    Convert an iterable of signals to MNE raw array.
+
+    Parameters
+    ----------
+    signals : Iterable of simuran.base_signal.BaseSignal
+        The signals to convert
+    ch_names : Iterable of str, optional
+        Channel names, by default None
+
+    Returns
+    -------
+    mne.io.RawArray
+        The data converted to MNE format
+
+    """
+    if ch_names is None:
+        ch_names = [sig.default_name() for sig in signals]
+    raw_data = np.array([sig.get_samples().to(u.V) for sig in signals], float)
+
+    sfreq = signals[0].get_sampling_rate()
+
+    ch_types = [sig.get_channel_type() for sig in signals]
+
+    info = mne.create_info(ch_names=ch_names, sfreq=sfreq, ch_types=ch_types)
+    raw = mne.io.RawArray(raw_data, info=info)
+
+    return raw

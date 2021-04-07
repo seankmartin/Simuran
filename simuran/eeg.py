@@ -1,4 +1,5 @@
 import os
+import re
 
 from simuran.base_signal import BaseSignal
 from simuran.base_container import GenericContainer
@@ -6,13 +7,16 @@ from simuran.base_container import GenericContainer
 import mne
 import numpy as np
 from astropy import units as u
+import scipy.signal as sg
 
 
 class Eeg(BaseSignal):
     """EEG class."""
 
-    def __init__(self):
+    def __init__(self, samples=None, sampling_rate=None):
         super().__init__()
+        if samples is not None and sampling_rate is not None:
+            self.from_numpy(samples, sampling_rate)
 
     def default_name(self):
         """Default name based on region."""
@@ -23,6 +27,86 @@ class Eeg(BaseSignal):
             name = "{} - {}".format(self.region, name)
 
         return name
+
+    def filter(self, low, high, inplace=False, **kwargs):
+        """
+        Filter the signal.
+
+        Parameters
+        ----------
+        low : float
+            The low frequency for filtering.
+        high : float
+            The high frequency for filtering.
+        inplace : bool, optional
+            Whether to perform the operation in place, by default False
+
+        Keyword arguments
+        -----------------
+        See https://mne.tools/stable/generated/mne.filter.filter_data.html
+
+        Returns
+        -------
+        simuran.eeg.Eeg
+            The filtered signal.
+
+        """
+        kwargs["copy"] = not inplace
+        filtered_data = mne.filter.filter_data(
+            np.array(self.samples.to(u.V)), self.sampling_rate, low, high, **kwargs
+        )
+        if not inplace:
+            eeg = Eeg(filtered_data * u.V, self.sampling_rate)
+            return eeg
+        else:
+            self.samples = filtered_data * u.V
+            return self
+
+    def compare_filters(self, *filters, **plot_args):
+        """
+        Plot a comparison of filters.
+
+        Filters are expected to be as tuples like:
+        (name, low, high, **kwargs)
+        where **kwargs are passed to simuran.eeg.filter
+
+        Returns
+        -------
+        matplotlib.figure.Figure
+            The filtered version of the signals
+        """
+        eeg_array = EegArray()
+        eeg_array.append(self)
+        ch_names = ["Original"]
+        for f in filters:
+            fname, low, high, kwargs = f
+            eeg = self.filter(low, high, inplace=False, **kwargs)
+            eeg_array.append(eeg)
+            ch_names.append(fname)
+        return eeg_array.plot(ch_names=ch_names, **plot_args)
+
+    def default_filt_compare(self, low, high, **plot_args):
+        """Compare a FIR filter and and IIR butter filter."""
+        plot_args["title"] = plot_args.get("title", "Filter Comparison")
+        plot_args["duration"] = 5
+        butter_dict = {"method": "iir"}
+
+        filter_ = (0, low, high, "bandpass")
+        nc_iir = {
+            "order": butter_filter(self.sampling_rate, *filter_),
+            "ftype": "butter",
+        }
+        nc_dict = {"method": "iir", "iir_params": nc_iir}
+        filter1 = ("Default", low, high, {})
+        filter2 = ("Butterworth", low, high, butter_dict)
+        filter3 = ("NeuroChaT", low, high, nc_dict)
+
+        self.compare_filters(filter1, filter2, filter3, **plot_args)
+
+    def __str__(self):
+        return "EEG signal at {}Hz with {} samples".format(
+            self.sampling_rate, len(self.samples)
+        )
 
 
 class EegArray(GenericContainer):
@@ -98,6 +182,10 @@ class EegArray(GenericContainer):
         show : bool, optional
             Whether to show the plot in interactive mode, by default True
 
+        Keyword arguments
+        -----------------
+        See https://mne.tools/stable/generated/mne.io.Raw.html?highlight=raw%20plot#mne.io.Raw.plot
+
         Returns
         -------
         matplotlib.figure.Figure
@@ -123,7 +211,7 @@ class EegArray(GenericContainer):
         kwargs["proj"] = proj
         kwargs["group_by"] = kwargs.get("group_by", "original")
         kwargs["remove_dc"] = kwargs.get("remove_dc", False)
-        kwargs["show_options"] = kwargs.get("show_options", True)
+        kwargs["show_options"] = kwargs.get("show_options", False)
 
         if kwargs["scalings"] is None:
             scalings = dict(
@@ -143,7 +231,68 @@ class EegArray(GenericContainer):
             max_val = 1.2 * np.max(np.abs(mne_array.get_data(stop=15)[0]))
             scalings["eeg"] = max_val
             kwargs["scalings"] = scalings
-
         fig = mne_array.plot(**kwargs)
 
         return fig
+
+
+def butter_filter(Fs, *args):
+    """
+    Filter using bidirectional zero-phase shift Butterworth filter.
+
+    Parameters
+    ----------
+    x : ndarray
+        Data or signal to filter
+    Fs : Sampling frequency
+    *kwargs
+        Arguments with filter paramters
+
+    Returns
+    -------
+    ndarray
+        Filtered signal
+
+    """
+    gstop = 20  # minimum dB attenuation at stopabnd
+    gpass = 3  # maximum dB loss during ripple
+    for arg in args:
+        if isinstance(arg, str):
+            filttype = arg
+    if filttype == "lowpass" or filttype == "highpass":
+        wp = args[1] / (Fs / 2)
+        if wp > 1:
+            wp = 1
+            if filttype == "lowpass":
+                print("Butterworth filter critical frequency Wp is capped at 1")
+            else:
+                exit(-1)
+
+    elif filttype == "bandpass":
+        if len(args) < 4:
+            exit(-1)
+        else:
+            wp = np.array(args[1:3]) / (Fs / 2)
+            if wp[0] >= wp[1]:
+                exit(-1)
+            if wp[0] == 0 and wp[1] >= 1:
+                exit(-1)
+            elif wp[0] == 0:
+                wp = wp[1]
+                filttype = "lowpass"
+            elif wp[1] >= 1:
+                wp = wp[0]
+                filttype = "highpass"
+
+    if filttype == "lowpass":
+        ws = min([wp + 0.1, 1])
+    elif filttype == "highpass":
+        ws = max([wp - 0.1, 0.01 / (Fs / 2)])
+    elif filttype == "bandpass":
+        ws = np.zeros_like(wp)
+        ws[0] = max([wp[0] - 0.1, 0.01 / (Fs / 2)])
+        ws[1] = min([wp[1] + 0.1, 1])
+
+    min_order, min_wp = sg.buttord(wp, ws, gpass, gstop)
+
+    return min_order

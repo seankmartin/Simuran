@@ -7,6 +7,8 @@ try:
 except ImportError:
     do_analysis = False
 
+from neurochat.nc_utils import butter_filter
+
 
 def recording_info():
     def setup_signals():
@@ -111,7 +113,11 @@ def main(set_file_location):
     """Create a single recording for analysis."""
     recording = simuran.Recording(params=recording_info(), base_file=set_file_location)
 
-    result = LFPClean.clean_lfp_signals(recording, verbose=True, vis=True)
+    # result = LFPClean.clean_lfp_signals(recording, verbose=True, vis=True)
+    eeg_sigs = recording.get_eeg_signals()
+    filter_ = [10, 1.5, 100, "bandpass"]
+    butter_filter(eeg_sigs[0].samples, eeg_sigs[0].sampling_rate, *filter_)
+    eeg_sigs[0].default_filt_compare(1.5, 100)
 
 
 if __name__ == "__main__":

@@ -6,7 +6,7 @@ from simuran.base_class import BaseSimuran
 from simuran.param_handler import ParamHandler
 from simuran.base_container import GenericContainer
 from simuran.base_signal import BaseSignal
-from simuran.eeg import EegArray
+from simuran.eeg import EegArray, Eeg
 from simuran.single_unit import SingleUnit
 from simuran.spatial import Spatial
 from simuran.loaders.loader_list import loaders_dict
@@ -185,10 +185,13 @@ class Recording(BaseSimuran):
             The signals as an EegArray.
         
         """
+        inplace = not copy
         eeg_array = EegArray()
         _, eeg_idxs = self.signals.group_by_property("channel_type", "eeg")
-        eeg_sigs = self.signals.subsample(idx_list=eeg_idxs, inplace=False)
-        eeg_array.set_container(eeg_sigs)
+        eeg_sigs = self.signals.subsample(idx_list=eeg_idxs, inplace=inplace)
+        eeg_array.set_container(
+            [Eeg(eeg.samples, eeg.sampling_rate) for eeg in eeg_sigs]
+        )
 
         return eeg_array
 
