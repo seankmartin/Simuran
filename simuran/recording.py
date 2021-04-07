@@ -6,6 +6,7 @@ from simuran.base_class import BaseSimuran
 from simuran.param_handler import ParamHandler
 from simuran.base_container import GenericContainer
 from simuran.base_signal import BaseSignal
+from simuran.eeg import EegArray
 from simuran.single_unit import SingleUnit
 from simuran.spatial import Spatial
 from simuran.loaders.loader_list import loaders_dict
@@ -168,6 +169,28 @@ class Recording(BaseSimuran):
     def get_signals(self):
         """Get the signals."""
         return self.signals
+
+    def get_eeg_signals(self, copy=True):
+        """
+        Get the eeg signals as an EegArray.
+        
+        Parameters
+        ----------
+        copy : bool, optional
+            Whether to copy the retrieved signals, by default True.
+
+        Returns
+        -------
+        simuran.eeg.EegArray
+            The signals as an EegArray.
+        
+        """
+        eeg_array = EegArray()
+        _, eeg_idxs = self.signals.group_by_property("channel_type", "eeg")
+        eeg_sigs = self.signals.subsample(idx_list=eeg_idxs, inplace=False)
+        eeg_array.set_container(eeg_sigs)
+
+        return eeg_array
 
     def get_np_signals(self):
         """Return a 2D array of signals as a numpy array."""

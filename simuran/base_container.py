@@ -157,6 +157,20 @@ class AbstractContainer(ABC):
             return []
 
     def get_possible_values(self, prop):
+        """
+        Return a list of all values of val.prop for val in self.
+
+        Parameters
+        ----------
+        prop : str
+            The name of the attribute to retrieve values for.
+
+        Returns
+        -------
+        list
+            All values of prop found in the container.
+
+        """
         used = set()
         to_return = []
         for val in self.container:
@@ -408,6 +422,13 @@ class AbstractContainer(ABC):
             new_instance = copy.copy(self)
             new_instance.container = [self.container[i] for i in idx_list]
             return new_instance
+
+    def set_container(self, container):
+        """Set the value of self.container."""
+        if isinstance(container, AbstractContainer):
+            self.container = container.container
+        else:
+            self.container = container
 
     def __getitem__(self, idx):
         """Retrive the object at the specified index from the container."""

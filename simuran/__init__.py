@@ -9,6 +9,6 @@ from .batch_setup import BatchSetup
 from .param_handler import ParamHandler
 from .recording import Recording
 from .recording_container import RecordingContainer
-from .lfp import LFP
+from .eeg import Eeg, EegArray
 from .single_unit import SingleUnit
 from .spatial import Spatial
