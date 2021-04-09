@@ -4,7 +4,7 @@ import os
 from neurochat.nc_lfp import NLfp
 from neurochat.nc_spatial import NSpatial
 from neurochat.nc_spike import NSpike
-from neurochat.nc_datacontainer import NDatacontainer
+from neurochat.nc_datacontainer import NDataContainer
 from skm_pyutils.py_path import get_all_files_in_dir
 from skm_pyutils.py_table import list_to_df
 from astropy import units as u
@@ -210,7 +210,7 @@ class NCLoader(BaseLoader):
             # TODO replace with the auto extraction from NeuroChaT.
             # This is in NC data container.
 
-            dc = NDatacontainer(load_on_fly=True)
+            dc = NDataContainer(load_on_fly=True)
             dc.add_axona_files_from_dir(folder, recursive=True, pos_extension=".pos")
             print(dc)
             # set_files = []
