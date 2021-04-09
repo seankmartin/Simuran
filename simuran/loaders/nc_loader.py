@@ -4,7 +4,6 @@ import os
 from neurochat.nc_lfp import NLfp
 from neurochat.nc_spatial import NSpatial
 from neurochat.nc_spike import NSpike
-from neurochat.nc_datacontainer import NDataContainer
 from skm_pyutils.py_path import get_all_files_in_dir
 from skm_pyutils.py_table import list_to_df
 from astropy import units as u
@@ -131,13 +130,14 @@ class NCLoader(BaseLoader):
             elif not os.path.isfile(base):
                 raise ValueError("{} is not a file or directory".format(base))
 
-            cluster_extension = kwargs.get("cluster_extension", ".cut")
-            clu_extension = kwargs.get("clu_extension", ".clu.X")
-            pos_extension = kwargs.get("pos_extension", ".txt")
-            lfp_extension = kwargs.get("lfp_extension", ".eeg")  # eeg or egf
-            stm_extension = kwargs.get("stm_extension", ".stm")
-            tet_groups = kwargs.get("unit_groups", [i + 1 for i in range(16)])
-            channels = kwargs.get("sig_channels", [i + 1 for i in range(32)])
+            joined_params = {**self.load_params, **kwargs}
+            cluster_extension = joined_params.get("cluster_extension", ".cut")
+            clu_extension = joined_params.get("clu_extension", ".clu.X")
+            pos_extension = joined_params.get("pos_extension", ".pos")
+            lfp_extension = joined_params.get("lfp_extension", ".eeg")  # eeg or egf
+            stm_extension = joined_params.get("stm_extension", ".stm")
+            tet_groups = joined_params.get("unit_groups", None)
+            channels = joined_params.get("sig_channels", None)
 
             filename = os.path.splitext(base)[0]
             base_filename = os.path.splitext(os.path.basename(base))[0]
@@ -145,6 +145,18 @@ class NCLoader(BaseLoader):
             # Extract the tetrode and cluster data
             spike_names_all = []
             cluster_names_all = []
+            if tet_groups is None:
+                tet_groups = [
+                    x for x in range(0, 64) if os.path.exists(filename + "." + str(x))
+                ]
+            if channels is None:
+                channels = [
+                    x
+                    for x in range(2, 256)
+                    if os.path.exists(filename + lfp_extension + str(x))
+                ]
+                if os.path.exists(filename + lfp_extension):
+                    channels = [1] + channels
             for tetrode in tet_groups:
                 spike_name = filename + "." + str(tetrode)
                 if not os.path.isfile(spike_name):
@@ -172,10 +184,16 @@ class NCLoader(BaseLoader):
                     return_absolute=False,
                     case_sensitive_ext=True,
                 ):
-                    if fname[: (len(base_filename) + 1)] == base_filename + "_":
-                        name = os.path.join(os.path.dirname(base), fname)
-                        output_list[i] = name
-                        break
+                    if ext == ".txt":
+                        if fname[: len(base_filename) + 1] == base_filename + "_":
+                            name = os.path.join(os.path.dirname(base), fname)
+                            output_list[i] = name
+                            break
+                    else:
+                        if fname[: len(base_filename)] == base_filename:
+                            name = os.path.join(os.path.dirname(base), fname)
+                            output_list[i] = name
+                            break
             spatial_name, stim_name = output_list
 
             base_sig_name = filename + lfp_extension

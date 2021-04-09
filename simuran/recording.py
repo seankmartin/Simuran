@@ -52,6 +52,7 @@ class Recording(BaseSimuran):
     ----------
     params : dict, optional
         Direct parameters which describe the recording, default is None
+        See simuran.params.simuran_base_params for what can be passed.
     param_file : str, optional
         The path to a file which contains parameters, default is None
     base_file : str, optional
@@ -80,6 +81,8 @@ class Recording(BaseSimuran):
             self._setup_from_file(param_file, load=load)
         elif params is not None:
             self._setup_from_dict(params, load=load)
+        else:
+            print("One of params and param_file should be set at init")
 
     def load(self, *args, **kwargs):
         """Load each available attribute."""
@@ -106,14 +109,50 @@ class Recording(BaseSimuran):
         Returns
         -------
         list
+            The channels found. Returns None if no channels are set.
 
         """
-        num_sigs = self.param_handler["signals"]["num_signals"]
-        if as_idx:
-            return [i for i in range(num_sigs)]
-        default_chans = [i + 1 for i in range(num_sigs)]
-        chans = self.param_handler["signals"].get("channels", default_chans)
-        return chans
+        if self.signals is None:
+            if self.param_handler.get("signals", None) is not None:
+                num_sigs = self.param_handler["signals"]["num_signals"]
+                if as_idx:
+                    return [i for i in range(num_sigs)]
+                default_chans = [i + 1 for i in range(num_sigs)]
+                chans = self.param_handler["signals"].get("channels", default_chans)
+                return chans
+            else:
+                return None
+        else:
+            chans = []
+            if as_idx:
+                return [i for i in range(len(self.signals))]
+            for s in self.signals:
+                if s.channel is not None:
+                    chans.append(s.channel)
+                else:
+                    return [i for i in range(len(self.signals))]
+            return chans
+
+    def get_unit_groups(self):
+        """
+        Get the groups of the units.
+        
+        For example, the list of tetrodes in the recording.
+        Or the IDs of the sites on a ephys probe.
+
+        Returns
+        -------
+        list
+            The found groups. Returns None if none are set yet.
+        """
+        if self.units is None:
+            if self.param_handler.get("units", None) is not None:
+                groups = self.param_handler["units"]["group"]
+                return groups
+            else:
+                return None
+        else:
+            groups = set([unit.group for unit in self.units])
 
     def get_name_for_save(self, rel_dir=None):
         """
@@ -290,33 +329,53 @@ class Recording(BaseSimuran):
         else:
             data_loader = data_loader_cls(self.param_handler["loader_kwargs"])
             chans = self.get_signal_channels()
-            groups = self.param_handler["units"]["group"]
+            groups = self.get_unit_groups()
             fnames, base = data_loader.auto_fname_extraction(
                 base, sig_channels=chans, unit_groups=groups
             )
             if fnames is None:
                 self.valid = False
+                print("Invalid recording setup from {}".format(base))
                 return
             self.source_file = base
 
         # TODO this could possibly have different classes for diff loaders
         self.signals = GenericContainer(BaseSignal)
-        if "signals" in self.param_handler.keys():
+        use_all = (
+            ("signals" not in self.param_handler.keys())
+            and ("units" not in self.param_handler.keys())
+            and ("spatial" not in self.param_handler.keys())
+        )
+        if "signals" in self.param_handler.keys() or use_all:
             self.available.append("signals")
-            signal_dict = self.param_handler["signals"]
-            for i in range(signal_dict["num_signals"]):
-                params = split_dict(signal_dict, i)
+            signal_dict = self.param_handler.get("signals", None)
+            if data_loader_cls == "params_only_no_cls":
+                to_iter = signal_dict["num_signals"]
+            else:
+                to_iter = len(fnames["Signal"])
+            for i in range(to_iter):
+                if signal_dict is not None:
+                    params = split_dict(signal_dict, i)
+                else:
+                    params = {}
                 self.signals.append_new(params)
                 if data_loader is not None:
                     self.signals[-1].set_source_file(fnames["Signal"][i])
                     self.signals[-1].set_loader(data_loader)
 
-        if "units" in self.param_handler.keys():
+        if "units" in self.param_handler.keys() or use_all:
             self.units = GenericContainer(SingleUnit)
             self.available.append("units")
-            units_dict = self.param_handler["units"]
-            for i in range(units_dict["num_groups"]):
-                params = split_dict(units_dict, i)
+            units_dict = self.param_handler.get("units", None)
+            if data_loader_cls == "params_only_no_cls":
+                to_iter = units_dict["num_groups"]
+            else:
+                to_iter = len(fnames["Spike"])
+            for i in range(to_iter):
+                if units_dict is not None:
+                    params = split_dict(units_dict, i)
+                else:
+                    params = {}
                 self.units.append_new(params)
                 if data_loader is not None:
                     self.units[-1].set_source_file(
@@ -324,7 +383,7 @@ class Recording(BaseSimuran):
                     )
                     self.units[-1].set_loader(data_loader)
 
-        if "spatial" in self.param_handler.keys():
+        if "spatial" in self.param_handler.keys() or use_all:
             self.spatial = Spatial()
             self.available.append("spatial")
             if data_loader is not None:
@@ -340,6 +399,11 @@ class Recording(BaseSimuran):
 
     def __str__(self):
         """Call on print."""
-        return "{} with params {} and source files {}".format(
-            self.__class__.__name__, self.param_handler.params, self.source_files
-        )
+        if self.param_handler is not None:
+            return "{} with params {} and source files {}".format(
+                self.__class__.__name__, self.param_handler.params, self.source_files
+            )
+        else:
+            return "{} with no params and source files {}".format(
+                self.__class__.__name__, self.source_files
+            )

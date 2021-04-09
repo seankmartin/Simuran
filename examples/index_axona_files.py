@@ -9,7 +9,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 
 
 def main(folder, overwrite=False):
-    simuran.index_ephys_files(
+    df = simuran.index_ephys_files(
         folder,
         loader_name="neurochat",
         out_loc=os.path.join(HERE, "index.csv"),
@@ -17,6 +17,20 @@ def main(folder, overwrite=False):
         overwrite=overwrite,
         loader_kwargs={"system": "Axona"},
     )
+
+    recording = recording_from_df_line(df.iloc[1055])
+    print(recording)
+
+
+def recording_from_df_line(line):
+    params = {
+        "loader": "neurochat",
+        "loader_kwargs": {"system": "Axona", "pos_extension": ".txt"},
+    }
+    filename = os.path.join(line.filename, line.folder)
+    recording = simuran.Recording(params=params, base_file=filename, load=True)
+
+    return recording
 
 
 def get_rat_name(s):

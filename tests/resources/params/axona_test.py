@@ -5,7 +5,7 @@ mapping = {
     "units": {},
     "spatial": {},
     "loader": "nc_loader",
-    "loader_kwargs": {"system": "Axona"},
+    "loader_kwargs": {"system": "Axona", "pos_extension": ".txt"},
 }
 
 # Setting up the signals
