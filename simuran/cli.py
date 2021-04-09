@@ -156,7 +156,7 @@ def main():
             raise ValueError(
                 "In non recursive mode, the function configuration path must be a file"
             )
-        return simuran.main.main.run(
+        return simuran.main.single_main.run(
             parsed.batch_config_path,
             parsed.function_config_path,
             text_editor=parsed.editor,

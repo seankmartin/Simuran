@@ -19,7 +19,6 @@ import simuran.analysis.analysis_handler
 import simuran.param_handler
 import simuran.plot.figure
 
-import matplotlib
 import matplotlib.pyplot as plt
 
 
@@ -686,7 +685,7 @@ def setup_default_params(
     return should_quit, param_names, in_dir
 
 
-def main(
+def analyse_files(
     location,
     functions,
     attributes_to_save,
@@ -711,7 +710,6 @@ def main(
     only_check=False,
     should_modify_path=True,
     num_cpus=1,
-    dirname="",
 ):
     """
     Run the main control functionality.
@@ -781,8 +779,6 @@ def main(
         is added to path, by default True.
     num_cpus : int, optional
         The number of worker CPUs to launch, by default 1.
-    dirname : str, optional
-        The directory name to replace __dirname__ by in param files.
 
     Returns
     -------
@@ -1012,7 +1008,7 @@ def run(
             )
         )
 
-    return main(
+    return analyse_files(
         in_dir,
         list_of_functions,
         save_list,

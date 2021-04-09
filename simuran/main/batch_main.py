@@ -6,7 +6,7 @@ import multiprocessing
 
 from skm_pyutils.py_log import log_exception
 
-from simuran.main.main import run, modify_path
+from simuran.main.single_main import run, modify_path
 from simuran.param_handler import ParamHandler
 from simuran.main.merge import merge_files, csv_merge
 

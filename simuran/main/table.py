@@ -339,7 +339,7 @@ def index_ephys_files(
             )
         )
     data_loader = data_loader_cls(loader_kwargs)
-    data_loader.index_files(start_dir, **kwargs)
+    results_df = data_loader.index_files(start_dir, **kwargs)
 
     if post_process_fn is not None:
         results_df = post_process_fn(results_df, **post_process_kwargs)

@@ -6,7 +6,7 @@ import pprint
 
 from doit.tools import title_with_actions
 
-from simuran.main.main import modify_path
+from simuran.main.single_main import modify_path
 from simuran.param_handler import ParamHandler
 
 
