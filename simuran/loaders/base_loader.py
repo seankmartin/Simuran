@@ -101,3 +101,21 @@ class BaseLoader(ABC):
 
         """
         pass
+
+    @abstractmethod
+    def index_files(self, folder, **kwargs):
+        """
+        Return a dataframe of file information from the given folder.
+
+        Parameters
+        ----------
+        folder : str
+            The folder to start the indexing in.
+
+        Returns
+        -------
+        pandas.DataFrame
+            A dataframe of file information.
+
+        """
+        pass

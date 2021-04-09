@@ -1,12 +1,17 @@
 """This module handles interfacing with NeuroChaT."""
 import os
 
-from simuran.loaders.base_loader import BaseLoader
 from neurochat.nc_lfp import NLfp
 from neurochat.nc_spatial import NSpatial
 from neurochat.nc_spike import NSpike
+from neurochat.nc_datacontainer import NDatacontainer
 from skm_pyutils.py_path import get_all_files_in_dir
+from skm_pyutils.py_table import list_to_df
 from astropy import units as u
+from tqdm import tqdm
+import numpy as np
+
+from simuran.loaders.base_loader import BaseLoader
 
 
 class NCLoader(BaseLoader):
@@ -197,5 +202,43 @@ class NCLoader(BaseLoader):
                 "Stimulation": stim_name,
             }
             return file_locs, base
+        else:
+            raise ValueError("auto_fname_extraction only implemented for Axona")
+
+    def index_files(self, folder, **kwargs):
+        if self.load_params["system"] == "Axona":
+            # TODO replace with the auto extraction from NeuroChaT.
+            # This is in NC data container.
+
+            dc = NDatacontainer(load_on_fly=True)
+            dc.add_axona_files_from_dir(folder, recursive=True, pos_extension=".pos")
+            print(dc)
+            # set_files = []
+            # root_folders = []
+            # times = []
+            # durations = []
+            # files = get_all_files_in_dir(folder, ext=".set", recursive=True, return_absolute=True, case_sensitive_ext=True)
+            # for fname in files:
+            #     set_files.append(os.path.basename(fname))
+            #     root_folders.append(os.path.normpath(os.path.dirname(fname)))
+            #     with open(fname) as f:
+            #         f.readline()
+            #         t = f.readline()[-9:-2]
+            #         try:
+            #             int(t[:2])
+            #             times.append(t)
+            #             f.readline()
+            #             f.readline()
+            #             durations.append(f.readline()[-11:-8])
+            #         except:
+            #             if len(times) != len(set_files):
+            #                 times.append(np.nan)
+            #             if len(durations) != len(set_files):
+            #                 durations.append(np.nan)
+
+            # print(f"Found {len(set_files)} set files")
+            # headers = ["filename", "folder", "time", "duration"]
+            # in_list = [set_files, root_folders, times, durations]
+            # results_df = list_to_df(in_list, headers)
         else:
             raise ValueError("auto_fname_extraction only implemented for Axona")

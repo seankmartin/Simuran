@@ -6,9 +6,9 @@ from copy import copy
 
 import pandas as pd
 from PyPDF2 import PdfFileMerger, PdfFileReader
+from skm_pyutils.py_path import get_base_dir_to_files, make_path_if_not_exists
 
-from skm_pyutils.py_path import get_base_dir_to_files
-from skm_pyutils.py_table import list_to_df
+from simuran.loaders.loader_list import loaders_dict
 from simuran.recording import Recording
 from simuran.recording_container import RecordingContainer
 from simuran.analysis.custom.nc import stat_per_cell
@@ -150,7 +150,10 @@ def populate_table_directories(filename, dir_to_start, ext=None, re_filter=None)
         new_df["Filename"] = new_df["Filename"].apply(mod_col)
 
     file_dict, no_match, multi_match = get_base_dir_to_files(
-        new_df["Filename"].values, dir_to_start, ext=ext, re_filter=re_filter,
+        new_df["Filename"].values,
+        dir_to_start,
+        ext=ext,
+        re_filter=re_filter,
     )
 
     def new_col_maker(item):
@@ -270,6 +273,82 @@ def analyse_cell_list(filename):
     df.to_excel(out_fname, index=False)
 
     return df
+
+
+def index_ephys_files(
+    start_dir,
+    loader_name,
+    out_loc=None,
+    post_process_fn=None,
+    overwrite=True,
+    post_process_kwargs=None,
+    loader_kwargs=None,
+    **kwargs
+):
+    """
+    Create a dataframe from ephys files found in folder
+
+    This function recursively scan folder for Axona .set files and return
+    a pandas dataframe with ['filename', 'folder', 'time', 'duration']
+    columns
+
+    TODO
+    ----
+    expand this to use loaders for different formats
+
+    Parameters
+    ----------
+    start_dir : str
+        Path to folder containing the files to index.
+    loader_name : str
+        The loader to use for the file population.
+    out_loc : str, optional
+        csv file to save results to if provided.
+    post_process_fn : function, optional
+        An optional function to apply to the indexed data files.
+        Should take (dataframe, **kwargs as parameters)
+    overwrite : bool, optional
+        Whether to overwrite an existing output, by default True.
+    post_process_kwargs : dict, optional
+        Keyword arguments passed to post_process_fn.
+    loader_kwargs : dict, optional
+        Keyword arguments passed to post_process_fn.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Pandas dataframe with all discovered files.
+
+    """
+    if out_loc is None:
+        out_loc = ""
+
+    if (overwrite is False) and os.path.exists(out_loc):
+        return pd.read_csv(out_loc)
+
+    if post_process_kwargs is None:
+        post_process_kwargs = {}
+    if loader_kwargs is None:
+        loader_kwargs = {}
+
+    data_loader_cls = loaders_dict.get(loader_name)
+    if data_loader_cls is None:
+        raise ValueError(
+            "Unrecognised loader {}, options are {}".format(
+                loader_name, list(loaders_dict.keys())
+            )
+        )
+    data_loader = data_loader_cls(loader_kwargs)
+    data_loader.index_files(start_dir, **kwargs)
+
+    if post_process_fn is not None:
+        results_df = post_process_fn(results_df, **post_process_kwargs)
+
+    if out_loc != "":
+        make_path_if_not_exists(out_loc, exist_ok=True)
+        results_df.to_csv(out_loc, index=False)
+
+    return results_df
 
 
 if __name__ == "__main__":
