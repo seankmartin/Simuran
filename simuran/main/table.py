@@ -7,6 +7,7 @@ from copy import copy
 import pandas as pd
 from PyPDF2 import PdfFileMerger, PdfFileReader
 from skm_pyutils.py_path import get_base_dir_to_files, make_path_if_not_exists
+from skm_pyutils.py_table import list_to_df
 
 from simuran.loaders.loader_list import loaders_dict
 from simuran.recording import Recording
@@ -150,10 +151,7 @@ def populate_table_directories(filename, dir_to_start, ext=None, re_filter=None)
         new_df["Filename"] = new_df["Filename"].apply(mod_col)
 
     file_dict, no_match, multi_match = get_base_dir_to_files(
-        new_df["Filename"].values,
-        dir_to_start,
-        ext=ext,
-        re_filter=re_filter,
+        new_df["Filename"].values, dir_to_start, ext=ext, re_filter=re_filter,
     )
 
     def new_col_maker(item):
@@ -283,7 +281,7 @@ def index_ephys_files(
     overwrite=True,
     post_process_kwargs=None,
     loader_kwargs=None,
-    **kwargs
+    **kwargs,
 ):
     """
     Create a dataframe from ephys files found in folder
@@ -324,6 +322,10 @@ def index_ephys_files(
         out_loc = ""
 
     if (overwrite is False) and os.path.exists(out_loc):
+        print(
+            f"{out_loc} exists, so loading this - "
+            + "please delete to reindex or pass overwrite as True."
+        )
         return pd.read_csv(out_loc)
 
     if post_process_kwargs is None:
@@ -345,7 +347,7 @@ def index_ephys_files(
         results_df = post_process_fn(results_df, **post_process_kwargs)
 
     if out_loc != "":
-        make_path_if_not_exists(out_loc, exist_ok=True)
+        make_path_if_not_exists(out_loc)
         results_df.to_csv(out_loc, index=False)
 
     return results_df

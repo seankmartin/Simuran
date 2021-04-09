@@ -13,6 +13,7 @@ try:
     from simuran.loaders.nc_loader import NCLoader
 
     loaders_dict["nc_loader"] = NCLoader
+    loaders_dict["neurochat"] = NCLoader
 except BaseException:
     print("Error importing NeuroChaT:")
     traceback.print_exc(file=sys.stdout)
