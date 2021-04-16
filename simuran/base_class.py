@@ -43,6 +43,7 @@ class BaseSimuran(ABC):
 
     def __init__(self, **kwargs):
         """See help(BaseSimuran) for more info."""
+        super().__init__()
         self.kwargs = kwargs
         self.info = {}
         self.datetime = datetime.datetime.now()
@@ -52,7 +53,6 @@ class BaseSimuran(ABC):
         self.last_loaded_source = None
         self.underlying = None
         self.results = {}
-        super().__init__()
 
     @abstractmethod
     def load(self, *args, **kwargs):

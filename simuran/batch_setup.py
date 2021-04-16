@@ -49,6 +49,7 @@ class BatchSetup(object):
 
     def __init__(self, in_dir, fpath="simuran_batch_params.py"):
         """See help(BatchSetup)."""
+        super().__init__()
         self.in_dir = in_dir
         if not os.path.isfile(fpath):
             if os.path.isfile(os.path.join(self.in_dir, fpath)):

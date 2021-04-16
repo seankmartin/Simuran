@@ -13,8 +13,26 @@ import scipy.signal as sg
 class Eeg(BaseSignal):
     """EEG class."""
 
-    def __init__(self, samples=None, sampling_rate=None):
+    def __init__(self, samples=None, sampling_rate=None, signal=None):
         super().__init__()
+        if signal is not None:
+            self.samples = signal.samples
+            self.sampling_rate = signal.sampling_rate
+            self.timestamps = signal.timestamps
+            self.source_file = signal.source_file
+            self.region = signal.region
+            self.group = signal.group
+            self.channel = signal.channel
+            self.channel_type = signal.channel_type
+            self.source_file = signal.source_file
+            self.kwargs = signal.kwargs
+            self.info = signal.info
+            self.datetime = signal.datetime
+            self.tag = signal.tag
+            self.loader = signal.loader
+            self.last_loaded_source = signal.last_loaded_source
+            self.underlying = signal.underlying
+            self.results = signal.results
         if samples is not None and sampling_rate is not None:
             self.from_numpy(samples, sampling_rate)
 
@@ -87,7 +105,9 @@ class Eeg(BaseSignal):
 
     def default_filt_compare(self, low, high, **plot_args):
         """Compare a FIR filter and and IIR butter filter."""
-        plot_args["title"] = plot_args.get("title", "Filter Comparison")
+        plot_args["title"] = plot_args.get(
+            "title", "Filter Comparison -- {}".format(self.source_file)
+        )
         plot_args["duration"] = 5
         butter_dict = {"method": "iir"}
 

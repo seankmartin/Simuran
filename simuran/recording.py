@@ -226,9 +226,9 @@ class Recording(BaseSimuran):
         eeg_array = EegArray()
         _, eeg_idxs = self.signals.group_by_property("channel_type", "eeg")
         eeg_sigs = self.signals.subsample(idx_list=eeg_idxs, inplace=inplace)
-        eeg_array.set_container(
-            [Eeg(eeg.samples, eeg.sampling_rate) for eeg in eeg_sigs]
-        )
+        if inplace:
+            eeg_sigs = self.signals
+        eeg_array.set_container([Eeg(signal=eeg) for eeg in eeg_sigs])
 
         return eeg_array
 

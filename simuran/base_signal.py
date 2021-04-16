@@ -40,6 +40,7 @@ class BaseSignal(BaseSimuran):
 
     def __init__(self):
         """See help(BaseSignal)."""
+        super().__init__()
         self.timestamps = None
         self.samples = None
         self.sampling_rate = None
@@ -48,7 +49,6 @@ class BaseSignal(BaseSimuran):
         self.channel = None
         self.channel_type = "eeg"
         self.source_file = "<unknown>"
-        super().__init__()
 
     def load(self, *args, **kwargs):
         """Load the signal."""
@@ -59,6 +59,7 @@ class BaseSignal(BaseSimuran):
             self.last_loaded_source = self.source_file
 
     def from_numpy(self, np_array, sampling_rate):
+        """Set data from a numpy array."""
         self.samples = np_array
         self.sampling_rate = sampling_rate
         self.timestamps = [sampling_rate * i for i in range(len(self.samples))]

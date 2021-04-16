@@ -7,7 +7,7 @@ from skm_pyutils.py_config import read_python
 from skm_pyutils.py_path import get_dirs_matching_regex
 
 
-class ParamHandler:
+class ParamHandler(object):
     """
     A wrapper around a dictionary describing parameters.
 
@@ -42,6 +42,7 @@ class ParamHandler:
         self, params=None, in_loc=None, name="mapping", dirname_replacement=""
     ):
         """See help(ParamHandler)."""
+        super().__init__()
         self.set_param_dict(params)
         self.location = ""
         self._param_name = name
