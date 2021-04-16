@@ -81,8 +81,6 @@ class Recording(BaseSimuran):
             self._setup_from_file(param_file, load=load)
         elif params is not None:
             self._setup_from_dict(params, load=load)
-        else:
-            print("One of params and param_file should be set at init")
 
     def load(self, *args, **kwargs):
         """Load each available attribute."""
