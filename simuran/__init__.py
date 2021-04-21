@@ -18,3 +18,4 @@ from .recording_container import RecordingContainer
 from .eeg import Eeg, EegArray
 from .single_unit import SingleUnit
 from .spatial import Spatial
+from .analysis.analysis_handler import AnalysisHandler
