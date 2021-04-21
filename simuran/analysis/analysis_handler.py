@@ -1,9 +1,12 @@
 """This module provides functionality for performing large batch analysis."""
 
 import logging
+import os
 
 from indexed import IndexedOrderedDict
 from skm_pyutils.py_log import log_exception
+from skm_pyutils.py_save import save_mixed_dict_to_csv
+from skm_pyutils.py_save import save_dicts_to_csv
 
 
 class AnalysisHandler(object):
@@ -108,6 +111,10 @@ class AnalysisHandler(object):
         self.fns_to_run.append(fn)
         self.fn_params_list.append(args)
         self.fn_kwargs_list.append(kwargs)
+
+    def save_results(self, output_location):
+        head, tail = os.path.split(output_location)
+        save_mixed_dict_to_csv(self.results, head, tail)
 
     def _run_fn(self, fn, *args, **kwargs):
         """
