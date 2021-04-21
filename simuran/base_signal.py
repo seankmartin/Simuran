@@ -3,6 +3,7 @@
 from simuran.base_class import BaseSimuran
 
 import mne
+import numpy as np
 from astropy import units as u
 
 
@@ -73,6 +74,21 @@ class BaseSignal(BaseSimuran):
             name = "{} - {}".format(self.region, name)
 
         return name
+
+    def to_neurochat(self):
+        """Convert to NeuroChaT NLfp object."""
+        from neurochat import NLfp
+        if self.underlying is not None:
+            if type(self.underlying) == NLfp:
+                # TODO check this works
+                return self.underlying
+        lfp = NLfp()
+        lfp.set_channel(self.channel)
+        lfp.set_timestamp(np.array(self.timestamps * u.mV))
+        lfp.set_samples(np.array(self.samples * u.s))
+        lfp.set_sampling_rate(self.sampling_rate)
+        return lfp
+
 
     def get_duration(self):
         """Get the length of the signal in the unit of timestamps."""
