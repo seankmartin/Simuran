@@ -110,18 +110,20 @@ def recording_info():
     return mapping
 
 
-def main(set_file_location):
+def main(set_file_location, do_analysis=False):
     """Create a single recording for analysis."""
     recording = simuran.Recording(params=recording_info(), base_file=set_file_location)
-    print(recording.signals[0].get_source_file())
+    if not do_analysis:
+        return recording
 
-    result = LFPClean.clean_lfp_signals(recording, verbose=True, vis=True, append_avg=True)
-    # eeg_sigs = recording.get_eeg_signals()
-    # filter_ = [10, 1.5, 100, "bandpass"]
-    # butter_filter(eeg_sigs[0].samples, eeg_sigs[0].sampling_rate, *filter_)
-    # eeg_sigs[0].default_filt_compare(1.5, 100)
+    else:
+        result = LFPClean.clean_lfp_signals(recording, verbose=True, vis=True, append_avg=True)
+        # eeg_sigs = recording.get_eeg_signals()
+        # filter_ = [10, 1.5, 100, "bandpass"]
+        # butter_filter(eeg_sigs[0].samples, eeg_sigs[0].sampling_rate, *filter_)
+        # eeg_sigs[0].default_filt_compare(1.5, 100)
 
 
 if __name__ == "__main__":
     main_set_file_location = r"D:\SubRet_recordings_imaging\LSubRet5\recording\Small sq up_small sq down\01122017\S1_small sq up\01122017_smallsqdownup_up_1_1.set"
-    main(main_set_file_location)
+    main(main_set_file_location, True)
