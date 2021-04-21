@@ -54,6 +54,14 @@ class AnalysisHandler(object):
         """Set the value of self.verbose."""
         self.verbose = verbose
 
+    def get_results(self):
+        """Return the results."""
+        return self.results
+
+    def run_all(self):
+        """Alias for run_all_fns."""
+        self.run_all_fns()
+
     def run_all_fns(self):
         """Run all of the established functions."""
         fn_zipped = zip(self.fns_to_run, self.fn_params_list, self.fn_kwargs_list)
