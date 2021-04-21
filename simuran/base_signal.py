@@ -78,16 +78,17 @@ class BaseSignal(BaseSimuran):
 
     def to_neurochat(self):
         """Convert to NeuroChaT NLfp object."""
-        from neurochat import NLfp
+        from neurochat.nc_lfp import NLfp
+
         if self.underlying is not None:
             if type(self.underlying) == NLfp:
                 # TODO check this works
                 return self.underlying
         lfp = NLfp()
-        lfp.set_channel(self.channel)
-        lfp.set_timestamp(np.array(self.timestamps * u.mV))
-        lfp.set_samples(np.array(self.samples * u.s))
-        lfp.set_sampling_rate(self.sampling_rate)
+        lfp.set_channel_id(self.channel)
+        lfp._timestamp = np.array(self.timestamps * u.mV)
+        lfp._samples = np.array(self.samples * u.s)
+        lfp._record_info['Sampling rate'] = self.sampling_rate
         return lfp
 
     def in_range(self, start, stop, step=None):

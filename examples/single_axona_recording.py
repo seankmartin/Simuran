@@ -117,7 +117,9 @@ def main(set_file_location, do_analysis=False):
         return recording
 
     else:
-        result = LFPClean.clean_lfp_signals(recording, verbose=True, vis=True, append_avg=True)
+        result = LFPClean.clean_lfp_signals(
+            recording, verbose=True, vis=True, append_avg=True
+        )
         # eeg_sigs = recording.get_eeg_signals()
         # filter_ = [10, 1.5, 100, "bandpass"]
         # butter_filter(eeg_sigs[0].samples, eeg_sigs[0].sampling_rate, *filter_)
