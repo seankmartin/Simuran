@@ -1,4 +1,5 @@
 """Module to hold the abstract class setting up information held in a signal."""
+import math
 
 from simuran.base_class import BaseSimuran
 
@@ -89,6 +90,15 @@ class BaseSignal(BaseSimuran):
         lfp.set_sampling_rate(self.sampling_rate)
         return lfp
 
+    def in_range(self, start, stop, step=None):
+        """Splice samples from second based times."""
+        start = int(math.floor(start * self.sampling_rate))
+        stop = int(math.ceil(stop * self.sampling_rate))
+        if step is not None:
+            step = int(math.round(self.step * self.sampling_rate))
+            return self.samples[start:stop:step]
+        else:
+            return self.samples[start:stop]
 
     def get_duration(self):
         """Get the length of the signal in the unit of timestamps."""
