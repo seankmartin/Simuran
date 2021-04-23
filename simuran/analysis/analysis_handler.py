@@ -113,8 +113,12 @@ class AnalysisHandler(object):
         self.fn_kwargs_list.append(kwargs)
 
     def save_results(self, output_location):
-        head, tail = os.path.split(output_location)
-        save_mixed_dict_to_csv(self.results, head, tail)
+        with open(output_location, "w") as f:
+            print("Saving results to {}".format(output_location))
+            for k, v in self.results.items():
+                f.write(k.replace(" ", "_").replace(",", "_") + "\n")
+                o_str = save_mixed_dict_to_csv(v, None, save=False)
+                f.write(o_str)
 
     def _run_fn(self, fn, *args, **kwargs):
         """
