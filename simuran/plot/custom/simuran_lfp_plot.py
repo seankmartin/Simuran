@@ -26,7 +26,7 @@ def vis_lfp(
         Whether to save the plots or show them.
     **kwargs : keyword arguments
         These can be used to override plot appearances.
-    
+
     Returns
     -------
     None

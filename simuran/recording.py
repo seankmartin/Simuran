@@ -134,7 +134,7 @@ class Recording(BaseSimuran):
     def get_unit_groups(self):
         """
         Get the groups of the units.
-        
+
         For example, the list of tetrodes in the recording.
         Or the IDs of the sites on a ephys probe.
 
@@ -210,7 +210,7 @@ class Recording(BaseSimuran):
     def get_eeg_signals(self, copy=True):
         """
         Get the eeg signals as an EegArray.
-        
+
         Parameters
         ----------
         copy : bool, optional
@@ -220,7 +220,7 @@ class Recording(BaseSimuran):
         -------
         simuran.eeg.EegArray
             The signals as an EegArray.
-        
+
         """
         inplace = not copy
         eeg_array = EegArray()

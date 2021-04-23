@@ -88,7 +88,7 @@ class BaseSignal(BaseSimuran):
         lfp.set_channel_id(self.channel)
         lfp._timestamp = np.array(self.timestamps * u.mV)
         lfp._samples = np.array(self.samples * u.s)
-        lfp._record_info['Sampling rate'] = self.sampling_rate
+        lfp._record_info["Sampling rate"] = self.sampling_rate
         return lfp
 
     def in_range(self, start, stop, step=None):
