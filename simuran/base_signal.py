@@ -61,10 +61,13 @@ class BaseSignal(BaseSimuran):
             self.last_loaded_source = self.source_file
 
     def from_numpy(self, np_array, sampling_rate):
-        """Set data from a numpy array."""
-        self.samples = np_array
+        """Set data from a numpy array. - assumed in mV and srate in Hz"""
+        if not hasattr(np_array, "unit"):
+            self.samples = np_array * u.mV
+        else:
+            self.samples = np_array
         self.sampling_rate = sampling_rate
-        self.timestamps = [sampling_rate * i for i in range(len(self.samples))]
+        self.timestamps = [i / sampling_rate for i in range(len(self.samples))] * u.s
 
     def default_name(self):
         """Default name based on region."""
