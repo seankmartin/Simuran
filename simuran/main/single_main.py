@@ -82,10 +82,10 @@ def save_unclosed_figures(out_dir):
     if len(figs) != 0:
         print("Saving unclosed_plots to {}".format(out_dir))
     for i, f in enumerate(figs):
-        os.makedirs(out_dir, exist_ok=True)
+        os.makedirs(os.path.join(out_dir, "unclosed_plots"), exist_ok=True)
         name = os.path.join(out_dir, "unclosed_plots", "fig_{}.png".format(i))
         f.savefig(name)
-        f.close()
+        plt.close(f)
 
 
 def check_input_params(location, batch_name):
