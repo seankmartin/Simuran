@@ -19,3 +19,5 @@ from .eeg import Eeg, EegArray
 from .single_unit import SingleUnit
 from .spatial import Spatial
 from .analysis.analysis_handler import AnalysisHandler
+from .plot.figure import SimuranFigure
+from .plot.base_plot import save_simuran_plot, setup_ax

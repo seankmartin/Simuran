@@ -6,7 +6,6 @@ import os
 from indexed import IndexedOrderedDict
 from skm_pyutils.py_log import log_exception
 from skm_pyutils.py_save import save_mixed_dict_to_csv
-from skm_pyutils.py_save import save_dicts_to_csv
 
 
 class AnalysisHandler(object):

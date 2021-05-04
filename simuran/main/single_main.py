@@ -9,8 +9,11 @@ import time
 import multiprocessing
 from copy import copy
 from datetime import datetime
+import logging
 
 from tqdm import tqdm
+import matplotlib.pyplot as plt
+from skm_pyutils.py_log import log_exception
 
 import simuran.batch_setup
 import simuran.recording_container
@@ -19,7 +22,7 @@ import simuran.analysis.analysis_handler
 import simuran.param_handler
 import simuran.plot.figure
 
-import matplotlib.pyplot as plt
+main_was_error = False
 
 
 def save_figures(figures, out_dir, figure_names=[], verbose=False, set_done=False):
@@ -76,8 +79,12 @@ def save_figures(figures, out_dir, figure_names=[], verbose=False, set_done=Fals
 def save_unclosed_figures(out_dir):
     """Save any figures which were not closed to out_dir and close them."""
     figs = list(map(plt.figure, plt.get_fignums()))
+    if len(figs) != 0:
+        print("Saving unclosed_plots to {}".format(out_dir))
     for i, f in enumerate(figs):
-        f.savefig(os.path.join(out_dir, "unclosed_plots", "fig_{}.png".format(i)))
+        os.makedirs(out_dir, exist_ok=True)
+        name = os.path.join(out_dir, "unclosed_plots", "fig_{}.png".format(i))
+        f.savefig(name)
         f.close()
 
 
@@ -424,15 +431,32 @@ def multiprocessing_func(
     load_all,
     to_load,
     out_dir,
+    handle_errors,
 ):
-    analysis_handler = simuran.analysis.analysis_handler.AnalysisHandler()
+    analysis_handler = simuran.analysis.analysis_handler.AnalysisHandler(
+        handle_errors=handle_errors
+    )
     if args_fn is not None:
         function_args = args_fn(recording_container, i, figures)
     if load_all:
         recording_container[i].available = to_load
-        recording = recording_container.get(i)
+        if handle_errors:
+            try:
+                recording = recording_container.get(i)
+            except BaseException as e:
+                log_exception(
+                    e,
+                    "Loading recording {} at {}".format(
+                        i, recording_container[i].source_file
+                    ),
+                )
+                global main_was_error
+                main_was_error = True
+        else:
+            recording = recording_container.get(i)
     else:
         recording = recording_container[i]
+
     for fn in functions:
         # TODO get this right
         if not isinstance(fn, (tuple, list)):
@@ -464,6 +488,7 @@ def run_all_analysis(
     to_load,
     out_dir,
     num_cpus=1,
+    handle_errors=False,
 ):
     """
     Run all of the analysis functions on the recording container.
@@ -488,6 +513,8 @@ def run_all_analysis(
         The directory to save the figures to
     num_cpus : int, optional
         The number of CPUs to use, default is 1.
+    handle_errors : bool, optional
+        Whether to raise errors, default is False.
 
     Returns
     -------
@@ -519,6 +546,7 @@ def run_all_analysis(
                     load_all,
                     to_load,
                     out_dir,
+                    handle_errors,
                 ),
                 callback=final_figs.append,
             )
@@ -542,6 +570,7 @@ def run_all_analysis(
                 load_all,
                 to_load,
                 out_dir,
+                handle_errors,
             ),
 
     if args_fn is not None:
@@ -568,6 +597,9 @@ def run_all_analysis(
     final_figs = save_figures(
         final_figs, out_dir, figure_names=figure_names, verbose=False
     )
+
+    if main_was_error:
+        logging.warning("A handled error occurred while loading files")
 
     return final_figs
 
@@ -638,9 +670,7 @@ def setup_default_params(
 
     if os.path.isfile(param_names["batch"]):
         batch_handler = simuran.param_handler.ParamHandler(
-            in_loc=param_names["batch"],
-            name="params",
-            dirname_replacement=dirname,
+            in_loc=param_names["batch"], name="params", dirname_replacement=dirname,
         )
         param_names["base"] = batch_handler.get("mapping_file", param_names["base"])
         in_dir = batch_handler.get("start_dir", in_dir)
@@ -712,6 +742,7 @@ def analyse_files(
     only_check=False,
     should_modify_path=True,
     num_cpus=1,
+    handle_errors=False,
 ):
     """
     Run the main control functionality.
@@ -781,6 +812,8 @@ def analyse_files(
         is added to path, by default True.
     num_cpus : int, optional
         The number of worker CPUs to launch, by default 1.
+    handle_errors : bool, optional
+        Whether to raise errors, default is False.
 
     Returns
     -------
@@ -850,6 +883,7 @@ def analyse_files(
         to_load,
         out_dir,
         num_cpus=num_cpus,
+        handle_errors=handle_errors,
     )
 
     recording_container.save_summary_data(
@@ -981,9 +1015,7 @@ def run(
             modify_path(site_dir, verbose=verbose)
             should_modify_path = False
         setup_ph = simuran.param_handler.ParamHandler(
-            in_loc=param_names["fn"],
-            name="fn_params",
-            dirname_replacement=dirname,
+            in_loc=param_names["fn"], name="fn_params", dirname_replacement=dirname,
         )
         list_of_functions = setup_ph["run"]
         save_list = setup_ph["save"]
@@ -995,6 +1027,7 @@ def run(
         to_load = setup_ph.get("to_load", ["signals", "spatial", "units"])
         load_all = setup_ph.get("load_all", True)
         select_recordings = setup_ph.get("select_recordings", True)
+        handle_errors = setup_ph.get("handle_errors", False)
     else:
         raise FileNotFoundError(
             "Please create a file listing params at {}".format(fn_param_loc)
@@ -1002,9 +1035,7 @@ def run(
 
     if os.path.isfile(param_names["batch"]):
         batch_handler = simuran.param_handler.ParamHandler(
-            in_loc=param_names["batch"],
-            name="params",
-            dirname_replacement=dirname,
+            in_loc=param_names["batch"], name="params", dirname_replacement=dirname,
         )
         in_dir = batch_handler.get("start_dir", in_dir)
     else:
@@ -1036,5 +1067,5 @@ def run(
         only_check=only_check,
         should_modify_path=should_modify_path,
         num_cpus=num_cpus,
-        dirname=dirname,
+        handle_errors=handle_errors,
     )
