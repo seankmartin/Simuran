@@ -213,9 +213,7 @@ class EegArray(GenericContainer):
 
         """
         signals = self
-        mne_array = self.convert_signals_to_mne(
-            ch_names=ch_names,
-        )
+        mne_array = self.convert_signals_to_mne(ch_names=ch_names,)
 
         n_channels = kwargs.get("n_channels", len(signals))
         kwargs["duration"] = duration

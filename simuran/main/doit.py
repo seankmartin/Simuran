@@ -35,7 +35,9 @@ def create_task(batch_file, analysis_functions=[], num_workers=1, dirname=""):
         os.path.abspath(os.path.join(os.path.dirname(batch_file), "..", "analysis")),
         verbose=False,
     )
-    run_dict = ParamHandler(in_loc=batch_file, name="params")
+    run_dict = ParamHandler(
+        in_loc=batch_file, name="params", dirname_replacement=dirname
+    )
     dependencies = []
 
     fnames = []

@@ -151,10 +151,7 @@ def populate_table_directories(filename, dir_to_start, ext=None, re_filter=None)
         new_df["Filename"] = new_df["Filename"].apply(mod_col)
 
     file_dict, no_match, multi_match = get_base_dir_to_files(
-        new_df["Filename"].values,
-        dir_to_start,
-        ext=ext,
-        re_filter=re_filter,
+        new_df["Filename"].values, dir_to_start, ext=ext, re_filter=re_filter,
     )
 
     def new_col_maker(item):
