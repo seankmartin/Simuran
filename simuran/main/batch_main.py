@@ -208,7 +208,7 @@ def batch_run(
 
     start_time = time.monotonic()
     dirname = kwargs.get("dirname", "")
-    run_path_to_use = os.path.dirname(run_dict_loc) if dirname == "" else dirname
+    run_path_to_use = os.path.dirname(run_dict_loc)
     modify_path(
         os.path.abspath(os.path.join(run_path_to_use, "..", "analysis")),
         verbose=kwargs.get("verbose", False),
