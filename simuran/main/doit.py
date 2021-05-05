@@ -36,7 +36,7 @@ def create_task(batch_file, analysis_functions=[], num_workers=1, dirname=""):
         verbose=False,
     )
     run_dict = ParamHandler(
-        in_loc=batch_file, name="params", dirname_replacement=dirname
+        in_loc=batch_file, name="params", dirname_replacement=""
     )
     dependencies = []
 
