@@ -88,7 +88,7 @@ def save_unclosed_figures(out_dir):
         plt.close(f)
 
 
-def check_input_params(location, batch_name):
+def check_input_params(location, batch_name, dirname_replacement=""):
     """
     Check the configuration parameters and create a batch setup.
 
@@ -113,11 +113,15 @@ def check_input_params(location, batch_name):
 
     """
     if os.path.isdir(location):
-        batch_setup = simuran.batch_setup.BatchSetup(location, fpath=batch_name)
+        batch_setup = simuran.batch_setup.BatchSetup(
+            location, fpath=batch_name, dirname_replacement=dirname_replacement
+        )
         full_param_loc = batch_setup.ph.get("mapping_file", "")
 
         record_params = simuran.param_handler.ParamHandler(
-            in_loc=full_param_loc, name="mapping"
+            in_loc=full_param_loc,
+            name="mapping",
+            dirname_replacement=dirname_replacement,
         )
         if record_params["loader"] == "params_only":
             raise ValueError(
@@ -126,7 +130,7 @@ def check_input_params(location, batch_name):
         return batch_setup
     elif os.path.isfile(location):
         record_params = simuran.param_handler.ParamHandler(
-            in_loc=location, name="mapping"
+            in_loc=location, name="mapping", dirname_replacement=dirname_replacement
         )
         if record_params["loader"] == "params_only":
             raise ValueError(
@@ -743,6 +747,7 @@ def analyse_files(
     should_modify_path=True,
     num_cpus=1,
     handle_errors=False,
+    dirname="",
 ):
     """
     Run the main control functionality.
@@ -814,6 +819,8 @@ def analyse_files(
         The number of worker CPUs to launch, by default 1.
     handle_errors : bool, optional
         Whether to raise errors, default is False.
+    dirname : str, optional
+        What to replace __dirname__ by in config files.
 
     Returns
     -------
@@ -835,7 +842,7 @@ def analyse_files(
 
     """
     in_dir = location if os.path.isdir(location) else os.path.dirname(location)
-    batch_setup = check_input_params(location, batch_name)
+    batch_setup = check_input_params(location, batch_name, dirname_replacement=dirname)
     batch_params = batch_setup.ph
     out_dir, out_name = set_output_locations(batch_name, function_config_path)
     out_loc = os.path.join(out_dir, out_name)
@@ -848,6 +855,7 @@ def analyse_files(
 
     if do_batch_setup:
         # TODO let the interactive be controllable
+        # TODO check this still works with many code changes
         if not batch_control_setup(
             batch_setup, only_check, do_interactive=False, verbose=verbose
         ):
@@ -1068,4 +1076,5 @@ def run(
         should_modify_path=should_modify_path,
         num_cpus=num_cpus,
         handle_errors=handle_errors,
+        dirname=dirname,
     )

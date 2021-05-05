@@ -13,16 +13,6 @@ class BatchSetup(object):
     """
     Help managing parameters for running batch operations.
 
-    Attributes
-    ----------
-    in_dir : str
-        The path to the directory to start batch operations in.
-    fpath : str
-        The path to the parameter file describing the behaviour.
-    only_check: bool
-        Whether files should actually be written out,
-        or just have the paths that would be written to printed out.
-
     Parameters
     ----------
     in_dir : str
@@ -33,6 +23,20 @@ class BatchSetup(object):
         This should describe how batch_setup will behave.
     ph : simuran.params.ParamHandler
         A param handler that holds the configuration.
+    dirname_replacement : str
+        What to replace "__dirname__" by in config files
+    
+    Attributes
+    ----------
+    in_dir : str
+        The path to the directory to start batch operations in.
+    fpath : str
+        The path to the parameter file describing the behaviour.
+    only_check : bool
+        Whether files should actually be written out,
+        or just have the paths that would be written to printed out.
+    dirname_replacement : str
+        What to replace "__dirname__" by in config files
     _bad_file : bool
         True if the file passed is not valid, or not passed.
 
@@ -47,7 +51,7 @@ class BatchSetup(object):
         batch_setup.write_batch_params()
     """
 
-    def __init__(self, in_dir, fpath="simuran_batch_params.py"):
+    def __init__(self, in_dir, fpath="simuran_batch_params.py", dirname_replacement=""):
         """See help(BatchSetup)."""
         super().__init__()
         self.in_dir = in_dir
@@ -56,6 +60,7 @@ class BatchSetup(object):
                 self.file_loc = os.path.join(self.in_dir, fpath)
         else:
             self.file_loc = fpath
+        self.dirname_replacement = dirname_replacement
         self.setup()
         self.only_check = False
 
@@ -77,7 +82,11 @@ class BatchSetup(object):
 
     def setup(self):
         """Call on initialisation."""
-        self.ph = ParamHandler(in_loc=self.file_loc, name="params")
+        self.ph = ParamHandler(
+            in_loc=self.file_loc,
+            name="params",
+            dirname_replacement=self.dirname_replacement,
+        )
         self._bad_file = self.ph["mapping_file"] is None
         if not self._bad_file:
             self._bad_file = not os.path.isfile(self.ph["mapping_file"])
