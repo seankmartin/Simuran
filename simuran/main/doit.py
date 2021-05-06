@@ -76,11 +76,11 @@ def create_task(batch_file, analysis_functions=[], num_workers=1, dirname=""):
         )
     ]
     if dirname != "":
-        action = "simuran -r -m -n {} --dirname {} {}".format(
+        action = "simuran -r -m -o -n {} --dirname {} {}".format(
             num_workers, dirname, batch_file
         )
     else:
-        action = "simuran -r -m -n {} {}".format(num_workers, batch_file)
+        action = "simuran -r -m -o -n {} {}".format(num_workers, batch_file)
 
     def clean():
         run_dict_ = ParamHandler(in_loc=batch_file, name="params")

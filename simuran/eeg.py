@@ -1,5 +1,6 @@
 import os
 import re
+from copy import deepcopy
 
 from simuran.base_signal import BaseSignal
 from simuran.base_container import GenericContainer
@@ -74,10 +75,11 @@ class Eeg(BaseSignal):
             np.array(self.samples.to(u.V)), self.sampling_rate, low, high, **kwargs
         )
         if not inplace:
-            eeg = Eeg(filtered_data * u.V, self.sampling_rate)
+            eeg = deepcopy(self)
+            eeg.samples = (filtered_data * u.V).to(u.mV)
             return eeg
         else:
-            self.samples = filtered_data * u.V
+            self.samples = filtered_data * u.V.to(u.mV)
             return self
 
     def compare_filters(self, *filters, **plot_args):
