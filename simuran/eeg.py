@@ -1,6 +1,4 @@
 import os
-import re
-from copy import deepcopy
 
 from simuran.base_signal import BaseSignal
 from simuran.base_container import GenericContainer
@@ -46,41 +44,6 @@ class Eeg(BaseSignal):
             name = "{} - {}".format(self.region, name)
 
         return name
-
-    def filter(self, low, high, inplace=False, **kwargs):
-        """
-        Filter the signal.
-
-        Parameters
-        ----------
-        low : float
-            The low frequency for filtering.
-        high : float
-            The high frequency for filtering.
-        inplace : bool, optional
-            Whether to perform the operation in place, by default False
-
-        Keyword arguments
-        -----------------
-        See https://mne.tools/stable/generated/mne.filter.filter_data.html
-
-        Returns
-        -------
-        simuran.eeg.Eeg
-            The filtered signal.
-
-        """
-        kwargs["copy"] = not inplace
-        filtered_data = mne.filter.filter_data(
-            np.array(self.samples.to(u.V)), self.sampling_rate, low, high, **kwargs
-        )
-        if not inplace:
-            eeg = deepcopy(self)
-            eeg.samples = (filtered_data * u.V).to(u.mV)
-            return eeg
-        else:
-            self.samples = filtered_data * u.V.to(u.mV)
-            return self
 
     def compare_filters(self, *filters, **plot_args):
         """

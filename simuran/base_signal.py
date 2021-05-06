@@ -1,5 +1,6 @@
 """Module to hold the abstract class setting up information held in a signal."""
 import math
+from copy import deepcopy
 
 from simuran.base_class import BaseSimuran
 
@@ -103,6 +104,41 @@ class BaseSignal(BaseSimuran):
             return self.samples[start:stop:step]
         else:
             return self.samples[start:stop]
+
+    def filter(self, low, high, inplace=False, **kwargs):
+        """
+        Filter the signal.
+
+        Parameters
+        ----------
+        low : float
+            The low frequency for filtering.
+        high : float
+            The high frequency for filtering.
+        inplace : bool, optional
+            Whether to perform the operation in place, by default False
+
+        Keyword arguments
+        -----------------
+        See https://mne.tools/stable/generated/mne.filter.filter_data.html
+
+        Returns
+        -------
+        simuran.eeg.Eeg
+            The filtered signal.
+
+        """
+        kwargs["copy"] = not inplace
+        filtered_data = mne.filter.filter_data(
+            np.array(self.samples.to(u.V)), self.sampling_rate, low, high, **kwargs
+        )
+        if not inplace:
+            eeg = deepcopy(self)
+            eeg.samples = (filtered_data * u.V).to(u.mV)
+            return eeg
+        else:
+            self.samples = (filtered_data * u.V).to(u.mV)
+            return self
 
     def get_duration(self):
         """Get the length of the signal in the unit of timestamps."""
