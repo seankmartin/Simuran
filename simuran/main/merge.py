@@ -118,27 +118,32 @@ def csv_merge(in_dir, keep_headers=True, insert_newline=True, stats=True, delim=
                             except BaseException:
                                 to_write = np.nan
                             data[i, j] = to_write
-                    check = data[-1]
-                    if np.sum(check) == 0:
-                        raise RuntimeError(
-                            "Excel sheet to merge has trailing blank lines"
+                    if np.sum(data) == 0:
+                        print("No data to average in merge")
+                    else:
+                        check = data[-1]
+                        if np.sum(check) == 0:
+                            raise RuntimeError(
+                                "Excel sheet to merge has trailing blank lines"
+                            )
+                        with warnings.catch_warnings():
+                            warnings.filterwarnings(
+                                action="ignore", message="Mean of empty slice"
+                            )
+                            warnings.filterwarnings(
+                                action="ignore",
+                                message="Degrees of freedom <= 0 for slice.",
+                            )
+                            avg = np.nanmean(data, axis=0)
+                            std = np.nanstd(data, axis=0)
+                        avg_str = (
+                            "Average," + "," + ",".join(str(val) for val in avg) + "\n"
                         )
-                    with warnings.catch_warnings():
-                        warnings.filterwarnings(
-                            action="ignore", message="Mean of empty slice"
+                        std_str = (
+                            "Std," + "," + ",".join(str(val) for val in std) + "\n"
                         )
-                        warnings.filterwarnings(
-                            action="ignore",
-                            message="Degrees of freedom <= 0 for slice.",
-                        )
-                        avg = np.nanmean(data, axis=0)
-                        std = np.nanstd(data, axis=0)
-                    avg_str = (
-                        "Average," + "," + ",".join(str(val) for val in avg) + "\n"
-                    )
-                    std_str = "Std," + "," + ",".join(str(val) for val in std) + "\n"
-                    output.write(avg_str)
-                    output.write(std_str)
+                        output.write(avg_str)
+                        output.write(std_str)
 
                 if insert_newline:
                     output.write("\n")

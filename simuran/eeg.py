@@ -100,7 +100,7 @@ class EegArray(GenericContainer):
     def __init__(self):
         super().__init__(Eeg)
 
-    def convert_signals_to_mne(self, ch_names=None):
+    def convert_signals_to_mne(self, ch_names=None, verbose=True):
         """
         Convert an iterable of signals to MNE raw array.
 
@@ -117,6 +117,11 @@ class EegArray(GenericContainer):
             The data converted to MNE format
 
         """
+        if not verbose:
+            verbose = "WARNING"
+        else:
+            verbose = None
+
         signals = self
         if ch_names is None:
             ch_names = [eeg.default_name() for eeg in signals]
@@ -127,7 +132,7 @@ class EegArray(GenericContainer):
         ch_types = [eeg.get_channel_type() for eeg in signals]
 
         info = mne.create_info(ch_names=ch_names, sfreq=sfreq, ch_types=ch_types)
-        raw = mne.io.RawArray(raw_data, info=info)
+        raw = mne.io.RawArray(raw_data, info=info, verbose=verbose)
 
         return raw
 
@@ -178,7 +183,7 @@ class EegArray(GenericContainer):
 
         """
         signals = self
-        mne_array = self.convert_signals_to_mne(ch_names=ch_names,)
+        mne_array = self.convert_signals_to_mne(ch_names=ch_names, verbose=False)
 
         n_channels = kwargs.get("n_channels", len(signals))
         kwargs["duration"] = duration
@@ -213,10 +218,10 @@ class EegArray(GenericContainer):
                 chpi=1e-4,
                 whitened=1e2,
             )
-            max_val = 1.2 * np.max(np.abs(mne_array.get_data(stop=15)[0]))
+            max_val = 1.8 * np.max(np.abs(mne_array.get_data(stop=duration)))
             scalings["eeg"] = max_val
             kwargs["scalings"] = scalings
-        fig = mne_array.plot(**kwargs)
+        fig = mne_array.plot(verbose="ERROR", **kwargs)
 
         return fig
 
