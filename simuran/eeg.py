@@ -100,7 +100,7 @@ class EegArray(GenericContainer):
     def __init__(self):
         super().__init__(Eeg)
 
-    def convert_signals_to_mne(self, ch_names=None, verbose=True):
+    def convert_signals_to_mne(self, ch_names=None, verbose=True, bad_chans=None):
         """
         Convert an iterable of signals to MNE raw array.
 
@@ -110,6 +110,8 @@ class EegArray(GenericContainer):
             The signals to convert
         ch_names : Iterable of str, optional
             Channel names, by default None
+        bad_chans : list of object, optional
+            A list of SIMURAN channels that are bad.
 
         Returns
         -------
@@ -134,6 +136,14 @@ class EegArray(GenericContainer):
         info = mne.create_info(ch_names=ch_names, sfreq=sfreq, ch_types=ch_types)
         raw = mne.io.RawArray(raw_data, info=info, verbose=verbose)
 
+        mne_bad = []
+        if bad_chans is not None:
+            for i in bad_chans:
+                for j in range(len(signals)):
+                    if signals[j].channel == i:
+                        mne_bad.append(raw.info["ch_names"][j])
+        raw.info["bads"] = mne_bad
+
         return raw
 
     def plot(
@@ -146,6 +156,7 @@ class EegArray(GenericContainer):
         duration=100,
         proj=False,
         show=True,
+        bad_chans=None,
         **kwargs
     ):
         """
@@ -171,6 +182,8 @@ class EegArray(GenericContainer):
             Whether to project the signals, by default False
         show : bool, optional
             Whether to show the plot in interactive mode, by default True
+        bad_chans : list of int, optional
+            The bad channels in the array (plotted in red) - by channel.
 
         Keyword arguments
         -----------------
@@ -183,7 +196,9 @@ class EegArray(GenericContainer):
 
         """
         signals = self
-        mne_array = self.convert_signals_to_mne(ch_names=ch_names, verbose=False)
+        mne_array = self.convert_signals_to_mne(
+            ch_names=ch_names, verbose=False, bad_chans=bad_chans
+        )
 
         n_channels = kwargs.get("n_channels", len(signals))
         kwargs["duration"] = duration
