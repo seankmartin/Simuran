@@ -21,3 +21,4 @@ from .spatial import Spatial
 from .analysis.analysis_handler import AnalysisHandler
 from .plot.figure import SimuranFigure
 from .plot.base_plot import save_simuran_plot, setup_ax
+from .base_container import GenericContainer
