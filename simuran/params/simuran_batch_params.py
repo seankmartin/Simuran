@@ -3,6 +3,7 @@
 import os
 
 # Where to start running batch analysis from
+# The magic string __dirname__, is replaced by a directory name that is passed through command line
 start_dir = "__dirname__"
 
 # regex_filters should be a list of regex patterns to match against.
@@ -22,8 +23,8 @@ interactive = True
 # mapping directly specifies parameters, so mapping_file is preferred
 mapping = {}  # see default_params.py to set this up
 
-# The magic string __dirname__, is replaced by the directory this file is in
-directory = "__dirname__"
+# The magic string __thisdirname__ is also available, which is replaced by the directory that this file is in.
+directory = "__thisdirname__"
 # Absolute path to a file that contains the mapping.
 mapping_file = os.path.abspath(os.path.join(directory, "simuran_base_params.py"))
 

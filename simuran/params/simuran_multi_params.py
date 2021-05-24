@@ -36,8 +36,8 @@ def set_file_locations():
 
     output.append(
         (
-            os.path.join("__dirname__", "simuran_batch_params.py"),
-            os.path.join("__dirname__", "simuran_fn_params.py"),
+            os.path.join("__thisdirname__", "simuran_batch_params.py"),
+            os.path.join("__thisdirname__", "simuran_fn_params.py"),
             "name_for_cell_and_file_outputs",
         )
     )
@@ -58,6 +58,9 @@ def set_fixed_params(in_dict):
     # For example, this could be used to concatenate
     # EEG signals that were recorded in two second long trials
     in_dict["keep_all_data"] = False
+
+    # What folders to merge after running, as a list of string folder names
+    in_dict["to_merge"] = None
 
     return in_dict
 

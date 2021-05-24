@@ -3,6 +3,7 @@
 import os
 
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 import skm_pyutils.py_path
 
@@ -131,3 +132,15 @@ def save_simuran_plot(fig, save_location, **kwargs):
     fig.savefig(save_location, dpi=dpi, bbox_inches=bbox_inches, pad_inches=pad_inches)
 
     return save_location
+
+def despine():
+    """Despine the current plot with trimming."""
+    sns.despine(offset=0, trim=True)
+
+
+def set_plot_style(palette="dark"):
+    """Set the seaborn palette and style."""
+    sns.set_palette(palette)
+    sns.set_context(
+        "paper", font_scale=1.4, rc={"lines.linewidth": 3.2},
+    )
