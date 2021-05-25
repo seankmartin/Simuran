@@ -97,7 +97,10 @@ class SimuranFigure(object):
     def close(self):
         """Close the underlying figure if not closed."""
         if not self.closed:
-            plt.close(self.figure)
+            try:
+                plt.close(self.figure)
+            except BaseException:
+                self.figure.close()
             self.closed = True
 
     def isdone(self):
