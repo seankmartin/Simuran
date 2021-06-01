@@ -228,7 +228,7 @@ class ParamHandler(object):
                     print(d)
                 return dirs
             else:
-                print("Would copy {} to:".format(exact_file))
+                print("Would copy {} to {} folders:".format(exact_file, len(dirs)))
                 for d in dirs:
                     print(d)
                 return dirs
