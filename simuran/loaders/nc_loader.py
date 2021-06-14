@@ -114,6 +114,8 @@ class NCLoader(BaseLoader):
 
         """
         # Currently only implemented for Axona systems
+        error_on_missing = self.load_params.get("enforce_data", True)
+
         if self.load_params["system"] == "Axona":
 
             # Find the set file if a directory is passed
@@ -160,9 +162,12 @@ class NCLoader(BaseLoader):
             for tetrode in tet_groups:
                 spike_name = filename + "." + str(tetrode)
                 if not os.path.isfile(spike_name):
-                    raise ValueError(
-                        "Axona data is not available for {}".format(spike_name)
-                    )
+                    e_msg = "Axona data is not available for {}".format(spike_name)
+                    if error_on_missing:
+                        raise ValueError(e_msg)
+                    else:
+                        print("Warning: " + e_msg)
+                        
                 spike_names_all.append(spike_name)
 
                 cut_name = filename + "_" + str(tetrode) + cluster_extension
@@ -203,14 +208,20 @@ class NCLoader(BaseLoader):
                     if os.path.exists(base_sig_name + str(c)):
                         signal_names.append(base_sig_name + str(c))
                     else:
-                        raise ValueError(
-                            "{} does not exist".format(base_sig_name + str(c))
-                        )
+                        e_msg = "{} does not exist".format(base_sig_name + str(c))
+                        if error_on_missing:
+                            raise ValueError(e_msg)
+                        else:
+                            print("Warning: " + e_msg)
                 else:
                     if os.path.exists(base_sig_name):
                         signal_names.append(base_sig_name)
                     else:
-                        raise ValueError("{} does not exist".format(base_sig_name))
+                        e_msg = "{} does not exist".format(base_sig_name)
+                        if error_on_missing:
+                            raise ValueError(e_msg)
+                        else:
+                            print("Warning: " + e_msg)
 
             file_locs = {
                 "Spike": spike_names_all,

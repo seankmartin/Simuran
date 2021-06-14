@@ -25,7 +25,7 @@ def multiprocessing_func(
 ):
     # TODO printing would have to be stored and done at the end
     print(
-        "--------------------SIMURAN Batch Iteration {}--------------------".format(i)
+        "--------------------SIMURAN Batch Iteration {}--------------------".format(i+1)
     )
     run_dict, batch_param_loc, fn_param_loc = get_dict_entry(
         run_dict_list, function_to_use, i
