@@ -24,6 +24,7 @@ pip install -e .
 
 ## Requirements
 Listed in requirements.txt.
+Just in case version conflicts come up, the last known set of working packages is in frozen.txt
 
 ## Ideas
 Interface with other programs such as SpikeInterface to allow for many different systems and sorters to be used.
