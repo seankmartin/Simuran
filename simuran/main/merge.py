@@ -38,7 +38,7 @@ def merge_files(in_dir, all_result_ext=None):
     for d in dirs:
         name = d[len(in_dir) :]
         name = "--".join(name.split(os.sep))
-        print("Copying contents of {}".format(d))
+        # print("Copying contents of {}".format(d))
         all_files = get_all_files_in_dir(
             d, ext=all_result_ext, recursive=True, return_absolute=True
         )
@@ -83,12 +83,12 @@ def csv_merge(in_dir, keep_headers=True, insert_newline=True, stats=True, delim=
     data_start_col = 2
     csv_files = get_all_files_in_dir(in_dir, ext="csv", recursive=True)
     o_name = os.path.join(in_dir, "merge.csv")
-    print("Merging results into {}".format(o_name))
+    print("Merging csv results into {}".format(o_name))
     if os.path.isfile(o_name):
         csv_files = csv_files[1:]
     with open(o_name, "w") as output:
         for i, f in enumerate(csv_files):
-            print("Merging {}".format(f))
+            # print("Merging {}".format(f))
             with open(f, "r") as open_file:
                 file_data = open_file.read()
                 lines = file_data.split("\n")
