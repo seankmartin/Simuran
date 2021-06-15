@@ -24,6 +24,8 @@ class RecordingContainer(AbstractContainer):
         The index of the last loaded recording.
     base_dir : str
         The base directory where the recording files are stored.
+    invalid_recording_locations : list of str
+        Paths to recordings that could not be set up.
 
     Parameters
     ----------
@@ -41,6 +43,7 @@ class RecordingContainer(AbstractContainer):
         self.last_loaded = Recording()
         self.last_loaded_idx = None
         self.base_dir = None
+        self.invalid_recording_locations = []
 
     def auto_setup(
         self,
@@ -93,7 +96,7 @@ class RecordingContainer(AbstractContainer):
             if (os.path.dirname(fname) in dirs)
             and (os.path.basename(fname) == param_name)
         ]
-        return self.setup(fnames, start_dir)
+        return self.setup(fnames, start_dir, verbose=verbose)
 
     def setup(self, param_files, start_dir=None, verbose=False):
         """
@@ -116,6 +119,7 @@ class RecordingContainer(AbstractContainer):
         """
         should_load = not self.load_on_fly
         out_str_load = "Loading" if should_load else "Parsing"
+        good_param_files = []
         for i, param_file in enumerate(param_files):
             if verbose:
                 print(
@@ -127,13 +131,15 @@ class RecordingContainer(AbstractContainer):
             if not recording.valid:
                 if verbose:
                     print("Last recording was invalid, not adding to container")
+                self.invalid_recording_locations.append(param_file)
             else:
                 self.append(recording)
+                good_param_files.append(param_file)
 
         if start_dir is not None:
             self.base_dir = start_dir
 
-        return param_files
+        return good_param_files
 
     def get(self, idx):
         """
@@ -197,6 +203,9 @@ class RecordingContainer(AbstractContainer):
                 unit_l.append(u.units_to_use)
             all_units.append(unit_l)
         return all_units
+
+    def get_invalid_locations(self):
+        return self.invalid_recording_locations
 
     def subsample(self, idx_list=None, interactive=False, prop=None, inplace=False):
         """

@@ -1,5 +1,6 @@
 """This module handles interfacing with NeuroChaT."""
 import os
+import logging
 
 from neurochat.nc_lfp import NLfp
 from neurochat.nc_spatial import NSpatial
@@ -166,8 +167,9 @@ class NCLoader(BaseLoader):
                     if error_on_missing:
                         raise ValueError(e_msg)
                     else:
-                        print("Warning: " + e_msg)
-                        
+                        logging.warning(e_msg)
+                        return None, base
+
                 spike_names_all.append(spike_name)
 
                 cut_name = filename + "_" + str(tetrode) + cluster_extension
@@ -212,7 +214,8 @@ class NCLoader(BaseLoader):
                         if error_on_missing:
                             raise ValueError(e_msg)
                         else:
-                            print("Warning: " + e_msg)
+                            logging.warning(e_msg)
+                            return None, base
                 else:
                     if os.path.exists(base_sig_name):
                         signal_names.append(base_sig_name)
@@ -221,7 +224,8 @@ class NCLoader(BaseLoader):
                         if error_on_missing:
                             raise ValueError(e_msg)
                         else:
-                            print("Warning: " + e_msg)
+                            logging.warning(e_msg)
+                            return None, base
 
             file_locs = {
                 "Spike": spike_names_all,
