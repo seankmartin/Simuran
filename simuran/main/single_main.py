@@ -10,6 +10,7 @@ import multiprocessing
 from copy import copy
 from datetime import datetime
 import logging
+from pprint import pformat
 
 from tqdm import tqdm
 import matplotlib.pyplot as plt
@@ -456,6 +457,7 @@ def multiprocessing_func(
                 )
                 global main_was_error
                 main_was_error = True
+                return figures
         else:
             recording = recording_container.get(i)
     else:
@@ -913,6 +915,17 @@ def analyse_files(
     print(
         "Operation completed in {:.2f}mins".format((time.monotonic() - start_time) / 60)
     )
+
+    if len(recording_container.get_invalid_locations()) > 0:
+        logging.warning(
+            pformat(
+                "Loaded {} recordings and skipped loading from {} locations:\n {}".format(
+                    len(recording_container),
+                    len(recording_container.get_invalid_locations()),
+                    recording_container.get_invalid_locations(),
+                )
+            )
+        )
 
     return results, recording_container
 

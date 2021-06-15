@@ -1,6 +1,7 @@
 """This module holds single experiment related information."""
 import os
 import numpy as np
+import logging
 
 from simuran.base_class import BaseSimuran
 from simuran.param_handler import ParamHandler
@@ -333,7 +334,7 @@ class Recording(BaseSimuran):
             )
             if fnames is None:
                 self.valid = False
-                print("Invalid recording setup from {}".format(base))
+                logging.warning("Invalid recording setup from {}".format(base))
                 return
             self.source_file = base
 
