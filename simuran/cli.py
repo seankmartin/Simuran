@@ -1,8 +1,18 @@
 """A command line interface into SIMURAN."""
 import argparse
+import os
+import logging
+
 import simuran.main
 import simuran.batch_setup
-import os
+from skm_pyutils.py_log import setup_text_logging, get_default_log_loc
+
+
+def establish_logger(loglevel, params):
+    fname = get_default_log_loc("simuran_cli.log")
+    setup_text_logging(None, loglevel, fname, append=True)
+
+    logging.info("New run with params {}".format(params))
 
 
 def main():
@@ -113,8 +123,17 @@ def main():
         default="",
         help="Directory to replace __dirname__ by in parameter files.",
     )
+    parser.add_argument(
+        "--log",
+        type=str,
+        default="warning",
+        help="Log level (e.g. debug, or warning) or the numeric value (20 is info)"
+    )
 
     parsed, unparsed = parser.parse_known_args()
+
+    establish_logger(parsed.log, parsed)
+
     if parsed.dummy is True:
         parsed.skip_batch_setup = False
 
