@@ -23,7 +23,7 @@ def get_dict_entry(run_dict_list, function_to_use, index):
 def multiprocessing_func(
     i, run_dict_list, function_to_use, kwargs, handle_errors, save_info, keep_container,
 ):
-    # TODO printing would have to be stored and done at the end
+    # TODO printing would have to be stored and done at the end for multi worker
     print(
         "--------------------SIMURAN Batch Iteration {}--------------------".format(i+1)
     )

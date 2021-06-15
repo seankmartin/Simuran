@@ -63,3 +63,9 @@ SIMURAN can use any code that is on the Python path. The easiest way to manage t
 2. https://github.com/SpikeInterface
 3. https://github.com/seankmartin/NeuroChaT_API_Scripts
 4. https://github.com/mne-tools/mne-python/
+
+## Todo List
+1. TODO check todo within code.
+2. TODO turn back on the analysis tests
+3. TODO Create more tests for core elements, such as figures.
+4. TODO Clean up CLI, too many arguments currently. Could probably split into other scripts.

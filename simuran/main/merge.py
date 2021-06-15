@@ -82,7 +82,10 @@ def csv_merge(in_dir, keep_headers=True, insert_newline=True, stats=True, delim=
     """
     data_start_col = 2
     csv_files = get_all_files_in_dir(in_dir, ext="csv", recursive=True)
-    o_name = os.path.join(in_dir, "merge.csv")
+    try:
+        o_name = os.path.join(in_dir, f"merge--{os.path.basename(in_dir)}.csv")
+    except BaseException:
+        o_name = os.path.join(in_dir, f"merge.csv")
     print("Merging csv results into {}".format(o_name))
     if os.path.isfile(o_name):
         csv_files = csv_files[1:]
@@ -119,7 +122,9 @@ def csv_merge(in_dir, keep_headers=True, insert_newline=True, stats=True, delim=
                                 to_write = np.nan
                             data[i, j] = to_write
                     if np.sum(data) == 0:
-                        print("No data to average in merge")
+                        # print("No data to average in merge")
+                        # Added pass to make code valid
+                        pass
                     else:
                         check = data[-1]
                         if np.sum(check) == 0:

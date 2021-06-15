@@ -908,9 +908,10 @@ def analyse_files(
     )
     save_unclosed_figures(out_dir)
 
-    results = recording_container.data_from_attr_list(
-        attributes_to_save, friendly_names=friendly_names, decimals=decimals
-    )
+    # results = recording_container.data_from_attr_list(
+    #     attributes_to_save, friendly_names=friendly_names, decimals=decimals
+    # )
+    results = recording_container.get_results()
 
     print(
         "Operation completed in {:.2f}mins".format((time.monotonic() - start_time) / 60)
