@@ -147,6 +147,9 @@ save_list, output_names = setup_output()
 figs, fig_names = setup_figures()
 sort_fn = setup_sorting()
 load_all, to_load, select_recordings = setup_loading()
+
+# Whether to skip failed runs, or crash the program
+handle_errors = False
 fn_params = {
     "run": functions,
     "args": args_func,
@@ -158,4 +161,5 @@ fn_params = {
     "load_all": load_all,
     "to_load": to_load,
     "select_recordings": select_recordings,
+    "handle_errors": handle_errors,
 }
