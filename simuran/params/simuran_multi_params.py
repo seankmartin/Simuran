@@ -65,10 +65,14 @@ def set_fixed_params(in_dict):
     return in_dict
 
 
+import os
 # Setup the actual parameters
-params = {"run_list": []}
+params = {"run_list": [], "to_merge": []}
 params = set_fixed_params(params)
 
 for val in set_file_locations():
     param_dict = create_new_entry(val[0], val[1], val[2])
+    fn_name = os.path.splitext(os.path.basename(val[1]))[0]
+    if fn_name not in params["to_merge"]:
+        params["to_merge"].append(fn_name)
     params["run_list"].append(param_dict)
