@@ -1,6 +1,7 @@
 """This module handles interfacing with NeuroChaT."""
 import os
 import logging
+from copy import deepcopy
 
 from neurochat.nc_lfp import NLfp
 from neurochat.nc_spatial import NSpatial
@@ -75,7 +76,7 @@ class NCLoader(BaseLoader):
         if clust_name is not None:
             self.single_unit = NSpike()
             self.single_unit.load(fname, self.load_params["system"])
-            waveforms = self.single_unit.get_waveform()
+            waveforms = deepcopy(self.single_unit.get_waveform())
             for chan, val in waveforms.items():
                 waveforms[chan] = val * u.uV
             return {
