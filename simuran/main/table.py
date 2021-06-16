@@ -12,7 +12,6 @@ from skm_pyutils.py_table import list_to_df
 from simuran.loaders.loader_list import loaders_dict
 from simuran.recording import Recording
 from simuran.recording_container import RecordingContainer
-from simuran.analysis.custom.nc import stat_per_cell
 from simuran.analysis.analysis_handler import AnalysisHandler
 
 
@@ -189,8 +188,12 @@ def populate_table_directories(filename, dir_to_start, ext=None, re_filter=None)
     return new_df
 
 
-def analyse_cell_list(filename):
+def analyse_cell_list(filename, fn_to_use, headers):
+    """
+    The keys returned from the function must be group_unit.
+    """
     df = pd.read_excel(filename)
+    nrows_original = len(df)
 
     file_list, cell_list, mapping_list = process_paths_from_df(df)
 
@@ -216,21 +219,9 @@ def analyse_cell_list(filename):
     ah = AnalysisHandler()
     for recording in rc:
         # print(f"Recording {recording.source_file} with units {recording.get_set_units_as_dict()}")
-        fn_to_use = stat_per_cell
         ah.add_fn(fn_to_use, recording)
     ah.run_all_fns()
 
-    headers = [
-        "Directory",
-        "Filename",
-        "Group",
-        "Unit",
-        "Mean Width",
-        "Firing Rate",
-        "Median ISI",
-        "Std ISI",
-        "CV ISI",
-    ]
     result_list = []
     last_order = -1
 
@@ -243,7 +234,6 @@ def analyse_cell_list(filename):
             last_order = order
         fname = rc[i].source_file
         dirname, basename = os.path.split(fname)
-        last = []
         first = []
         for result_key, result_val in val.items():
             group, unit = result_key.split("_")
@@ -253,18 +243,20 @@ def analyse_cell_list(filename):
                 basename,
                 group,
                 unit,
-                result_val[0],
-                result_val[1],
-                result_val[2],
-                result_val[3],
-                result_val[4],
+                *result_val
             ]
             result_list.append(first)
 
         # merger.append(PdfFileReader(os.path.join("pdfs", f"waveforms_{i+1}.pdf")))
 
     df = list_to_df(in_list=result_list, headers=headers)
+    nrows_new = len(df)
     # merger.write(os.path.join("pdfs", f"merged_result_of_{i+1}.pdf"))
+
+    if nrows_new != nrows_original:
+        print("WARNING: Not all cells were correctly analysed.")
+        print(f"Analysed {nrows_new} cells out of {nrows_original} cells.")
+        print("Please evaluate the result with caution.")
 
     base, ext = os.path.splitext(filename)
     out_fname = base + "_results" + ext
