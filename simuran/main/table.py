@@ -2,10 +2,8 @@
 
 import os
 from pprint import pprint
-from copy import copy
 
 import pandas as pd
-from PyPDF2 import PdfFileMerger, PdfFileReader
 from skm_pyutils.py_path import get_base_dir_to_files, make_path_if_not_exists
 from skm_pyutils.py_table import list_to_df
 
@@ -188,10 +186,25 @@ def populate_table_directories(filename, dir_to_start, ext=None, re_filter=None)
     return new_df
 
 
-def analyse_cell_list(filename, fn_to_use, headers):
+def analyse_cell_list(
+    filename,
+    fn_to_use,
+    headers,
+    after_fn=None,
+    out_dir=None,
+    fn_args=None,
+    fn_kwargs=None,
+):
     """
     The keys returned from the function must be group_unit.
     """
+    if out_dir is None:
+        out_dir = os.path.dirname(filename)
+    if fn_args is None:
+        fn_args = []
+    if fn_kwargs is None:
+        fn_kwargs = {}
+
     df = pd.read_excel(filename)
     nrows_original = len(df)
 
@@ -218,14 +231,12 @@ def analyse_cell_list(filename, fn_to_use, headers):
 
     ah = AnalysisHandler()
     for recording in rc:
-        # print(f"Recording {recording.source_file} with units {recording.get_set_units_as_dict()}")
-        ah.add_fn(fn_to_use, recording)
+        ah.add_fn(fn_to_use, recording, *fn_args, **fn_kwargs)
     ah.run_all_fns()
 
     result_list = []
     last_order = -1
 
-    # merger = PdfFileMerger()
     for i, (key, val) in enumerate(ah.results.items()):
         if i != 0:
             order = int(key.split("_")[-1])
@@ -238,29 +249,26 @@ def analyse_cell_list(filename, fn_to_use, headers):
         for result_key, result_val in val.items():
             group, unit = result_key.split("_")
             group, unit = int(group), int(unit)
-            first = [
-                dirname,
-                basename,
-                group,
-                unit,
-                *result_val
-            ]
+            first = [dirname, basename, group, unit, *result_val]
             result_list.append(first)
-
-        # merger.append(PdfFileReader(os.path.join("pdfs", f"waveforms_{i+1}.pdf")))
 
     df = list_to_df(in_list=result_list, headers=headers)
     nrows_new = len(df)
-    # merger.write(os.path.join("pdfs", f"merged_result_of_{i+1}.pdf"))
 
     if nrows_new != nrows_original:
         print("WARNING: Not all cells were correctly analysed.")
         print(f"Analysed {nrows_new} cells out of {nrows_original} cells.")
         print("Please evaluate the result with caution.")
 
-    base, ext = os.path.splitext(filename)
-    out_fname = base + "_results" + ext
+    base, ext = os.path.splitext(os.path.basename(filename))
+    res_name = "_" + fn_to_use.__name__ + "_results"
+    out_fname = os.path.join(out_dir, base + res_name + ext)
     df.to_excel(out_fname, index=False)
+
+    if after_fn is not None:
+        results = rc.get_results()
+        fnames = rc.get_property("source_file")
+        after_fn([results, fnames], (out_dir, os.path.basename(filename)))
 
     return df
 
