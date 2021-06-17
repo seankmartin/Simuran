@@ -252,6 +252,8 @@ def analyse_cell_list(
             first = [dirname, basename, group, unit, *result_val]
             result_list.append(first)
 
+    if len(headers) != len(result_list[0]):
+        headers = ["Directory", "Filename", "Group", "Unit",] + headers
     df = list_to_df(in_list=result_list, headers=headers)
     nrows_new = len(df)
 
