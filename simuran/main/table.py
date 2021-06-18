@@ -205,10 +205,10 @@ def analyse_cell_list(
     if fn_kwargs is None:
         fn_kwargs = {}
 
-    df = pd.read_excel(filename)
-    nrows_original = len(df)
+    orig_df = pd.read_excel(filename)
+    nrows_original = len(orig_df)
 
-    file_list, cell_list, mapping_list = process_paths_from_df(df)
+    file_list, cell_list, mapping_list = process_paths_from_df(orig_df)
 
     base_dir = os.path.abspath(
         os.path.join(os.path.dirname(filename), "..", "recording_mappings")
@@ -261,10 +261,15 @@ def analyse_cell_list(
         print("WARNING: Not all cells were correctly analysed.")
         print(f"Analysed {nrows_new} cells out of {nrows_original} cells.")
         print("Please evaluate the result with caution.")
+    else:
+        for name, values in orig_df.iteritems():
+            if name not in df.columns:
+                df[name] = values
 
     base, ext = os.path.splitext(os.path.basename(filename))
     res_name = "_" + fn_to_use.__name__ + "_results"
     out_fname = os.path.join(out_dir, base + res_name + ext)
+
     df.to_excel(out_fname, index=False)
 
     if after_fn is not None:
