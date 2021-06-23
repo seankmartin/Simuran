@@ -1060,6 +1060,14 @@ def run(
             in_loc=param_names["batch"], name="params", dirname_replacement=dirname,
         )
         in_dir = batch_handler.get("start_dir", in_dir)
+
+        # Sorting in the batch file or select recordings overwrites the function specs
+        new_sort_fn = batch_handler.get("sorting", None)
+        if new_sort_fn is not None:
+            sort_fn = new_sort_fn
+        new_select_recordings = setup_ph.get("select_recordings", None)
+        if new_select_recordings is not None:
+            select_recordings = new_select_recordings
     else:
         raise FileNotFoundError(
             "Please create a file listing batch behaviour at {}".format(

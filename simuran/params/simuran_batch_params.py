@@ -35,6 +35,42 @@ out_basename = "simuran_params.py"
 # And exist in a child directory of the starting directory
 delete_old_files = False
 
+# Whether a subset of recordings should be considered
+# True opens a console to help choose, but a list of indices can be passed
+# NB overwrites the function selection if present
+select_recordings = False
+
+# Sorting for the container
+# NB overwrites the function selection if present
+def setup_sorting():
+    """If you don't need to do sorting, simply return None."""
+
+    def sort_fn(x):
+        """
+        Establish a sorting function for recordings in a container.
+
+        Note
+        ----
+        "__dirname__" is a magic string that can be used to obtain
+        the absolute path to the directory this file is in
+        so you don't have to hard code it.
+
+        Returns
+        -------
+        object
+            any object with a defined ordering function.
+            for example, an integer
+
+        """
+        in_dir = "__dirname__"
+        comp = x.source_file[len(in_dir) + 1 :]
+        return comp
+
+    # Use return None to do no sorting
+    # return sort_fn
+    return None
+
+sort_fn = setup_sorting()
 params = {
     "start_dir": start_dir,
     "regex_filters": regex_filters,
@@ -45,4 +81,6 @@ params = {
     "mapping_file": mapping_file,
     "out_basename": out_basename,
     "delete_old_files": delete_old_files,
+    "sorting": sort_fn,
+    "select_recordings": select_recordings,
 }
