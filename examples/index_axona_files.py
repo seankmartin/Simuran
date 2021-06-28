@@ -27,7 +27,7 @@ def recording_from_df_line(line):
         "loader": "neurochat",
         "loader_kwargs": {"system": "Axona", "pos_extension": ".txt"},
     }
-    filename = os.path.join(line.filename, line.folder)
+    filename = os.path.join(line.folder, line.filename)
     recording = simuran.Recording(params=params, base_file=filename, load=True)
 
     return recording
@@ -361,6 +361,21 @@ def update_maze(s):
         return "lesion"
 
 
+def animal_to_mapping(s):
+    cl_13 = "CL-SR_1-3.py"
+    cl_46 = "CL-SR_4-6.py"
+    d = {
+        "CSubRet1": cl_13,
+        "CSubRet2_sham": cl_13,
+        "CSubRet3_sham": cl_13,
+        "CSubRet4": cl_46,
+        "CSubRet5_sham": cl_46,
+        "CSR6": cl_46,
+    }
+
+    return d.get(s, None)
+
+
 def clean_data(df, **kwargs):
     """
     Sequency of cleaning dataframe
@@ -424,6 +439,8 @@ def clean_data(df, **kwargs):
         df.treatment.isnull()
     ].name_dec.apply(update_maze)
     df.drop("name_dec", axis=1, inplace=True)
+
+    df["mapping"] = df.rat.apply(animal_to_mapping)
 
     return df
 
