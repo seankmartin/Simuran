@@ -9,7 +9,13 @@ from .main.batch_main import batch_run, batch_main
 from .main.copy_params import copy_param_files
 from .main.doit import create_task
 from .main.single_main import run, analyse_files
-from .main.table import index_ephys_files, analyse_cell_list, populate_table_directories
+from .main.table import (
+    index_ephys_files,
+    analyse_cell_list,
+    populate_table_directories,
+    recording_container_from_file,
+    recording_container_from_df
+)
 
 from .batch_setup import BatchSetup
 from .param_handler import ParamHandler
