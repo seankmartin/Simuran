@@ -5,18 +5,36 @@ import logging
 from pprint import pformat
 
 import simuran
-from simuran.main import save_figures
+from simuran.main.single_main import save_figures
 from lfp_atn_simuran.analysis.parse_cfg import parse_cfg_info
 from lfp_atn_simuran.analysis.frequency_analysis import powers
 from skm_pyutils.py_log import log_exception
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-lib_folder = os.path.abspath(HERE, "..")
+lib_folder = os.path.abspath(os.path.join(HERE, ".."))
 addsitedir(lib_folder)
 
 from index_axona_files import clean_data
 
 def analyse_container(rc, out_dir):
+    # More simple
+    for recording in rc:
+        # Recording has signals, single_units, spatial
+
+        # signals
+        signals = recording.signals
+        for i in range(len(signals)):
+            signals[i].load()
+        
+        # spatial
+        recording.spatial.load()
+
+        # Do the analysis
+        neurochat_spatial = recording.spatial.underlying
+
+        for i in range(len(signals)):
+            neurochat_lfp = signals[i].underlying
+
 
     # This could also be performed without SIMURAN functions
     # Just by looping over the container and grabbing what you need
@@ -73,7 +91,7 @@ def analyse_container(rc, out_dir):
     output_names = friendly_names
 
     # Throw away bad data (could not be loaded)
-    good_idx = [i for in range(len(rc)) if i not in bad_idx]
+    good_idx = [i for i in range(len(rc)) if i not in bad_idx]
     new_rc = rc.subsample(idx_list=good_idx, inplace=False)
 
     new_rc.save_summary_data(
@@ -108,9 +126,14 @@ def main(folder, data_out_path, param_dir, out_dir):
         loader_kwargs={"system": "Axona"},
     )
 
+    # 1a. Filter out the data you want
+
     # 2. Process this into a recording container
-    param_dir = os.path.abspath(os.path.join())
+    param_dir = os.path.abspath(os.path.join(os.path.dirname(data_out_path), ".."))
     rc = simuran.recording_container_from_df(df, folder, param_dir, load=False)
+    recording = rc[0]
+    print(recording)
+    exit(-1)
 
     # 3. Do analysis on this container
     results = analyse_container(rc, out_dir)

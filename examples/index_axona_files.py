@@ -366,14 +366,14 @@ def animal_to_mapping(s):
     cl_46 = "CL-SR_4-6.py"
     d = {
         "CSubRet1": cl_13,
-        "CSubRet2_sham": cl_13,
-        "CSubRet3_sham": cl_13,
+        "CSubRet2": cl_13,
+        "CSubRet3": cl_13,
         "CSubRet4": cl_46,
-        "CSubRet5_sham": cl_46,
+        "CSubRet5": cl_46,
         "CSR6": cl_46,
     }
 
-    return d.get(s, None)
+    return d.get(s, "NOT_EXIST")
 
 
 def clean_data(df, **kwargs):

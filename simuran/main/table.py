@@ -426,7 +426,7 @@ def recording_container_from_file(filename, base_dir, load=False):
 
 def recording_container_from_df(df, base_dir, param_dir, load=False):
     """Recording container from a pandas dataframe"""
-    needed = ["filename", "directory", "mapping"]
+    needed = ["filename", "folder", "mapping"]
     for need in needed:
         if need not in df.columns:
             raise ValueError(f"{need} is a required column")
@@ -434,13 +434,14 @@ def recording_container_from_df(df, base_dir, param_dir, load=False):
     rc = RecordingContainer()
 
     for row in df.itertuples():
-        dirname = row.directory
+        dirname = row.folder
         f = row.filename
         fname = os.path.join(dirname, f)
-        base_dir = os.path.abspath(param_dir, "..", "recording_mappings")
-        mapping_f = os.path.join(base_dir, row.mapping)
-        recording = Recording(param_file=mapping_f, base_file=fname, load=load)
-        rc.append(recording)
+        base_dir = os.path.abspath(os.path.join(param_dir, "..", "recording_mappings"))
+        if row.mapping is not "NOT_EXIST":
+            mapping_f = os.path.join(base_dir, row.mapping)
+            recording = Recording(param_file=mapping_f, base_file=fname, load=load)
+            rc.append(recording)
 
     rc.base_dir = base_dir
     return rc
