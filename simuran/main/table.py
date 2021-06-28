@@ -194,6 +194,7 @@ def analyse_cell_list(
     out_dir=None,
     fn_args=None,
     fn_kwargs=None,
+    overwrite=False,
 ):
     """
     The keys returned from the function must be group_unit.
@@ -206,6 +207,22 @@ def analyse_cell_list(
         fn_kwargs = {}
 
     orig_df = pd.read_excel(filename)
+    base, ext = os.path.splitext(os.path.basename(filename))
+    res_name = "_" + fn_to_use.__name__ + "_results"
+    out_fname = os.path.join(out_dir, base + res_name + ext)
+    pickle_name = os.path.abspath(
+        os.path.join(out_dir, "..", "pickles", base + res_name + "_dump.pickle")
+    )
+    if os.path.exists(pickle_name) and not overwrite:
+        print(
+            f"{pickle_name} exists already, please delete to run or pass overwrite as True"
+        )
+        with open(pickle_name, "rb") as f:
+            df = pickle.load(f)
+        if after_fn is not None:
+            after_fn(df, (out_dir, os.path.basename(filename)))
+        return df
+
     nrows_original = len(orig_df)
 
     file_list, cell_list, mapping_list = process_paths_from_df(orig_df)
@@ -217,22 +234,44 @@ def analyse_cell_list(
 
     rc = RecordingContainer()
 
-    for fname, map_name in zip(file_list, mapping_list):
-        recording = Recording(param_file=map_name, base_file=fname, load=False)
+    n_not_loaded = 0
+    bad_idx = []
+    log_loc = get_default_log_loc("simuran_table.log")
+    for i, (fname, map_name) in enumerate(zip(file_list, mapping_list)):
+        try:
+            recording = Recording(param_file=map_name, base_file=fname, load=False)
+        except BaseException as ex:
+            n_not_loaded += 1
+            log_exception(
+                ex, "Unable to load recording {}".format(fname), location=log_loc,
+            )
+            bad_idx.append(i)
+            recording = Recording()
         rc.append(recording)
+    if n_not_loaded != 0:
+        print(f"Unable to load {n_not_loaded} recordings")
 
+    n_skip = 0
     for info in cell_list:
         file_idx, group_no, cell_no = info
+        if file_idx in bad_idx:
+            n_skip += 1
+            continue
 
         record_unit_idx = rc[file_idx].units.group_by_property("group", group_no)[1][0]
         if rc[file_idx].units[record_unit_idx].units_to_use is None:
             rc[file_idx].units[record_unit_idx].units_to_use = []
         rc[file_idx].units[record_unit_idx].units_to_use.append(cell_no)
+    if n_skip != 0:
+        print(f"Unable to analyse {n_skip} cells due to recording problems")
 
     ah = AnalysisHandler()
-    for recording in rc:
-        ah.add_fn(fn_to_use, recording, *fn_args, **fn_kwargs)
-    ah.run_all_fns()
+    used_recs = []
+    for i, recording in enumerate(rc):
+        if i not in bad_idx:
+            ah.add_fn(fn_to_use, recording, *fn_args, **fn_kwargs)
+            used_recs.append(recording.source_file)
+    ah.run_all_fns(pbar=True)
 
     result_list = []
     last_order = -1
@@ -243,7 +282,7 @@ def analyse_cell_list(
             if order < last_order:
                 raise RuntimeError("Not evaluating in ascending order.")
             last_order = order
-        fname = rc[i].source_file
+        fname = used_recs[i]
         dirname, basename = os.path.split(fname)
         first = []
         for result_key, result_val in val.items():
@@ -266,16 +305,14 @@ def analyse_cell_list(
             if name not in df.columns:
                 df[name] = values
 
-    base, ext = os.path.splitext(os.path.basename(filename))
-    res_name = "_" + fn_to_use.__name__ + "_results"
-    out_fname = os.path.join(out_dir, base + res_name + ext)
-
     df.to_excel(out_fname, index=False)
 
+    os.makedirs(os.path.dirname(pickle_name), exist_ok=True)
+    with open(pickle_name, "wb") as f:
+        pickle.dump(df, f)
+
     if after_fn is not None:
-        results = rc.get_results()
-        fnames = rc.get_property("source_file")
-        after_fn([results, fnames], (out_dir, os.path.basename(filename)))
+        after_fn(df, (out_dir, os.path.basename(filename)))
 
     return df
 
