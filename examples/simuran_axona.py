@@ -129,7 +129,6 @@ def main(folder, data_out_path, param_dir, out_dir):
     # 1a. Filter out the data you want
 
     # 2. Process this into a recording container
-    param_dir = os.path.abspath(os.path.join(os.path.dirname(data_out_path), ".."))
     rc = simuran.recording_container_from_df(df, folder, param_dir, load=False)
     recording = rc[0]
     print(recording)

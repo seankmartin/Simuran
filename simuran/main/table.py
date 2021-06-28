@@ -438,7 +438,7 @@ def recording_container_from_df(df, base_dir, param_dir, load=False):
         f = row.filename
         fname = os.path.join(dirname, f)
         base_dir = os.path.abspath(os.path.join(param_dir, "..", "recording_mappings"))
-        if row.mapping is not "NOT_EXIST":
+        if row.mapping != "NOT_EXIST":
             mapping_f = os.path.join(base_dir, row.mapping)
             recording = Recording(param_file=mapping_f, base_file=fname, load=load)
             rc.append(recording)
