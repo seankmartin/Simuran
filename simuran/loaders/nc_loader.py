@@ -59,6 +59,11 @@ class NCLoader(BaseLoader):
             "underlying": self.spatial,
             "date": self.spatial.get_date(),
             "time": self.spatial.get_time(),
+            # TODO correct unit
+            "speed": self.spatial.get_speed() * (u.cm / u.s),
+            "position": (
+                self.spatial.get_pos_x() * u.cm,
+                self.spatial.get_pos_y() * u.cm)
         }
 
     def load_single_unit(self, *args, **kwargs):

@@ -15,6 +15,7 @@ class Spatial(BaseSimuran):
 
     def __init__(self):
         """See help(Spatial)."""
+        # TODO finish this init
         super().__init__()
 
     def load(self, *args, **kwargs):
