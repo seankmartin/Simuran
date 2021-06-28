@@ -16,26 +16,14 @@ addsitedir(lib_folder)
 
 from index_axona_files import clean_data
 
+def analyse_container(rc, out_dir):
 
-def main(folder, data_out_path, param_dir, out_dir):
-
-    # 1. Parse all the files in the directory
-    df = simuran.index_ephys_files(
-        folder,
-        loader_name="neurochat",
-        out_loc=data_out_path,
-        post_process_fn=clean_data,
-        overwrite=False,
-        loader_kwargs={"system": "Axona"},
-    )
-
-    # 2. Process this into a recording container
-    param_dir = os.path.abspath(os.path.join())
-    rc = simuran.recording_container_from_df(df, folder, param_dir, load=False)
-
-    # 3. Do analysis on this container
-    # The function should take recording as its first argument
+    # This could also be performed without SIMURAN functions
+    # Just by looping over the container and grabbing what you need
+    # However, you would lose some functionality such as error checking
     figures = []
+    # This function should take (recording, *args, **kwargs)
+    fn_to_use = powers
     fn_args = [rc.base_dir, figures]
     fn_kwargs = parse_cfg_info()
     ah = simuran.AnalysisHandler(handle_errors=True)
@@ -51,7 +39,7 @@ def main(folder, data_out_path, param_dir, out_dir):
             rc.invalid_recording_locations.append(rc[i].source_file)
             bad_idx.append(i)
             continue
-        ah.add_fn(powers, recording, *fn_args, **fn_kwargs)
+        ah.add_fn(fn_to_use, recording, *fn_args, **fn_kwargs)
         ah.run_all_fns()
         rc[i].results = copy(ah.results)
         ah.reset()
@@ -105,10 +93,34 @@ def main(folder, data_out_path, param_dir, out_dir):
             )
         )
 
+    return new_rc.get_results()
+
+
+def main(folder, data_out_path, param_dir, out_dir):
+
+    # 1. Parse all the files in the directory
+    df = simuran.index_ephys_files(
+        folder,
+        loader_name="neurochat",
+        out_loc=data_out_path,
+        post_process_fn=clean_data,
+        overwrite=False,
+        loader_kwargs={"system": "Axona"},
+    )
+
+    # 2. Process this into a recording container
+    param_dir = os.path.abspath(os.path.join())
+    rc = simuran.recording_container_from_df(df, folder, param_dir, load=False)
+
+    # 3. Do analysis on this container
+    results = analyse_container(rc, out_dir)
+
+    return results
+
 
 if __name__ == "__main__":
     # You can change the path to all the indexed files here
-    main_out_loc = os.path.join(HERE, "index.csv")
+    main_out_loc = r"E:\Repos\lfp_atn\lfp_atn_simuran\cell_lists\index.csv"
     main_folder = r"D:\SubRet_recordings_imaging"
     main_param_dir = r"E:\Repos\lfp_atn\lfp_atn_simuran\recording_mappings"
     main_out_dir = r"E:\Repos\lfp_atn\lfp_atn_simuran\sim_results\power_results"

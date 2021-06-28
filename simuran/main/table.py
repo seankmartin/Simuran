@@ -420,17 +420,17 @@ def recording_container_from_file(filename, base_dir, load=False):
 
     """
     df = df_from_file(filename)
-    needed = ["filename", "directory", "mapping"]
-    for need in needed:
-        if need not in df.columns:
-            raise ValueError(f"{need} is a required column")
-
     param_dir = os.path.abspath(os.path.join(os.path.dirname(filename), ".."))
     rc = recording_container_from_df(df, base_dir, param_dir, load=load)
     return rc
 
 def recording_container_from_df(df, base_dir, param_dir, load=False):
     """Recording container from a pandas dataframe"""
+    needed = ["filename", "directory", "mapping"]
+    for need in needed:
+        if need not in df.columns:
+            raise ValueError(f"{need} is a required column")
+
     rc = RecordingContainer()
 
     for row in df.itertuples():
