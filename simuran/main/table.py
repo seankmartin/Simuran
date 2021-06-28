@@ -1,11 +1,13 @@
 """This module can convert directory structures into pandas and vice versa."""
 
 import os
+import pickle
 from pprint import pprint
 
 import pandas as pd
 from skm_pyutils.py_path import get_base_dir_to_files, make_path_if_not_exists
-from skm_pyutils.py_table import list_to_df
+from skm_pyutils.py_table import list_to_df, df_from_file
+from skm_pyutils.py_log import log_exception, get_default_log_loc
 
 from simuran.loaders.loader_list import loaders_dict
 from simuran.recording import Recording
@@ -395,6 +397,53 @@ def index_ephys_files(
         results_df.to_csv(out_loc, index=False)
 
     return results_df
+
+
+def recording_container_from_file(filename, base_dir, load=False):
+    """
+    Create a simuran.RecordingContainer from filename.
+
+    It is assumed that filename is in a structure like this
+    parent:
+        - tables/filename
+        - recording_mappings/mapping_files
+
+    Parameters
+    ----------
+    filename : str
+        The filename to load from.
+    base_dir : str
+        The base directory of the recording container
+    load : bool, optional
+        Whether to load the data for the recording container.
+        Defaults to False.
+
+    """
+    df = df_from_file(filename)
+    needed = ["filename", "directory", "mapping"]
+    for need in needed:
+        if need not in df.columns:
+            raise ValueError(f"{need} is a required column")
+
+    param_dir = os.path.abspath(os.path.join(os.path.dirname(filename), ".."))
+    rc = recording_container_from_df(df, base_dir, param_dir, load=load)
+    return rc
+
+def recording_container_from_df(df, base_dir, param_dir, load=False):
+    """Recording container from a pandas dataframe"""
+    rc = RecordingContainer()
+
+    for row in df.itertuples():
+        dirname = row.directory
+        f = row.filename
+        fname = os.path.join(dirname, f)
+        base_dir = os.path.abspath(param_dir, "..", "recording_mappings")
+        mapping_f = os.path.join(base_dir, row.mapping)
+        recording = Recording(param_file=mapping_f, base_file=fname, load=load)
+        rc.append(recording)
+
+    rc.base_dir = base_dir
+    return rc
 
 
 if __name__ == "__main__":
