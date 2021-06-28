@@ -1,9 +1,9 @@
 """This module provides functionality for performing large batch analysis."""
 
 import logging
-import os
 
 from indexed import IndexedOrderedDict
+from tqdm import tqdm
 from skm_pyutils.py_log import log_exception
 from skm_pyutils.py_save import save_mixed_dict_to_csv
 
@@ -64,12 +64,20 @@ class AnalysisHandler(object):
         """Alias for run_all_fns."""
         self.run_all_fns()
 
-    def run_all_fns(self):
+    def run_all_fns(self, pbar=False):
         """Run all of the established functions."""
-        fn_zipped = zip(self.fns_to_run, self.fn_params_list, self.fn_kwargs_list)
         self._was_error = False
-        for (fn, fn_params, fn_kwargs) in fn_zipped:
-            self._run_fn(fn, *fn_params, **fn_kwargs)
+        if pbar:
+            pbar_ = tqdm(range(len(self.fns_to_run)))
+            for i in pbar_:
+                fn = self.fns_to_run[i]
+                fn_params = self.fn_params_list[i]
+                fn_kwargs = self.fn_kwargs_list[i]
+                self._run_fn(fn, *fn_params, **fn_kwargs)
+        else:
+            fn_zipped = zip(self.fns_to_run, self.fn_params_list, self.fn_kwargs_list)
+            for (fn, fn_params, fn_kwargs) in fn_zipped:
+                self._run_fn(fn, *fn_params, **fn_kwargs)
         if self._was_error:
             logging.warning("A handled error occurred while running analysis")
         self._was_error = False
