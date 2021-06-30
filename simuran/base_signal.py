@@ -86,8 +86,8 @@ class BaseSignal(BaseSimuran):
 
         if self.underlying is not None:
             if type(self.underlying) == NLfp:
-                # TODO check this works
                 return self.underlying
+
         lfp = NLfp()
         lfp.set_channel_id(self.channel)
         lfp._timestamp = np.array(self.timestamps * u.mV)

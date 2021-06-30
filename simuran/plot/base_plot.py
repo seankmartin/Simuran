@@ -49,10 +49,6 @@ def setup_ax(ax, default, **kwargs):
     -------
     None
 
-    TODO
-    ----
-    Further keyword arguments will be added over time.
-
     """
     for key, value in kwargs.items():
         default[key] = value
@@ -132,6 +128,7 @@ def save_simuran_plot(fig, save_location, **kwargs):
     fig.savefig(save_location, dpi=dpi, bbox_inches=bbox_inches, pad_inches=pad_inches)
 
     return save_location
+
 
 def despine():
     """Despine the current plot with trimming."""

@@ -1,7 +1,9 @@
 """This module holds single experiment related information."""
 import os
-import numpy as np
 import logging
+
+import numpy as np
+import astropy.units as u
 
 from simuran.base_class import BaseSimuran
 from simuran.param_handler import ParamHandler
@@ -236,6 +238,10 @@ class Recording(BaseSimuran):
     def get_np_signals(self):
         """Return a 2D array of signals as a numpy array."""
         return np.array([s.samples for s in self.signals], float)
+
+    def get_unit_signals(self):
+        """Return a 2D array of signals with units."""
+        return np.array([s.samples.to(u.mV) for s in self.signals], float) * u.mV
 
     def _parse_source_files(self):
         """

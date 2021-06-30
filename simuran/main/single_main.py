@@ -464,7 +464,6 @@ def multiprocessing_func(
         recording = recording_container[i]
 
     for fn in functions:
-        # TODO get this right
         if not isinstance(fn, (tuple, list)):
             fn_args = function_args.get(fn.__name__, ([], {}))
 
@@ -857,7 +856,6 @@ def analyse_files(
 
     if do_batch_setup:
         # TODO let the interactive be controllable
-        # TODO check this still works with many code changes
         if not batch_control_setup(
             batch_setup, only_check, do_interactive=False, verbose=verbose
         ):

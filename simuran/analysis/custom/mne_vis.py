@@ -1,6 +1,8 @@
 import datetime
 import os
 
+import numpy as np
+import astropy.units as u
 import mne
 from mne.preprocessing import ICA
 
@@ -21,8 +23,7 @@ def create_mne_array(recording, ch_names=None):
     mne.io.RawArray
 
     """
-    # TODO work with quantities here to avoid magic division to uV
-    raw_data = recording.get_np_signals() / 1000
+    raw_data = np.array(recording.get_unit_signals().to(u.V))
 
     if ch_names is None:
         try:

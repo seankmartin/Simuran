@@ -22,7 +22,6 @@ class SingleUnit(BaseSimuran):
 
     TODO
     ----
-    Implement general objects using the quantities package.
     I'm not sure the interface to single unit is the cleanest.
 
     """
