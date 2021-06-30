@@ -62,7 +62,21 @@ class BaseSignal(BaseSimuran):
             self.last_loaded_source = self.source_file
 
     def from_numpy(self, np_array, sampling_rate):
-        """Set data from a numpy array. - assumed in mV and srate in Hz"""
+        """
+        Set data from a numpy array, assumed in mV and srate in Hz.
+        
+        Parameters
+        ----------
+        np_array : numpy array
+            The data in mV.
+        sampling_rate : int
+            The sampling rate of the signal in Hz.
+
+        Returns
+        -------
+        None
+
+        """
         if not hasattr(np_array, "unit"):
             self.samples = np_array * u.mV
         else:
@@ -71,7 +85,7 @@ class BaseSignal(BaseSimuran):
         self.timestamps = [i / sampling_rate for i in range(len(self.samples))] * u.s
 
     def default_name(self):
-        """Default name based on region."""
+        """Get the default name for this signal based on region."""
         name = self.channel_type
         if self.channel is not None:
             name += " {}".format(self.channel)
@@ -96,7 +110,24 @@ class BaseSignal(BaseSimuran):
         return lfp
 
     def in_range(self, start, stop, step=None):
-        """Splice samples from second based times."""
+        """
+        Splice samples from second based times.
+        
+        Parameters
+        ----------
+        start : int
+            The start time in seconds to grab samples from
+        stop : int
+            The end time in seconds to grab samples from
+        step : int, optional
+            The amount to skip, as in normal array splicing.
+
+        Returns
+        -------
+        np.array
+            The spliced array
+
+        """
         start = int(math.floor(start * self.sampling_rate))
         stop = int(math.ceil(stop * self.sampling_rate))
         if step is not None:

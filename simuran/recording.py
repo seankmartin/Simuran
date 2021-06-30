@@ -197,6 +197,7 @@ class Recording(BaseSimuran):
         return [unit.units_to_use for unit in self.units]
 
     def get_set_units_as_dict(self):
+        """Get the units which are set as a dictionary"""
         groups = [unit.group for unit in self.units]
         units = self.get_set_units()
         out_dict = {}

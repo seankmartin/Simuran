@@ -9,6 +9,21 @@ from skm_pyutils.py_log import setup_text_logging, get_default_log_loc
 
 
 def establish_logger(loglevel, params):
+    """
+    Establish a logging file
+    
+    Parameters
+    ----------
+    loglevel: string or int
+        The logging level to set.
+    params : object
+        The parameters being used for this logger.
+
+    Returns
+    -------
+    None
+
+    """
     fname = get_default_log_loc("simuran_cli.log")
     setup_text_logging(None, loglevel, fname, append=True)
 
@@ -127,7 +142,7 @@ def main():
         "--log",
         type=str,
         default="warning",
-        help="Log level (e.g. debug, or warning) or the numeric value (20 is info)"
+        help="Log level (e.g. debug, or warning) or the numeric value (20 is info)",
     )
 
     parsed, unparsed = parser.parse_known_args()
@@ -190,11 +205,13 @@ def main():
 
 
 def cli_entry():
+    """The command line entry point."""
     main()
     return None
 
 
 def merge_entry():
+    """The merge operation entry point."""
     from simuran.main.merge import cli as merge_cli
 
     merge_cli()

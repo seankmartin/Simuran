@@ -438,6 +438,7 @@ def multiprocessing_func(
     out_dir,
     handle_errors,
 ):
+    """This function is run once per recording to analyse."""
     analysis_handler = simuran.analysis.analysis_handler.AnalysisHandler(
         handle_errors=handle_errors
     )

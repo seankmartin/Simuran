@@ -246,6 +246,7 @@ class NCLoader(BaseLoader):
             raise ValueError("auto_fname_extraction only implemented for Axona")
 
     def index_files(self, folder, **kwargs):
+        """Find all available neurochat files in the given folder"""
         if self.load_params["system"] == "Axona":
             set_files = []
             root_folders = []

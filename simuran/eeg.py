@@ -10,9 +10,10 @@ import scipy.signal as sg
 
 
 class Eeg(BaseSignal):
-    """EEG class."""
+    """EEG class. Provides extra functionality on top of base signal."""
 
     def __init__(self, samples=None, sampling_rate=None, signal=None):
+        """See help(Eeg)"""
         super().__init__()
         if signal is not None:
             self.samples = signal.samples
@@ -36,7 +37,7 @@ class Eeg(BaseSignal):
             self.from_numpy(samples, sampling_rate)
 
     def default_name(self):
-        """Default name based on region."""
+        """Get the default name for this signal based on region."""
         name = ""
         if self.channel is not None:
             name += "{}".format(self.channel)
@@ -89,15 +90,17 @@ class Eeg(BaseSignal):
         self.compare_filters(filter1, filter2, filter3, **plot_args)
 
     def __str__(self):
+        """Convert to string representation"""
         return "EEG signal at {}Hz with {} samples".format(
             self.sampling_rate, len(self.samples)
         )
 
 
 class EegArray(GenericContainer):
-    """Hold EEG signals."""
+    """Hold a set of EEG signals."""
 
     def __init__(self):
+        """See help(EegArray)"""
         super().__init__(Eeg)
 
     def convert_signals_to_mne(self, ch_names=None, verbose=True, bad_chans=None):

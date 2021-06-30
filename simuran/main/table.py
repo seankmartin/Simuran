@@ -43,6 +43,7 @@ def table_to_dir(table):
 
 def process_paths_from_df(df):
     """
+    Turn a list of cells into a SIMURAN compatible list.
 
     Parameters
     ----------
@@ -133,6 +134,27 @@ def excel_convert(filename, start_dir, optional_func=None):
 
 
 def populate_table_directories(filename, dir_to_start, ext=None, re_filter=None):
+    """
+    Find the directories that match given filenames.
+    
+    Parameters
+    ----------
+    filename : str
+        The path to an excel file describing the filenames to search for.
+        "Filename" must be a column of this excel file.
+    dir_to_start : str
+        The directory to start the search in
+    ext : str, optional
+        A file extension to look for
+    re_filter : str, optional
+        A regular expression to match filenames to
+
+    Returns
+    -------
+    pandas.DataFrame
+        The original dataframe with an added Directory column.
+
+    """
     df = pd.read_excel(filename)
 
     if "Filename" not in df.columns:
@@ -199,7 +221,35 @@ def analyse_cell_list(
     overwrite=False,
 ):
     """
-    The keys returned from the function must be group_unit.
+    Run a function on all cells listed in an excel file.
+
+    Parameters
+    ----------
+    filename : str
+        The path to the excel file.
+    fn_to_use : function
+        The function to run on all cells.
+        The first argument of this function must be recording.
+        The keys returned from the function used must be group_unit.
+    headers : str
+        The headers to use for the resulting data.
+    after_fn : function, optional
+        An optional function to apply to resulting data.
+    out_dir : str, optional
+        Where to store the output data.
+    fn_args : tuple, optional
+        The arguments to pass to fn_to_use.
+    fn_kwargs : dict, optional
+        The keyword arguments to pass to the function.
+    overwrite : bool, optional
+        Whether to overwrite an existing result.
+        By default, False.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Dataframe containing the results per cell.
+
     """
     if out_dir is None:
         out_dir = os.path.dirname(filename)
@@ -330,7 +380,7 @@ def index_ephys_files(
     **kwargs,
 ):
     """
-    Create a dataframe from ephys files found in folder
+    Create a dataframe from ephys files found in folder.
 
     This function recursively scan folder for Axona .set files and return
     a pandas dataframe with ['filename', 'folder', 'time', 'duration']
@@ -418,6 +468,10 @@ def recording_container_from_file(filename, base_dir, load=False):
         Whether to load the data for the recording container.
         Defaults to False.
 
+    Returns
+    -------
+    simuran.RecordingContainer
+
     """
     df = df_from_file(filename)
     param_dir = os.path.abspath(os.path.join(os.path.dirname(filename), ".."))
@@ -425,7 +479,26 @@ def recording_container_from_file(filename, base_dir, load=False):
     return rc
 
 def recording_container_from_df(df, base_dir, param_dir, load=False):
-    """Recording container from a pandas dataframe"""
+    """
+    Create a Recording container from a pandas dataframe.
+    
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        The dataframe to load from.
+    base_dir : str
+        The base directory of the recording container
+    param_dir : str
+        A path to the directory containing parameter files
+    load : bool, optional
+        Whether to load the data for the recording container.
+        Defaults to False.
+
+    Returns
+    -------
+    simuran.RecordingContainer
+
+    """
     needed = ["filename", "folder", "mapping"]
     for need in needed:
         if need not in df.columns:
@@ -451,11 +524,6 @@ if __name__ == "__main__":
     main_out_fname = r"D:\SubRet_recordings_imaging\muscimol_data\cell_lists\cell list_musc_Sean_filled.xlsx"
     main_out_fname_filled = r"D:\SubRet_recordings_imaging\SIMURAN\cell_lists\CTRL_Lesion_cells_filled_results.xlsx"
     in_start_dir = r"D:\SubRet_recordings_imaging"
-
-    def opt_func(fnm):
-        if fnm.endswith("_"):
-            fnm = fnm[:-1]
-        return fnm + ".set"
 
     # if not os.path.isfile(main_out_fname_filled):
     #     populate_table_directories(

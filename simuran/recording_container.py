@@ -205,6 +205,17 @@ class RecordingContainer(AbstractContainer):
         return all_units
 
     def get_invalid_locations(self):
+        """
+        Get a list of invalid locations (can not be loaded)
+        
+        For example, these recordings could have invalid mappings.
+
+        Returns
+        -------
+        list
+            These are in index form.
+
+        """
         return self.invalid_recording_locations
 
     def subsample(self, idx_list=None, interactive=False, prop=None, inplace=False):

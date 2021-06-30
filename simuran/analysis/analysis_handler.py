@@ -120,6 +120,19 @@ class AnalysisHandler(object):
         self.fn_kwargs_list.append(kwargs)
 
     def save_results(self, output_location):
+        """
+        Save the results of analysis to the given output location.
+        
+        Parameters
+        ----------
+        output_location : string
+            Path to a csv to save results to.
+    
+        Returns
+        -------
+        None
+
+        """
         with open(output_location, "w") as f:
             print("Saving results to {}".format(output_location))
             for k, v in self.results.items():
@@ -174,7 +187,7 @@ class AnalysisHandler(object):
         return result
 
     def __str__(self):
-        """Call on print."""
+        """String representation of this class."""
         return "{} with functions:\n {}, args:\n {}, kwargs:\n {}".format(
             self.__class__.__name__,
             self.fns_to_run,

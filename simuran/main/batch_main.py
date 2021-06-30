@@ -11,7 +11,8 @@ from simuran.param_handler import ParamHandler
 from simuran.main.merge import merge_files, csv_merge
 
 
-def get_dict_entry(run_dict_list, function_to_use, index):
+def _get_dict_entry(run_dict_list, function_to_use, index):
+    """Helper function."""
     run_dict = run_dict_list[index]
     batch_param_loc = run_dict.pop("batch_param_loc")
     fn_param_loc = run_dict.pop("fn_param_loc")
@@ -23,11 +24,12 @@ def get_dict_entry(run_dict_list, function_to_use, index):
 def multiprocessing_func(
     i, run_dict_list, function_to_use, kwargs, handle_errors, save_info, keep_container,
 ):
+    """This is run for each item to be analysed."""
     # TODO printing would have to be stored and done at the end for multi worker
     print(
         "--------------------SIMURAN Batch Iteration {}--------------------".format(i+1)
     )
-    run_dict, batch_param_loc, fn_param_loc = get_dict_entry(
+    run_dict, batch_param_loc, fn_param_loc = _get_dict_entry(
         run_dict_list, function_to_use, i
     )
     full_kwargs = {**run_dict, **kwargs}
