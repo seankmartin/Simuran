@@ -186,7 +186,15 @@ class Recording(BaseSimuran):
         return base_name_part
 
     def get_available_units(self):
-        """Get the list of available units."""
+        """
+        Get the list of available units.
+        
+        Returns
+        -------
+        list
+            list of tuple(group, list of units)
+        
+        """
         all_units = []
         for i, unit in enumerate(self.units):
             all_units.append([unit.group, unit.get_available_units()])

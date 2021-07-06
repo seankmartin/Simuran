@@ -1,6 +1,7 @@
 """Module to hold the abstract class setting up information held in a signal."""
 import math
 from copy import deepcopy
+import logging
 
 from simuran.base_class import BaseSimuran
 
@@ -160,6 +161,9 @@ class BaseSignal(BaseSimuran):
 
         """
         kwargs["copy"] = not inplace
+        if (low is None) or (high is None):
+            logging.warning("Invalid filter frequencies")
+            return self
         filtered_data = mne.filter.filter_data(
             np.array(self.samples.to(u.V)), self.sampling_rate, low, high, **kwargs
         )

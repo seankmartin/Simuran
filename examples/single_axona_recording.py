@@ -110,6 +110,26 @@ def recording_info():
     return mapping
 
 
+def phase_distribution(nc_lfp, spike_times, spatial, theta_min=6, theta_max=10):
+    g_data = nc_lfp.phase_dist(spike_times, fwin=(theta_min, theta_max))
+    from neurochat.nc_plot import spike_phase
+    import matplotlib.pyplot as plt
+    figures = spike_phase(g_data)
+    for i, f in enumerate(figures):
+        f.savefig(f"{i}__phase.png")
+        plt.close(f)
+    print(nc_lfp.get_results())
+    
+    phases = nc_lfp.phase_at_events(spike_times, fwin=(theta_min, theta_max))
+    _, positions, directions = spatial.get_event_loc(spike_times, keep_zero_idx=True)
+    dim_pos = positions[1]
+    plt.hist2d(dim_pos, phases, bins=[10, 180])
+    plt.savefig("outphase.png")
+    plt.close()
+    plt.scatter(dim_pos, phases)
+    plt.savefig("outscatt.png")
+    return
+
 def main(set_file_location, do_analysis=False):
     """Create a single recording for analysis."""
     recording = simuran.Recording(params=recording_info(), base_file=set_file_location)
@@ -117,13 +137,24 @@ def main(set_file_location, do_analysis=False):
         return recording
 
     else:
-        result = LFPClean.clean_lfp_signals(
-            recording, verbose=True, vis=True, append_avg=True
-        )
-        # eeg_sigs = recording.get_eeg_signals()
-        # filter_ = [10, 1.5, 100, "bandpass"]
-        # butter_filter(eeg_sigs[0].samples, eeg_sigs[0].sampling_rate, *filter_)
-        # eeg_sigs[0].default_filt_compare(1.5, 100)
+        lc_clean = LFPClean(method="avg")
+        result = lc_clean.clean(recording, min_f=None, max_f=None)
+        sub_sig = result["signals"]["SUB"].to_neurochat()
+        recording.spatial.load()
+        spatial = recording.spatial.underlying
+
+        available_units = recording.get_available_units()
+        for group, units in available_units:
+            if len(units) != 0:
+                print("Using tetrode {} unit {}".format(group, units[0]))
+                idx = recording.units.group_by_property("group", group)[1][0]
+                spike_obj = recording.units[idx]
+                spike_obj.load()
+                spike_obj = spike_obj.underlying
+                spike_obj.set_unit_no(units[0])
+                spike_times = spike_obj.get_unit_stamp()
+                break
+        phase_distribution(sub_sig, spike_times, spatial)
 
 
 if __name__ == "__main__":
