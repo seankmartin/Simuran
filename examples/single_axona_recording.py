@@ -17,7 +17,7 @@ def recording_info():
         num_signals = 32
 
         # What brain region each signal was recorded from
-        regions = ["RSC"] * 2 + ["SUB"] * 30
+        regions = ["SUB"] * 2 + ["RSC"] * 2 + ["SUB"] * 28
 
         # If the wires were bundled, or any other kind of grouping existed
         # If no grouping, groups = [i for i in range(num_signals)]
@@ -137,24 +137,34 @@ def main(set_file_location, do_analysis=False):
         return recording
 
     else:
-        lc_clean = LFPClean(method="avg")
+        lc_clean = LFPClean(method="avg", visualise=True, show_vis=False)
         result = lc_clean.clean(recording, min_f=None, max_f=None)
-        sub_sig = result["signals"]["SUB"].to_neurochat()
-        recording.spatial.load()
-        spatial = recording.spatial.underlying
+        fig = result["fig"]
+        fig.savefig("LSR5_01122017_regular.png", dpi=400)
 
-        available_units = recording.get_available_units()
-        for group, units in available_units:
-            if len(units) != 0:
-                print("Using tetrode {} unit {}".format(group, units[0]))
-                idx = recording.units.group_by_property("group", group)[1][0]
-                spike_obj = recording.units[idx]
-                spike_obj.load()
-                spike_obj = spike_obj.underlying
-                spike_obj.set_unit_no(units[0])
-                spike_times = spike_obj.get_unit_stamp()
-                break
-        phase_distribution(sub_sig, spike_times, spatial)
+        lc_clean = LFPClean(method="zscore", visualise=True, show_vis=False)
+        result = lc_clean.clean(recording, min_f=None, max_f=None)
+        fig = result["fig"]
+        fig.savefig("LSR5_01122017_zscore.png", dpi=400)
+
+
+        # result = lc_clean.clean(recording, min_f=None, max_f=None)
+        # sub_sig = result["signals"]["SUB"].to_neurochat()
+        # recording.spatial.load()
+        # spatial = recording.spatial.underlying
+
+        # available_units = recording.get_available_units()
+        # for group, units in available_units:
+        #     if len(units) != 0:
+        #         print("Using tetrode {} unit {}".format(group, units[0]))
+        #         idx = recording.units.group_by_property("group", group)[1][0]
+        #         spike_obj = recording.units[idx]
+        #         spike_obj.load()
+        #         spike_obj = spike_obj.underlying
+        #         spike_obj.set_unit_no(units[0])
+        #         spike_times = spike_obj.get_unit_stamp()
+        #         break
+        # phase_distribution(sub_sig, spike_times, spatial)
 
 
 if __name__ == "__main__":
