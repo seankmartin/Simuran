@@ -2,10 +2,18 @@
 import argparse
 import os
 import logging
+import time
+import sys
+
+from sumatra.projects import load_project
+from sumatra.programs import Executable
 
 import simuran.main
 import simuran.batch_setup
+import simuran.param_handler
 from skm_pyutils.py_log import setup_text_logging, get_default_log_loc
+
+VERSION = "0.0.1"
 
 
 def establish_logger(loglevel, params):
@@ -49,7 +57,7 @@ def main():
         The output of running analysis from the specified configuration.
 
     """
-    description = "simuran"
+    description = f"simuran version {VERSION}"
     parser = argparse.ArgumentParser(description)
     parser.add_argument(
         "batch_config_path",
@@ -144,8 +152,32 @@ def main():
         default="warning",
         help="Log level (e.g. debug, or warning) or the numeric value (20 is info)",
     )
+    parser.add_argument(
+        "--reason",
+        type=str,
+        default="Not specified",
+        help="Reason for running this experiment",
+    )
 
     parsed, unparsed = parser.parse_known_args()
+
+    if os.path.isfile(parsed.batch_config_path):
+        ph = simuran.param_handler.ParamHandler(
+            in_loc=parsed.batch_config_path, name="params"
+        )
+        params = ph.params
+    else:
+        params = {}
+
+    ex = Executable(path="simuran", version=VERSION, name="simuran")
+    project = load_project()
+    record = project.new_record(
+        parameters=params,
+        script_args=" ".join(sys.argv[1:]),
+        reason=parsed.reason,
+        executable=ex,
+    )
+    start_time = time.time()
 
     establish_logger(parsed.log, parsed)
 
@@ -161,7 +193,7 @@ def main():
         if not os.path.isfile(parsed.function_config_path):
             parsed.function_config_path = None
 
-        return simuran.batch_run(
+        result = simuran.batch_run(
             parsed.batch_config_path,
             function_to_use=parsed.function_config_path,
             text_editor=parsed.editor,
@@ -175,7 +207,6 @@ def main():
             overwrite=parsed.overwrite,
             dirname=parsed.dirname,
         )
-
     elif parsed.grab_params:
         output_location = os.path.join(
             os.path.dirname(parsed.location),
@@ -184,13 +215,15 @@ def main():
         print(
             "Copying parameters from {} to {}".format(parsed.location, output_location)
         )
-        simuran.batch_setup.BatchSetup.copy_params(parsed.location, output_location)
+        result = simuran.batch_setup.BatchSetup.copy_params(
+            parsed.location, output_location
+        )
     else:
         if parsed.function_config_path == "":
             raise ValueError(
                 "In non recursive mode, the function configuration path must be a file"
             )
-        return simuran.run(
+        result = simuran.run(
             parsed.batch_config_path,
             parsed.function_config_path,
             text_editor=parsed.editor,
@@ -202,6 +235,13 @@ def main():
             num_cpus=parsed.num_workers,
             dirname=parsed.dirname,
         )
+
+    record.duration = time.time() - start_time
+    record.output_data = record.datastore.find_new_data(record.timestamp)
+    project.add_record(record)
+    project.save()
+
+    return result
 
 
 def cli_entry():
