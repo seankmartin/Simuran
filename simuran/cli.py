@@ -7,10 +7,13 @@ import sys
 
 from sumatra.projects import load_project
 from sumatra.programs import Executable
+from sumatra.core import STATUS_FORMAT
+from sumatra.parameters import SimpleParameterSet
 
 import simuran.main
 import simuran.batch_setup
 import simuran.param_handler
+import simuran.config_handler
 from skm_pyutils.py_log import setup_text_logging, get_default_log_loc
 
 VERSION = "0.0.1"
@@ -158,24 +161,30 @@ def main():
         default="Not specified",
         help="Reason for running this experiment",
     )
+    parser.add_argument(
+        "--config", "-cfg", type=str, default="", help="Path to configuration file."
+    )
 
     parsed, unparsed = parser.parse_known_args()
 
-    if os.path.isfile(parsed.batch_config_path):
-        ph = simuran.param_handler.ParamHandler(
-            in_loc=parsed.batch_config_path, name="params"
-        )
-        params = ph.params
+    if len(parsed.config) > 0:
+        simuran.config_handler.set_config_path(parsed.config)
+        cfg = simuran.config_handler.parse_config()
     else:
-        params = {}
+        cfg = {}
 
     ex = Executable(path="simuran", version=VERSION, name="simuran")
     project = load_project()
+    for k, v in cfg.items():
+        if isinstance(v, dict):
+            cfg[k] = str(v)
+    sp = SimpleParameterSet(cfg)
     record = project.new_record(
-        parameters=params,
+        parameters=sp,
         script_args=" ".join(sys.argv[1:]),
         reason=parsed.reason,
         executable=ex,
+        main_file=parsed.batch_config_path,
     )
     start_time = time.time()
 
@@ -238,6 +247,7 @@ def main():
 
     record.duration = time.time() - start_time
     record.output_data = record.datastore.find_new_data(record.timestamp)
+    record.tags = set([STATUS_FORMAT % "finished"])
     project.add_record(record)
     project.save()
 
