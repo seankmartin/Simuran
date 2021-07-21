@@ -22,12 +22,12 @@ VERSION = "0.0.1"
 
 log = FileStdoutLogger()
 
-default_loc = os.path.join(
-    os.path.expanduser("~"), ".skm_python", "sm_errorlog.txt")
+default_loc = os.path.join(os.path.expanduser("~"), ".skm_python", "sm_errorlog.txt")
 os.makedirs(os.path.dirname(default_loc), exist_ok=True)
 this_logger = logging.getLogger(__name__)
 handler = logging.FileHandler(default_loc)
 this_logger.addHandler(handler)
+
 
 def excepthook(exc_type, exc_value, exc_traceback):
     """
@@ -42,16 +42,20 @@ def excepthook(exc_type, exc_value, exc_traceback):
 
     now = datetime.datetime.now()
     this_logger.critical(
-        "\n----------Uncaught Exception at {}----------".format(now), exc_info=(
-            exc_type, exc_value, exc_traceback))
+        "\n----------Uncaught Exception at {}----------".format(now),
+        exc_info=(exc_type, exc_value, exc_traceback),
+    )
 
     print("A fatal error occurred in SIMURAN")
-    print("The error info was: {}".format(
-        "".join(traceback.format_exception(exc_type, exc_value, exc_traceback)
-                ).strip()))
     print(
-        "Please report this to {} and provide the file {}".format(
-            "us", default_loc))
+        "The error info was: {}".format(
+            "".join(
+                traceback.format_exception(exc_type, exc_value, exc_traceback)
+            ).strip()
+        )
+    )
+    print("Please report this to {} and provide the file {}".format("us", default_loc))
+
 
 def establish_logger(loglevel, params):
     """
@@ -73,6 +77,7 @@ def establish_logger(loglevel, params):
     setup_text_logging(None, loglevel, fname, append=True)
 
     logging.info("New run with params {}".format(params))
+
 
 def main():
     """
@@ -198,7 +203,9 @@ def main():
     parser.add_argument(
         "--config", "-cfg", type=str, default="", help="Path to configuration file."
     )
-
+    parser.add_argument(
+        "--list", "-l", action="store_true", help="Whether to run on a list of files"
+    )
     parsed, unparsed = parser.parse_known_args()
 
     if len(parsed.config) > 0:
@@ -222,7 +229,7 @@ def main():
     )
     start_time = time.time()
 
-    simuran.log_utils.establish_logger(parsed.log, parsed)
+    establish_logger(parsed.log, parsed)
 
     if parsed.dummy is True:
         parsed.skip_batch_setup = False
@@ -260,6 +267,12 @@ def main():
         )
         result = simuran.batch_setup.BatchSetup.copy_params(
             parsed.location, output_location
+        )
+    elif parsed.list:
+        result = simuran.main_analyse_cell_list(
+            parsed.batch_config_path,
+            dirname_replacement=parsed.dirname,
+            overwrite=parsed.overwrite,
         )
     else:
         if parsed.function_config_path == "":

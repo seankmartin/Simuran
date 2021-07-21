@@ -1,0 +1,41 @@
+"""simuran_batch_params.py describes behaviour for recursing through directories."""
+
+import os
+
+# The magic string __dirname__, is replaced by a directory name that is passed through command line
+dirname = "__dirname__"
+# The magic string __thisdirname__ is also available, which is replaced by the directory that this file is in.
+this_dirname = "__thisdirname__"
+
+# The path to the cell list location
+cell_list_path = os.path.join(this_dirname, "cell_list.csv")
+
+# The function to run on each recording in the cell list
+# This is required
+fn_to_run = None
+
+# The function to run after analysing the cell lists
+# This can be left as None
+after_fn = None
+
+# out_dir can be left as None to automatically name
+out_dir = None
+
+# Arguments to pass into fn_to_run
+fn_args = []
+
+# Keyword arguments to pass into fn_to_run
+fn_kwargs = {}
+
+# Headers for the output
+headers = []
+
+params = {
+    "cell_list_path": cell_list_path,
+    "function_to_run": fn_to_run,
+    "after_fn": after_fn,
+    "headers": headers,
+    "out_dir": out_dir,
+    "fn_args": fn_args,
+    "fn_kwargs": fn_kwargs,
+}

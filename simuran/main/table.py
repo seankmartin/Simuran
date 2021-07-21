@@ -7,12 +7,16 @@ from pprint import pprint
 import pandas as pd
 from skm_pyutils.py_path import get_base_dir_to_files, make_path_if_not_exists
 from skm_pyutils.py_table import list_to_df, df_from_file
-from skm_pyutils.py_log import log_exception, get_default_log_loc
+from skm_pyutils.py_log import log_exception, get_default_log_loc, FileStdoutLogger
 
 from simuran.loaders.loader_list import loaders_dict
 from simuran.recording import Recording
 from simuran.recording_container import RecordingContainer
 from simuran.analysis.analysis_handler import AnalysisHandler
+from simuran.param_handler import ParamHandler
+from simuran.config_handler import parse_config
+
+log = FileStdoutLogger()
 
 
 def dir_to_table(directory):
@@ -258,7 +262,7 @@ def analyse_cell_list(
     if fn_kwargs is None:
         fn_kwargs = {}
 
-    orig_df = pd.read_excel(filename)
+    orig_df = df_from_file(filename)
     base, ext = os.path.splitext(os.path.basename(filename))
     res_name = "_" + fn_to_use.__name__ + "_results"
     out_fname = os.path.join(out_dir, base + res_name + ext)
@@ -266,7 +270,7 @@ def analyse_cell_list(
         os.path.join(out_dir, "..", "pickles", base + res_name + "_dump.pickle")
     )
     if os.path.exists(pickle_name) and not overwrite:
-        print(
+        log.print(
             f"{pickle_name} exists already, please delete to run or pass overwrite as True"
         )
         with open(pickle_name, "rb") as f:
@@ -301,7 +305,7 @@ def analyse_cell_list(
             recording = Recording()
         rc.append(recording)
     if n_not_loaded != 0:
-        print(f"Unable to load {n_not_loaded} recordings")
+        log.print(f"Unable to load {n_not_loaded} recordings")
 
     n_skip = 0
     for info in cell_list:
@@ -315,7 +319,7 @@ def analyse_cell_list(
             rc[file_idx].units[record_unit_idx].units_to_use = []
         rc[file_idx].units[record_unit_idx].units_to_use.append(cell_no)
     if n_skip != 0:
-        print(f"Unable to analyse {n_skip} cells due to recording problems")
+        log.print(f"Unable to analyse {n_skip} cells due to recording problems")
 
     ah = AnalysisHandler()
     used_recs = []
@@ -349,14 +353,16 @@ def analyse_cell_list(
     nrows_new = len(df)
 
     if nrows_new != nrows_original:
-        print("WARNING: Not all cells were correctly analysed.")
-        print(f"Analysed {nrows_new} cells out of {nrows_original} cells.")
-        print("Please evaluate the result with caution.")
+        log.print("WARNING: Not all cells were correctly analysed.")
+        log.print(f"Analysed {nrows_new} cells out of {nrows_original} cells.")
+        log.print("Please evaluate the result with caution.")
     else:
         for name, values in orig_df.iteritems():
             if name not in df.columns:
                 df[name] = values
 
+    # TODO replace this by csv as faster
+    os.makedirs(os.path.dirname(out_fname), exist_ok=True)
     df.to_excel(out_fname, index=False)
 
     os.makedirs(os.path.dirname(pickle_name), exist_ok=True)
@@ -478,6 +484,7 @@ def recording_container_from_file(filename, base_dir, load=False):
     rc = recording_container_from_df(df, base_dir, param_dir, load=load)
     return rc
 
+
 def recording_container_from_df(df, base_dir, param_dir, load=False):
     """
     Create a Recording container from a pandas dataframe.
@@ -518,6 +525,39 @@ def recording_container_from_df(df, base_dir, param_dir, load=False):
 
     rc.base_dir = base_dir
     return rc
+
+
+def main_analyse_cell_list(params, dirname_replacement, overwrite=False):
+    if isinstance(params, dict):
+        ph = ParamHandler(params=params,)
+        default = "sim_results__"
+    else:
+        ph = ParamHandler(
+            in_loc=params, name="params", dirname_replacement=dirname_replacement
+        )
+        default = os.path.join(
+            os.path.dirname(params),
+            "..",
+            "sim_results",
+            os.path.splitext(os.path.basename(params))[0],
+        )
+    out_dir = ph.get("out_dir", None)
+    if out_dir is None:
+        out_dir = default
+
+    ## TODO maybe should use same logic elsewhere
+    cfg = parse_config()
+    cfg.update(ph.get("fn_kwargs", {}))
+    return analyse_cell_list(
+        filename=ph["cell_list_path"],
+        fn_to_use=ph["function_to_run"],
+        headers=ph["headers"],
+        after_fn=ph.get("after_fn", None),
+        out_dir=out_dir,
+        fn_args=ph.get("fn_args", []),
+        fn_kwargs=cfg,
+        overwrite=ph.get("overwrite", overwrite),
+    )
 
 
 if __name__ == "__main__":
