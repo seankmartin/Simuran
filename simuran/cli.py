@@ -1,23 +1,57 @@
 """A command line interface into SIMURAN."""
 import argparse
 import os
-import logging
 import time
 import sys
+import logging
+import datetime
+import traceback
 
 from sumatra.projects import load_project
 from sumatra.programs import Executable
 from sumatra.core import STATUS_FORMAT
 from sumatra.parameters import SimpleParameterSet
+from skm_pyutils.py_log import setup_text_logging, get_default_log_loc, FileStdoutLogger
 
 import simuran.main
 import simuran.batch_setup
 import simuran.param_handler
 import simuran.config_handler
-from skm_pyutils.py_log import setup_text_logging, get_default_log_loc
 
 VERSION = "0.0.1"
 
+log = FileStdoutLogger()
+
+default_loc = os.path.join(
+    os.path.expanduser("~"), ".skm_python", "sm_errorlog.txt")
+os.makedirs(os.path.dirname(default_loc), exist_ok=True)
+this_logger = logging.getLogger(__name__)
+handler = logging.FileHandler(default_loc)
+this_logger.addHandler(handler)
+
+def excepthook(exc_type, exc_value, exc_traceback):
+    """
+    Any uncaught exceptions will be logged from here.
+
+    """
+    # Don't catch CTRL+C exceptions
+    if issubclass(exc_type, KeyboardInterrupt):
+        sys.__excepthook__(exc_type, exc_value, exc_traceback)
+        log.clear_log_file()
+        return
+
+    now = datetime.datetime.now()
+    this_logger.critical(
+        "\n----------Uncaught Exception at {}----------".format(now), exc_info=(
+            exc_type, exc_value, exc_traceback))
+
+    print("A fatal error occurred in SIMURAN")
+    print("The error info was: {}".format(
+        "".join(traceback.format_exception(exc_type, exc_value, exc_traceback)
+                ).strip()))
+    print(
+        "Please report this to {} and provide the file {}".format(
+            "us", default_loc))
 
 def establish_logger(loglevel, params):
     """
@@ -40,7 +74,6 @@ def establish_logger(loglevel, params):
 
     logging.info("New run with params {}".format(params))
 
-
 def main():
     """
     Start the SIMURAN command line interface.
@@ -60,6 +93,7 @@ def main():
         The output of running analysis from the specified configuration.
 
     """
+    sys.excepthook = excepthook
     description = f"simuran version {VERSION}"
     parser = argparse.ArgumentParser(description)
     parser.add_argument(
@@ -188,7 +222,7 @@ def main():
     )
     start_time = time.time()
 
-    establish_logger(parsed.log, parsed)
+    simuran.log_utils.establish_logger(parsed.log, parsed)
 
     if parsed.dummy is True:
         parsed.skip_batch_setup = False
@@ -221,7 +255,7 @@ def main():
             os.path.dirname(parsed.location),
             "simuran_params--" + os.path.basename(parsed.location),
         )
-        print(
+        log.print(
             "Copying parameters from {} to {}".format(parsed.location, output_location)
         )
         result = simuran.batch_setup.BatchSetup.copy_params(
@@ -245,9 +279,12 @@ def main():
             dirname=parsed.dirname,
         )
 
+    record.stdout_stderr = ""
     record.duration = time.time() - start_time
     record.output_data = record.datastore.find_new_data(record.timestamp)
     record.tags = set([STATUS_FORMAT % "finished"])
+    record.stdout_stderr = log.read_log_file()
+    log.clear_log_file()
     project.add_record(record)
     project.save()
 

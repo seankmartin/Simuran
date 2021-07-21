@@ -22,6 +22,10 @@ import simuran.recording
 import simuran.analysis.analysis_handler
 import simuran.param_handler
 import simuran.plot.figure
+from skm_pyutils.py_log import FileStdoutLogger
+
+## TODO test multiprocessing with logging.
+log = FileStdoutLogger()
 
 main_was_error = False
 
@@ -57,7 +61,7 @@ def save_figures(figures, out_dir, figure_names=[], verbose=False, set_done=Fals
 
     if len(figures) != 0:
         if verbose:
-            print("Plotting figures to {}".format(os.path.join(out_dir, "plots")))
+            log.print("Plotting figures to {}".format(os.path.join(out_dir, "plots")))
 
         if len(figure_names) != len(figures):
             for i, f in enumerate(figures):
@@ -70,7 +74,7 @@ def save_figures(figures, out_dir, figure_names=[], verbose=False, set_done=Fals
         for f in figures:
             if f.isdone():
                 if verbose:
-                    print("Plotting to {}".format(f.get_filename()))
+                    log.print("Plotting to {}".format(f.get_filename()))
                 f.savefig(os.path.join(out_dir, "plots", f.get_filename()))
                 f.close()
 
@@ -81,7 +85,7 @@ def save_unclosed_figures(out_dir):
     """Save any figures which were not closed to out_dir and close them."""
     figs = list(map(plt.figure, plt.get_fignums()))
     if len(figs) != 0:
-        print("Saving unclosed_plots to {}".format(out_dir))
+        log.print("Saving unclosed_plots to {}".format(out_dir))
     for i, f in enumerate(figs):
         os.makedirs(os.path.join(out_dir, "unclosed_plots"), exist_ok=True)
         name = os.path.join(out_dir, "unclosed_plots", "fig_{}.png".format(i))
@@ -160,14 +164,14 @@ def modify_path(path_dir, verbose=False):
     """
     if os.path.isdir(path_dir):
         if verbose:
-            print("Adding {} to path".format(path_dir))
+            log.print("Adding {} to path".format(path_dir))
         site.addsitedir(path_dir)
     elif verbose:
-        print("WARNING: {} does not exist, not adding to path".format(path_dir))
+        log.print("WARNING: {} does not exist, not adding to path".format(path_dir))
     if verbose:
-        print("The path is now:")
+        log.print("The path is now:")
         for line in sys.path:
-            print(line)
+            log.print(line)
 
 
 def batch_control_setup(batch_setup, only_check, do_interactive=True, verbose=False):
@@ -194,22 +198,22 @@ def batch_control_setup(batch_setup, only_check, do_interactive=True, verbose=Fa
     batch_setup.set_only_check(only_check)
 
     if batch_setup.ph["interactive"] or do_interactive:
-        print(
+        log.print(
             "Interactive mode selected, starting REGEX design at {}".format(
                 batch_setup.ph["start_dir"]
             )
         )
         batch_setup.interactive_refilt()
 
-    print("Running batch setup from {}".format(batch_setup.file_loc))
+    log.print("Running batch setup from {}".format(batch_setup.file_loc))
     batch_setup.write_batch_params(verbose_params=True, verbose=verbose)
     if batch_setup.ph["only_check"]:
-        print(
+        log.print(
             "Done checking batch setup. "
             + "Change only_check to False in {} to run".format(batch_setup.file_loc)
         )
     elif only_check:
-        print("Done checking batch setup. " + "Pass only_check as False in main to run")
+        log.print("Done checking batch setup. " + "Pass only_check as False in main to run")
 
     return not (batch_setup.ph["only_check"] or only_check)
 
@@ -264,7 +268,7 @@ def container_setup(
         raise FileNotFoundError("No recordings found in {}".format(location))
 
     if sort_container_fn is not None:
-        print("Sorting the container")
+        log.print("Sorting the container")
         recording_container.sort(sort_container_fn, reverse=reverse_sort)
 
     return recording_container
@@ -294,11 +298,11 @@ def write_cells_in_container(
     """
     help_out_loc = os.path.join(in_dir, "all_cells.txt")
     if (not os.path.isfile(help_out_loc)) or overwrite:
-        print("Printing all units to {}".format(help_out_loc))
+        log.print("Printing all units to {}".format(help_out_loc))
         with open(help_out_loc, "w") as f:
             recording_container.print_units(f)
     else:
-        print(
+        log.print(
             "All units already available at {}, delete this to update".format(
                 help_out_loc
             )
@@ -337,7 +341,7 @@ def subsample_container(
             select_location = os.path.join(recording_container.base_dir, file_list_name)
             if (not os.path.isfile(select_location)) or overwrite:
                 recording_container.subsample(interactive=True, inplace=True)
-                print(
+                log.print(
                     "Selected {} for processing, saved to {}".format(
                         recording_container.get_property("source_file"), select_location
                     )
@@ -350,7 +354,7 @@ def subsample_container(
                         out_str = "{}\n".format(name)
                         f.write(out_str)
             else:
-                print(
+                log.print(
                     "Loading recordings from {}, delete this to update".format(
                         select_location
                     )
@@ -535,7 +539,7 @@ def run_all_analysis(
     final_figs = []
     if num_cpus > 1:
         pool = multiprocessing.get_context("spawn").Pool(num_cpus)
-        print(
+        log.print(
             "Launching {} workers for {} iterations".format(
                 num_cpus, len(recording_container)
             )
@@ -692,7 +696,7 @@ def setup_default_params(
         full_name = value
         made_files.append(False)
         if not os.path.isfile(full_name):
-            print(
+            log.print(
                 "{} does not exist, will create it with {}".format(
                     full_name, text_editor
                 )
@@ -764,6 +768,8 @@ def analyse_files(
         A list of functions to perform on each recording.
     attributes_to_save : list
         A list of attributes to save from the results.
+    log : simuran.log_utils.SMLogger
+        A logging instance.
     args_fn : function, optional
         A function which returns the arguments to use for each
         function in functions for each recording.
@@ -912,7 +918,7 @@ def analyse_files(
     # )
     results = recording_container.get_results()
 
-    print(
+    log.print(
         "Operation completed in {:.2f}mins".format((time.monotonic() - start_time) / 60)
     )
 

@@ -9,6 +9,10 @@ from skm_pyutils.py_log import log_exception
 from simuran.main.single_main import run, modify_path
 from simuran.param_handler import ParamHandler
 from simuran.main.merge import merge_files, csv_merge
+from skm_pyutils.py_log import FileStdoutLogger
+
+## TODO test multiprocessing with logging.
+log = FileStdoutLogger()
 
 
 def _get_dict_entry(run_dict_list, function_to_use, index):
@@ -26,8 +30,10 @@ def multiprocessing_func(
 ):
     """This is run for each item to be analysed."""
     # TODO printing would have to be stored and done at the end for multi worker
-    print(
-        "--------------------SIMURAN Batch Iteration {}--------------------".format(i+1)
+    log.print(
+        "--------------------SIMURAN Batch Iteration {}--------------------".format(
+            i + 1
+        )
     )
     run_dict, batch_param_loc, fn_param_loc = _get_dict_entry(
         run_dict_list, function_to_use, i
@@ -112,7 +118,7 @@ def batch_main(
     if num_cpus > 1:
         pool = multiprocessing.get_context("spawn").Pool(num_cpus)
 
-        print(
+        log.print(
             "Launching {} workers for {} iterations".format(
                 num_cpus, len(run_dict_list)
             )
@@ -141,7 +147,7 @@ def batch_main(
             final_res[1].append(item[2])
 
     else:
-        print("Starting a loop over {} iterations".format(len(run_dict_list)))
+        log.print("Starting a loop over {} iterations".format(len(run_dict_list)))
         final_res = ([], [])
         for i in range(len(run_dict_list)):
             info = multiprocessing_func(
@@ -240,7 +246,7 @@ def batch_run(
         and os.path.isfile(pickle_name)
         and (not overwrite)
     ):
-        print(
+        log.print(
             "Loading data from {}, please delete it to run instead".format(pickle_name)
         )
         with open(pickle_name, "rb") as f:
@@ -263,14 +269,14 @@ def batch_run(
                 pickle.dump(all_info, f)
 
             if merge:
-                print("--------------------Merging results--------------------")
+                log.print("--------------------Merging results--------------------")
                 if len(to_merge) == 0:
-                    print("Merging everything in {}".format(out_dir))
+                    log.print("Merging everything in {}".format(out_dir))
                     csv_merge(out_dir)
                     merge_files(out_dir)
                 else:
                     for folder in to_merge:
-                        print(
+                        log.print(
                             "Merging in the folder {}".format(
                                 os.path.join(out_dir, folder)
                             )
@@ -282,7 +288,7 @@ def batch_run(
         and (after_batch_function is not None)
         and (after_batch_function != "save")
     ):
-        print("Running {}".format(after_batch_function.__name__))
+        log.print("Running {}".format(after_batch_function.__name__))
         after_batch_function(
             all_info,
             extra_info=(
@@ -291,7 +297,7 @@ def batch_run(
             ),
         )
 
-    print(
+    log.print(
         "Batch operation completed in {:.2f}mins".format(
             (time.monotonic() - start_time) / 60
         )
