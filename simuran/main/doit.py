@@ -10,7 +10,9 @@ from simuran.main.single_main import modify_path
 from simuran.param_handler import ParamHandler
 
 
-def create_task(batch_file, analysis_functions=[], num_workers=1, dirname=""):
+def create_task(
+    batch_file, analysis_functions=[], num_workers=1, dirname="", cfg_path="", reason=""
+):
     """
     Create a doit task.
 
@@ -73,12 +75,14 @@ def create_task(batch_file, analysis_functions=[], num_workers=1, dirname=""):
             os.path.splitext(os.path.basename(batch_file))[0] + "_dump.pickle",
         )
     ]
+    action = f"simuran -r -m -o -n {num_workers}"
     if dirname != "":
-        action = "simuran -r -m -o -n {} --dirname {} {}".format(
-            num_workers, dirname, batch_file
-        )
-    else:
-        action = "simuran -r -m -o -n {} {}".format(num_workers, batch_file)
+        action += f" --dirname {dirname}"
+    if cfg_path != "":
+        action += f" --config {cfg_path}"
+    if reason != "":
+        action += f' --reason "{reason}"'
+    action += f" {batch_file}"
 
     def clean():
         run_dict_ = ParamHandler(in_loc=batch_file, name="params")
