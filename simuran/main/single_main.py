@@ -14,7 +14,7 @@ from pprint import pformat
 
 from tqdm import tqdm
 import matplotlib.pyplot as plt
-from skm_pyutils.py_log import log_exception
+from skm_pyutils.py_log import log_exception, FileStdoutLogger
 
 import simuran.batch_setup
 import simuran.recording_container
@@ -22,9 +22,12 @@ import simuran.recording
 import simuran.analysis.analysis_handler
 import simuran.param_handler
 import simuran.plot.figure
-from skm_pyutils.py_log import FileStdoutLogger
+from simuran.config_handler import parse_config
 
 ## TODO test multiprocessing with logging.
+## May have issues with file locking
+## If so, easiest fix would be to disable the logging
+## When multiprocessing
 log = FileStdoutLogger()
 
 main_was_error = False
@@ -441,6 +444,7 @@ def multiprocessing_func(
     to_load,
     out_dir,
     handle_errors,
+    cfg
 ):
     """This function is run once per recording to analyse."""
     analysis_handler = simuran.analysis.analysis_handler.AnalysisHandler(
@@ -475,11 +479,15 @@ def multiprocessing_func(
             # This allows for multiple runs of the same function
             if isinstance(fn_args, dict):
                 for key, value in fn_args.items():
+                    cfg_cpy = copy(cfg)
                     args, kwargs = value
-                    analysis_handler.add_fn(fn, recording, *args, **kwargs)
+                    cfg_cpy.update(kwargs)
+                    analysis_handler.add_fn(fn, recording, *args, **cfg_cpy)
             else:
                 args, kwargs = fn_args
-                analysis_handler.add_fn(fn, recording, *args, **kwargs)
+                cfg_cpy = copy(cfg)
+                cfg_cpy.update(kwargs)
+                analysis_handler.add_fn(fn, recording, *args, **cfg_cpy)
     analysis_handler.run_all_fns()
     recording_container[i].results = copy(analysis_handler.results)
     analysis_handler.reset()
@@ -535,6 +543,7 @@ def run_all_analysis(
 
     """
     pbar = tqdm(range(len(recording_container)))
+    cfg = parse_config()
 
     final_figs = []
     if num_cpus > 1:
@@ -557,6 +566,7 @@ def run_all_analysis(
                     to_load,
                     out_dir,
                     handle_errors,
+                    cfg,
                 ),
                 callback=final_figs.append,
             )
@@ -581,6 +591,7 @@ def run_all_analysis(
                 to_load,
                 out_dir,
                 handle_errors,
+                cfg,
             ),
 
     if args_fn is not None:
@@ -595,11 +606,15 @@ def run_all_analysis(
             # This allows for multiple runs of the same function
             if isinstance(fn_args, dict):
                 for key, value in fn_args.items():
+                    cfg_cpy = copy(cfg)
                     args, kwargs = value
-                    analysis_handler.add_fn(fn, recording_container, *args, **kwargs)
+                    cfg_cpy.update(kwargs)
+                    analysis_handler.add_fn(fn, recording_container, *args, **cfg_cpy)
             else:
+                cfg_cpy = copy(cfg)
                 args, kwargs = fn_args
-                analysis_handler.add_fn(fn, recording_container, *args, **kwargs)
+                cfg_cpy.update(kwargs)
+                analysis_handler.add_fn(fn, recording_container, *args, **cfg_cpy)
 
     analysis_handler.run_all_fns()
     recording_container.results = copy(analysis_handler.results)
