@@ -11,7 +11,12 @@ from sumatra.projects import load_project
 from sumatra.programs import Executable
 from sumatra.core import STATUS_FORMAT
 from sumatra.parameters import SimpleParameterSet
-from skm_pyutils.py_log import setup_text_logging, get_default_log_loc, FileStdoutLogger
+from skm_pyutils.py_log import (
+    setup_text_logging,
+    get_default_log_loc,
+    FileStdoutLogger,
+    FileLogger,
+)
 
 import simuran.main
 import simuran.batch_setup
@@ -21,10 +26,13 @@ import simuran.config_handler
 VERSION = "0.0.1"
 
 log = FileStdoutLogger()
+file_log = FileLogger("simuran_cli")
+default_loc = os.path.join(os.path.expanduser("~"), ".skm_python", "simuran_all.log")
+setup_text_logging(None, loglevel="DEBUG", bname=default_loc)
 
 default_loc = os.path.join(os.path.expanduser("~"), ".skm_python", "sm_errorlog.txt")
 os.makedirs(os.path.dirname(default_loc), exist_ok=True)
-this_logger = logging.getLogger(__name__)
+this_logger = logging.getLogger("main_logger")
 handler = logging.FileHandler(default_loc)
 this_logger.addHandler(handler)
 
@@ -217,7 +225,7 @@ def main():
     else:
         cfg = {}
 
-    if not parsed.ns:
+    if not parsed.nosave:
         ex = Executable(path="simuran", version=VERSION, name="simuran")
         project = load_project()
         for k, v in cfg.items():
@@ -233,7 +241,7 @@ def main():
         )
         start_time = time.time()
 
-    establish_logger(parsed.log, parsed)
+    file_log.set_level(parsed.log)
 
     if parsed.dummy is True:
         parsed.skip_batch_setup = False
@@ -296,7 +304,7 @@ def main():
             dirname=parsed.dirname,
         )
 
-    if not parsed.ns:
+    if not parsed.nosave:
         record.stdout_stderr = ""
         record.duration = time.time() - start_time
         record.output_data = record.datastore.find_new_data(record.timestamp)
@@ -306,6 +314,7 @@ def main():
         project.save()
 
     log.clear_log_file()
+    logging.shutdown()
 
     return result
 
