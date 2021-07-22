@@ -110,7 +110,7 @@ def batch_main(
     all_info = []
 
     if idx is not None:
-        run_dict, batch_param_loc, fn_param_loc = get_dict_entry(idx)
+        run_dict, batch_param_loc, fn_param_loc = _get_dict_entry(idx)
         full_kwargs = {**run_dict, **kwargs}
         info = run(batch_param_loc, fn_param_loc, **full_kwargs)
         return info

@@ -29,3 +29,4 @@ from .analysis.analysis_handler import AnalysisHandler
 from .plot.figure import SimuranFigure
 from .plot.base_plot import save_simuran_plot, setup_ax, despine, set_plot_style
 from .base_container import GenericContainer
+from .config_handler import parse_config, set_config_path
