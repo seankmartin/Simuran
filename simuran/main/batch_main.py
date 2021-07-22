@@ -9,6 +9,7 @@ from skm_pyutils.py_log import log_exception
 from simuran.main.single_main import run, modify_path
 from simuran.param_handler import ParamHandler
 from simuran.main.merge import merge_files, csv_merge
+from simuran.config_handler import parse_config
 from skm_pyutils.py_log import FileStdoutLogger
 
 ## TODO test multiprocessing with logging.
@@ -288,6 +289,7 @@ def batch_run(
         and (after_batch_function is not None)
         and (after_batch_function != "save")
     ):
+        cfg = parse_config()
         log.print("Running {}".format(after_batch_function.__name__))
         after_batch_function(
             all_info,
@@ -295,6 +297,7 @@ def batch_run(
                 out_dir,
                 os.path.splitext(os.path.basename(run_dict_loc))[0] + fn_name,
             ),
+            **cfg
         )
 
     log.print(
