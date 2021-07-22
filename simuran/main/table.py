@@ -254,6 +254,10 @@ def analyse_cell_list(
     pandas.DataFrame
         Dataframe containing the results per cell.
 
+    TODO
+    ----
+    Support multiprocessing.
+
     """
     if out_dir is None:
         out_dir = os.path.dirname(filename)
