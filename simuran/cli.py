@@ -28,7 +28,7 @@ this_logger = logging.getLogger(__name__)
 handler = logging.FileHandler(default_loc)
 this_logger.addHandler(handler)
 
-
+# TODO consider simplifying some of this with a main control object.
 def excepthook(exc_type, exc_value, exc_traceback):
     """
     Any uncaught exceptions will be logged from here.
@@ -206,6 +206,9 @@ def main():
     parser.add_argument(
         "--list", "-l", action="store_true", help="Whether to run on a list of files"
     )
+    parser.add_argument(
+        "--nosave", "-ns", action="store_true", help="Skip sumatra saving"
+    )
     parsed, unparsed = parser.parse_known_args()
 
     if len(parsed.config) > 0:
@@ -214,20 +217,21 @@ def main():
     else:
         cfg = {}
 
-    ex = Executable(path="simuran", version=VERSION, name="simuran")
-    project = load_project()
-    for k, v in cfg.items():
-        if isinstance(v, dict):
-            cfg[k] = str(v)
-    sp = SimpleParameterSet(cfg)
-    record = project.new_record(
-        parameters=sp,
-        script_args=" ".join(sys.argv[1:]),
-        reason=parsed.reason,
-        executable=ex,
-        main_file=parsed.batch_config_path,
-    )
-    start_time = time.time()
+    if not parsed.ns:
+        ex = Executable(path="simuran", version=VERSION, name="simuran")
+        project = load_project()
+        for k, v in cfg.items():
+            if isinstance(v, dict):
+                cfg[k] = str(v)
+        sp = SimpleParameterSet(cfg)
+        record = project.new_record(
+            parameters=sp,
+            script_args=" ".join(sys.argv[1:]),
+            reason=parsed.reason,
+            executable=ex,
+            main_file=parsed.batch_config_path,
+        )
+        start_time = time.time()
 
     establish_logger(parsed.log, parsed)
 
@@ -292,14 +296,16 @@ def main():
             dirname=parsed.dirname,
         )
 
-    record.stdout_stderr = ""
-    record.duration = time.time() - start_time
-    record.output_data = record.datastore.find_new_data(record.timestamp)
-    record.tags = set([STATUS_FORMAT % "finished"])
-    record.stdout_stderr = log.read_log_file()
+    if not parsed.ns:
+        record.stdout_stderr = ""
+        record.duration = time.time() - start_time
+        record.output_data = record.datastore.find_new_data(record.timestamp)
+        record.tags = set([STATUS_FORMAT % "finished"])
+        record.stdout_stderr = log.read_log_file()
+        project.add_record(record)
+        project.save()
+
     log.clear_log_file()
-    project.add_record(record)
-    project.save()
 
     return result
 
