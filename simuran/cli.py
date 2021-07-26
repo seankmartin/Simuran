@@ -84,7 +84,7 @@ def establish_logger(loglevel, params):
     fname = get_default_log_loc("simuran_cli.log")
     setup_text_logging(None, loglevel, fname, append=True)
 
-    logging.info("New run with params {}".format(params))
+    file_log.info("New run with params {}".format(params))
 
 
 def main():

@@ -14,7 +14,7 @@ from pprint import pformat
 
 from tqdm import tqdm
 import matplotlib.pyplot as plt
-from skm_pyutils.py_log import log_exception, FileStdoutLogger
+from skm_pyutils.py_log import log_exception, FileStdoutLogger, FileLogger
 
 import simuran.batch_setup
 import simuran.recording_container
@@ -29,6 +29,7 @@ from simuran.config_handler import parse_config
 ## If so, easiest fix would be to disable the logging
 ## When multiprocessing
 log = FileStdoutLogger()
+file_log = FileLogger("simuran_cli")
 
 main_was_error = False
 
@@ -216,7 +217,9 @@ def batch_control_setup(batch_setup, only_check, do_interactive=True, verbose=Fa
             + "Change only_check to False in {} to run".format(batch_setup.file_loc)
         )
     elif only_check:
-        log.print("Done checking batch setup. " + "Pass only_check as False in main to run")
+        log.print(
+            "Done checking batch setup. " + "Pass only_check as False in main to run"
+        )
 
     return not (batch_setup.ph["only_check"] or only_check)
 
@@ -444,7 +447,7 @@ def multiprocessing_func(
     to_load,
     out_dir,
     handle_errors,
-    cfg
+    cfg,
 ):
     """This function is run once per recording to analyse."""
     analysis_handler = simuran.analysis.analysis_handler.AnalysisHandler(
@@ -624,7 +627,7 @@ def run_all_analysis(
     )
 
     if main_was_error:
-        logging.warning("A handled error occurred while loading files")
+        file_log.warning("A handled error occurred while loading files")
 
     return final_figs
 
@@ -938,15 +941,15 @@ def analyse_files(
     )
 
     if len(recording_container.get_invalid_locations()) > 0:
-        logging.warning(
-            pformat(
+        msg = pformat(
                 "Loaded {} recordings and skipped loading from {} locations:\n {}".format(
                     len(recording_container),
                     len(recording_container.get_invalid_locations()),
                     recording_container.get_invalid_locations(),
                 )
             )
-        )
+        file_log.warning(msg)
+        log.print("WARNING: " + msg)
 
     return results, recording_container
 

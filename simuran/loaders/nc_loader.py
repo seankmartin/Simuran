@@ -14,7 +14,7 @@ import numpy as np
 
 from simuran.loaders.base_loader import BaseLoader
 
-
+# TODO support non-sequential eeg numbers
 class NCLoader(BaseLoader):
     """Load data compatible with the NeuroChaT package."""
 

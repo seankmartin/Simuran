@@ -6,8 +6,13 @@ import csv
 
 from simuran.base_container import AbstractContainer
 from simuran.recording import Recording
+from skm_pyutils.py_log import FileStdoutLogger, FileLogger
 from skm_pyutils.py_path import get_all_files_in_dir
 from skm_pyutils.py_path import get_dirs_matching_regex
+
+# TODO make this easier
+log = FileStdoutLogger()
+file_log = FileLogger("simuran_cli")
 
 
 class RecordingContainer(AbstractContainer):
@@ -130,7 +135,12 @@ class RecordingContainer(AbstractContainer):
             recording = Recording(param_file=param_file, load=should_load)
             if not recording.valid:
                 if verbose:
-                    print("Last recording was invalid, not adding to container")
+                    log.print(
+                        "WARNING: Recording from {} was invalid, not adding to container".format(
+                            param_file
+                        )
+                    )
+                file_log.warning("Recording from {} was invalid".format(param_file))
                 self.invalid_recording_locations.append(param_file)
             else:
                 self.append(recording)
