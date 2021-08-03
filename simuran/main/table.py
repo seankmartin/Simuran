@@ -7,16 +7,15 @@ from pprint import pprint
 import pandas as pd
 from skm_pyutils.py_path import get_base_dir_to_files, make_path_if_not_exists
 from skm_pyutils.py_table import list_to_df, df_from_file
-from skm_pyutils.py_log import log_exception, get_default_log_loc, FileStdoutLogger
+from skm_pyutils.py_log import get_default_log_loc
 
+from simuran.log_handler import log_exception, print, log
 from simuran.loaders.loader_list import loaders_dict
 from simuran.recording import Recording
 from simuran.recording_container import RecordingContainer
 from simuran.analysis.analysis_handler import AnalysisHandler
 from simuran.param_handler import ParamHandler
 from simuran.config_handler import parse_config
-
-log = FileStdoutLogger()
 
 
 def dir_to_table(directory):
@@ -274,7 +273,7 @@ def analyse_cell_list(
         os.path.join(out_dir, "..", "pickles", base + res_name + "_dump.pickle")
     )
     if os.path.exists(pickle_name) and not overwrite:
-        log.print(
+        print(
             f"{pickle_name} exists already, please delete to run or pass overwrite as True"
         )
         with open(pickle_name, "rb") as f:
@@ -309,7 +308,7 @@ def analyse_cell_list(
             recording = Recording()
         rc.append(recording)
     if n_not_loaded != 0:
-        log.print(f"Unable to load {n_not_loaded} recordings")
+        print(f"Unable to load {n_not_loaded} recordings")
 
     n_skip = 0
     for info in cell_list:
@@ -323,7 +322,7 @@ def analyse_cell_list(
             rc[file_idx].units[record_unit_idx].units_to_use = []
         rc[file_idx].units[record_unit_idx].units_to_use.append(cell_no)
     if n_skip != 0:
-        log.print(f"Unable to analyse {n_skip} cells due to recording problems")
+        print(f"Unable to analyse {n_skip} cells due to recording problems")
 
     ah = AnalysisHandler()
     used_recs = []
@@ -357,9 +356,9 @@ def analyse_cell_list(
     nrows_new = len(df)
 
     if nrows_new != nrows_original:
-        log.print("WARNING: Not all cells were correctly analysed.")
-        log.print(f"Analysed {nrows_new} cells out of {nrows_original} cells.")
-        log.print("Please evaluate the result with caution.")
+        print("WARNING: Not all cells were correctly analysed.")
+        print(f"Analysed {nrows_new} cells out of {nrows_original} cells.")
+        print("Please evaluate the result with caution.")
     else:
         for name, values in orig_df.iteritems():
             if name not in df.columns:
@@ -374,7 +373,7 @@ def analyse_cell_list(
         pickle.dump(df, f)
 
     if after_fn is not None:
-        after_fn(df, (out_dir, os.path.basename(filename)))
+        after_fn(df, (out_dir, os.path.basename(filename)), **fn_kwargs)
 
     return df
 

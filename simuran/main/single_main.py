@@ -14,8 +14,8 @@ from pprint import pformat
 
 from tqdm import tqdm
 import matplotlib.pyplot as plt
-from skm_pyutils.py_log import log_exception, FileStdoutLogger, FileLogger
 
+from simuran.log_handler import log_exception, print, log
 import simuran.batch_setup
 import simuran.recording_container
 import simuran.recording
@@ -23,13 +23,6 @@ import simuran.analysis.analysis_handler
 import simuran.param_handler
 import simuran.plot.figure
 from simuran.config_handler import parse_config
-
-## TODO test multiprocessing with logging.
-## May have issues with file locking
-## If so, easiest fix would be to disable the logging
-## When multiprocessing
-log = FileStdoutLogger()
-file_log = FileLogger("simuran_cli")
 
 main_was_error = False
 
@@ -65,7 +58,7 @@ def save_figures(figures, out_dir, figure_names=[], verbose=False, set_done=Fals
 
     if len(figures) != 0:
         if verbose:
-            log.print("Plotting figures to {}".format(os.path.join(out_dir, "plots")))
+            print("Plotting figures to {}".format(os.path.join(out_dir, "plots")))
 
         if len(figure_names) != len(figures):
             for i, f in enumerate(figures):
@@ -78,7 +71,7 @@ def save_figures(figures, out_dir, figure_names=[], verbose=False, set_done=Fals
         for f in figures:
             if f.isdone():
                 if verbose:
-                    log.print("Plotting to {}".format(f.get_filename()))
+                    print("Plotting to {}".format(f.get_filename()))
                 f.savefig(os.path.join(out_dir, "plots", f.get_filename()))
                 f.close()
 
@@ -89,7 +82,7 @@ def save_unclosed_figures(out_dir):
     """Save any figures which were not closed to out_dir and close them."""
     figs = list(map(plt.figure, plt.get_fignums()))
     if len(figs) != 0:
-        log.print("Saving unclosed_plots to {}".format(out_dir))
+        print("Saving unclosed_plots to {}".format(out_dir))
     for i, f in enumerate(figs):
         os.makedirs(os.path.join(out_dir, "unclosed_plots"), exist_ok=True)
         name = os.path.join(out_dir, "unclosed_plots", "fig_{}.png".format(i))
@@ -168,14 +161,14 @@ def modify_path(path_dir, verbose=False):
     """
     if os.path.isdir(path_dir):
         if verbose:
-            log.print("Adding {} to path".format(path_dir))
+            print("Adding {} to path".format(path_dir))
         site.addsitedir(path_dir)
     elif verbose:
-        log.print("WARNING: {} does not exist, not adding to path".format(path_dir))
+        print("WARNING: {} does not exist, not adding to path".format(path_dir))
     if verbose:
-        log.print("The path is now:")
+        print("The path is now:")
         for line in sys.path:
-            log.print(line)
+            print(line)
 
 
 def batch_control_setup(batch_setup, only_check, do_interactive=True, verbose=False):
@@ -202,22 +195,22 @@ def batch_control_setup(batch_setup, only_check, do_interactive=True, verbose=Fa
     batch_setup.set_only_check(only_check)
 
     if batch_setup.ph["interactive"] or do_interactive:
-        log.print(
+        print(
             "Interactive mode selected, starting REGEX design at {}".format(
                 batch_setup.ph["start_dir"]
             )
         )
         batch_setup.interactive_refilt()
 
-    log.print("Running batch setup from {}".format(batch_setup.file_loc))
+    print("Running batch setup from {}".format(batch_setup.file_loc))
     batch_setup.write_batch_params(verbose_params=True, verbose=verbose)
     if batch_setup.ph["only_check"]:
-        log.print(
+        print(
             "Done checking batch setup. "
             + "Change only_check to False in {} to run".format(batch_setup.file_loc)
         )
     elif only_check:
-        log.print(
+        print(
             "Done checking batch setup. " + "Pass only_check as False in main to run"
         )
 
@@ -274,7 +267,7 @@ def container_setup(
         raise FileNotFoundError("No recordings found in {}".format(location))
 
     if sort_container_fn is not None:
-        log.print("Sorting the container")
+        print("Sorting the container")
         recording_container.sort(sort_container_fn, reverse=reverse_sort)
 
     return recording_container
@@ -304,11 +297,11 @@ def write_cells_in_container(
     """
     help_out_loc = os.path.join(in_dir, "all_cells.txt")
     if (not os.path.isfile(help_out_loc)) or overwrite:
-        log.print("Printing all units to {}".format(help_out_loc))
+        print("Printing all units to {}".format(help_out_loc))
         with open(help_out_loc, "w") as f:
             recording_container.print_units(f)
     else:
-        log.print(
+        print(
             "All units already available at {}, delete this to update".format(
                 help_out_loc
             )
@@ -347,7 +340,7 @@ def subsample_container(
             select_location = os.path.join(recording_container.base_dir, file_list_name)
             if (not os.path.isfile(select_location)) or overwrite:
                 recording_container.subsample(interactive=True, inplace=True)
-                log.print(
+                print(
                     "Selected {} for processing, saved to {}".format(
                         recording_container.get_property("source_file"), select_location
                     )
@@ -360,7 +353,7 @@ def subsample_container(
                         out_str = "{}\n".format(name)
                         f.write(out_str)
             else:
-                log.print(
+                print(
                     "Loading recordings from {}, delete this to update".format(
                         select_location
                     )
@@ -551,7 +544,7 @@ def run_all_analysis(
     final_figs = []
     if num_cpus > 1:
         pool = multiprocessing.get_context("spawn").Pool(num_cpus)
-        log.print(
+        print(
             "Launching {} workers for {} iterations".format(
                 num_cpus, len(recording_container)
             )
@@ -627,7 +620,7 @@ def run_all_analysis(
     )
 
     if main_was_error:
-        file_log.warning("A handled error occurred while loading files")
+        log.warning("A handled error occurred while loading files")
 
     return final_figs
 
@@ -714,7 +707,7 @@ def setup_default_params(
         full_name = value
         made_files.append(False)
         if not os.path.isfile(full_name):
-            log.print(
+            print(
                 "{} does not exist, will create it with {}".format(
                     full_name, text_editor
                 )
@@ -936,7 +929,7 @@ def analyse_files(
     # )
     results = recording_container.get_results()
 
-    log.print(
+    print(
         "Operation completed in {:.2f}mins".format((time.monotonic() - start_time) / 60)
     )
 
@@ -948,8 +941,8 @@ def analyse_files(
                     recording_container.get_invalid_locations(),
                 )
             )
-        file_log.warning(msg)
-        log.print("WARNING: " + msg)
+        log.warning(msg)
+        print("WARNING: " + msg)
 
     return results, recording_container
 

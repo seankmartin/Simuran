@@ -4,7 +4,7 @@ import logging
 
 from indexed import IndexedOrderedDict
 from tqdm import tqdm
-from skm_pyutils.py_log import log_exception
+from simuran.log_handler import log_exception
 from skm_pyutils.py_save import save_mixed_dict_to_csv
 
 

@@ -6,9 +6,7 @@ from pprint import pformat
 
 import simuran
 from simuran.main.single_main import save_figures
-from lfp_atn_simuran.analysis.parse_cfg import parse_cfg_info
 from lfp_atn_simuran.analysis.frequency_analysis import powers
-from skm_pyutils.py_log import log_exception
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 lib_folder = os.path.abspath(os.path.join(HERE, ".."))
@@ -43,7 +41,7 @@ def analyse_container(rc, out_dir):
     # This function should take (recording, *args, **kwargs)
     fn_to_use = powers
     fn_args = [rc.base_dir, figures]
-    fn_kwargs = parse_cfg_info()
+    fn_kwargs = simuran.parse_config()
     ah = simuran.AnalysisHandler(handle_errors=True)
     os.makedirs(out_dir, exist_ok=True)
     bad_idx = []
@@ -51,7 +49,7 @@ def analyse_container(rc, out_dir):
         try:
             recording = rc.get(i)
         except BaseException as e:
-            log_exception(
+            simuran.log_exception(
                 e, "Loading recording {} at {}".format(i, rc[i].source_file),
             )
             rc.invalid_recording_locations.append(rc[i].source_file)
