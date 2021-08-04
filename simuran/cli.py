@@ -313,6 +313,8 @@ def main():
         project.add_record(record)
         project.save()
 
+        print("Completed run, view log using sumatra - smtweb &")
+
     log.clear_log_file()
     logging.shutdown()
 
