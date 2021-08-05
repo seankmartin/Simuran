@@ -14,19 +14,16 @@ from sumatra.parameters import SimpleParameterSet
 from skm_pyutils.py_log import (
     setup_text_logging,
     get_default_log_loc,
-    FileStdoutLogger,
-    FileLogger,
 )
 
 import simuran.main
 import simuran.batch_setup
 import simuran.param_handler
 import simuran.config_handler
+from simuran.log_handler import log, print, out
 
 VERSION = "0.0.1"
 
-log = FileStdoutLogger()
-file_log = FileLogger("simuran_cli")
 default_loc = os.path.join(os.path.expanduser("~"), ".skm_python", "simuran_all.log")
 setup_text_logging(None, loglevel="DEBUG", bname=default_loc)
 
@@ -36,7 +33,6 @@ this_logger = logging.getLogger("main_logger")
 handler = logging.FileHandler(default_loc)
 this_logger.addHandler(handler)
 
-# TODO consider simplifying some of this with a main control object.
 def excepthook(exc_type, exc_value, exc_traceback):
     """
     Any uncaught exceptions will be logged from here.
@@ -45,7 +41,6 @@ def excepthook(exc_type, exc_value, exc_traceback):
     # Don't catch CTRL+C exceptions
     if issubclass(exc_type, KeyboardInterrupt):
         sys.__excepthook__(exc_type, exc_value, exc_traceback)
-        log.clear_log_file()
         return
 
     now = datetime.datetime.now()
@@ -84,7 +79,7 @@ def establish_logger(loglevel, params):
     fname = get_default_log_loc("simuran_cli.log")
     setup_text_logging(None, loglevel, fname, append=True)
 
-    file_log.info("New run with params {}".format(params))
+    log.info("New run with params {}".format(params))
 
 
 def main():
@@ -106,6 +101,7 @@ def main():
         The output of running analysis from the specified configuration.
 
     """
+    out.clear_log_file()
     sys.excepthook = excepthook
     description = f"simuran version {VERSION}"
     parser = argparse.ArgumentParser(description)
@@ -241,7 +237,7 @@ def main():
         )
         start_time = time.time()
 
-    file_log.set_level(parsed.log)
+    log.set_level(parsed.log)
 
     if parsed.dummy is True:
         parsed.skip_batch_setup = False
@@ -315,7 +311,6 @@ def main():
 
         print("Completed run, view log using sumatra - smtweb &")
 
-    log.clear_log_file()
     logging.shutdown()
 
     return result
