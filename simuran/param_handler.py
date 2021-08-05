@@ -217,7 +217,13 @@ class ParamHandler(object):
         dirs = get_dirs_matching_regex(
             start_dir, re_filters=re_filters, return_absolute=return_absolute
         )
-        dirs = [d for d in dirs if ("__pycache__" not in d) and (d != "")]
+        possible_dirs = [d for d in dirs if ("__pycache__" not in d) and (d != "")]
+
+        dirs = []
+        for d in possible_dirs:
+            filenames = next(os.walk(d), (None, None, []))[2]
+            if len(filenames) > 0:
+                dirs.append(d)
 
         if check_only:
             if exact_file is None:
