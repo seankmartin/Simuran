@@ -548,7 +548,6 @@ def main_analyse_cell_list(params, dirname_replacement, overwrite=False):
     if out_dir is None:
         out_dir = default
 
-    ## TODO maybe should use same logic elsewhere
     cfg = parse_config()
     cfg.update(ph.get("fn_kwargs", {}))
     return analyse_cell_list(
