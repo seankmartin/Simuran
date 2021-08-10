@@ -114,12 +114,13 @@ def phase_distribution(nc_lfp, spike_times, spatial, theta_min=6, theta_max=10):
     g_data = nc_lfp.phase_dist(spike_times, fwin=(theta_min, theta_max))
     from neurochat.nc_plot import spike_phase
     import matplotlib.pyplot as plt
+
     figures = spike_phase(g_data)
     for i, f in enumerate(figures):
         f.savefig(f"{i}__phase.png")
         plt.close(f)
     print(nc_lfp.get_results())
-    
+
     phases = nc_lfp.phase_at_events(spike_times, fwin=(theta_min, theta_max))
     _, positions, directions = spatial.get_event_loc(spike_times, keep_zero_idx=True)
     dim_pos = positions[1]
@@ -130,6 +131,7 @@ def phase_distribution(nc_lfp, spike_times, spatial, theta_min=6, theta_max=10):
     plt.savefig("outscatt.png")
     return
 
+
 def main(set_file_location, do_analysis=False):
     """Create a single recording for analysis."""
     recording = simuran.Recording(params=recording_info(), base_file=set_file_location)
@@ -137,16 +139,16 @@ def main(set_file_location, do_analysis=False):
         return recording
 
     else:
-        lc_clean = LFPClean(method="avg", visualise=True, show_vis=False)
-        result = lc_clean.clean(recording, min_f=None, max_f=None)
-        fig = result["fig"]
-        fig.savefig("LSR5_01122017_regular.png", dpi=400)
 
-        lc_clean = LFPClean(method="zscore", visualise=True, show_vis=False)
-        result = lc_clean.clean(recording, min_f=None, max_f=None)
-        fig = result["fig"]
-        fig.savefig("LSR5_01122017_zscore.png", dpi=400)
+        # lc_clean = LFPClean(method="avg", visualise=True, show_vis=False)
+        # result = lc_clean.clean(recording, min_f=None, max_f=None)
+        # fig = result["fig"]
+        # fig.savefig("LSR5_01122017_regular.png", dpi=400)
 
+        # lc_clean = LFPClean(method="zscore", visualise=True, show_vis=False)
+        # result = lc_clean.clean(recording, min_f=None, max_f=None)
+        # fig = result["fig"]
+        # fig.savefig("LSR5_01122017_zscore.png", dpi=400)
 
         # result = lc_clean.clean(recording, min_f=None, max_f=None)
         # sub_sig = result["signals"]["SUB"].to_neurochat()
@@ -165,6 +167,18 @@ def main(set_file_location, do_analysis=False):
         #         spike_times = spike_obj.get_unit_stamp()
         #         break
         # phase_distribution(sub_sig, spike_times, spatial)
+
+        import numpy as np
+
+        for u in recording.load_available_neurochat_units():
+            shifted = u.shift_spike_times(500, None)
+            shuffled = u.shuffle_spike_times(500, None)
+            print(u.get_unit_stamp()[:10])
+            print(shifted[0][:10])
+            print(shuffled[0][:10])
+            print(np.mean(np.diff(u.get_unit_stamp())))
+            print(np.mean(np.diff(shifted[0])))
+            print(np.mean(np.diff(shuffled[0])))
 
 
 if __name__ == "__main__":

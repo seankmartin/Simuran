@@ -200,6 +200,27 @@ class Recording(BaseSimuran):
             all_units.append([unit.group, unit.get_available_units()])
         return all_units
 
+    def load_available_neurochat_units(self):
+        """
+        Load and return the available neurochat units.
+
+        Returns
+        -------
+        generator
+            generator of SingleUnit instances.
+
+        """
+        available_units = self.get_available_units()
+        non_zero_units = [(g, u) for (g, u) in available_units if len(u) != 0]
+        for group, units in non_zero_units:
+            print("Using tetrode {} unit {}".format(group, units[0]))
+            idx = self.units.group_by_property("group", group)[1][0]
+            unit = self.units[idx]
+            unit.load()
+            spike_obj = unit.underlying
+            spike_obj.set_unit_no(units[0])
+            yield spike_obj
+
     def get_set_units(self):
         """Get the units which are set for analysis."""
         return [unit.units_to_use for unit in self.units]
