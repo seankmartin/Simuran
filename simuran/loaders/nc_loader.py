@@ -260,7 +260,7 @@ class NCLoader(BaseLoader):
                 return_absolute=True,
                 case_sensitive_ext=True,
             )
-            print(f"Found {len(set_files)} set files")
+            print(f"Found {len(files)} set files")
 
             for fname in tqdm(files, desc="Processing files"):
                 set_files.append(os.path.basename(fname))

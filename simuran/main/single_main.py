@@ -890,6 +890,7 @@ def analyse_files(
         recording_container, select_recordings, file_list_name, overwrite=False
     )
 
+    # TODO consider allowing this from outside of data too.
     cell_location = os.path.join(in_dir, cell_list_name)
     # TODO improve this to load the info from write cells.
     if os.path.isfile(cell_location) or do_cell_picker:

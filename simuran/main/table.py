@@ -382,8 +382,8 @@ def index_ephys_files(
     start_dir,
     loader_name,
     out_loc=None,
-    post_process_fn=None,
     overwrite=True,
+    post_process_fn=None,
     post_process_kwargs=None,
     loader_kwargs=None,
     **kwargs,
@@ -407,11 +407,11 @@ def index_ephys_files(
         The loader to use for the file population.
     out_loc : str, optional
         csv file to save results to if provided.
+    overwrite : bool, optional
+        Whether to overwrite an existing output, by default True.
     post_process_fn : function, optional
         An optional function to apply to the indexed data files.
         Should take (dataframe, **kwargs as parameters)
-    overwrite : bool, optional
-        Whether to overwrite an existing output, by default True.
     post_process_kwargs : dict, optional
         Keyword arguments passed to post_process_fn.
     loader_kwargs : dict, optional
@@ -523,6 +523,10 @@ def recording_container_from_df(df, base_dir, param_dir, load=False):
         base_dir = os.path.abspath(os.path.join(param_dir, "..", "recording_mappings"))
         if row.mapping != "NOT_EXIST":
             mapping_f = os.path.join(base_dir, row.mapping)
+            if not os.path.exists(mapping_f):
+                mapping_f = os.path.join(param_dir, row.mapping)
+            if not os.path.exists(mapping_f):
+                raise ValueError(f"{mapping_f} could not be found in {param_dir}")
             recording = Recording(param_file=mapping_f, base_file=fname, load=load)
             rc.append(recording)
 
