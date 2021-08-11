@@ -8,7 +8,7 @@ from . import plot
 from .main.batch_main import batch_run, batch_main
 from .main.copy_params import copy_param_files
 from .main.doit import create_task
-from .main.single_main import run, analyse_files
+from .main.single_main import run, analyse_files, save_figures
 from .main.table import (
     index_ephys_files,
     analyse_cell_list,

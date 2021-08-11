@@ -9,7 +9,6 @@ import time
 import multiprocessing
 from copy import copy
 from datetime import datetime
-import logging
 from pprint import pformat
 
 from tqdm import tqdm
