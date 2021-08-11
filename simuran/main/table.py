@@ -279,7 +279,7 @@ def analyse_cell_list(
         with open(pickle_name, "rb") as f:
             df = pickle.load(f)
         if after_fn is not None:
-            after_fn(df, (out_dir, os.path.basename(filename)))
+            after_fn(df, (out_dir, os.path.basename(filename)), **fn_kwargs)
         return df
 
     nrows_original = len(orig_df)
@@ -554,6 +554,7 @@ def main_analyse_cell_list(params, dirname_replacement, overwrite=False):
 
     cfg = parse_config()
     cfg.update(ph.get("fn_kwargs", {}))
+    print(cfg)
     return analyse_cell_list(
         filename=ph["cell_list_path"],
         fn_to_use=ph["function_to_run"],
