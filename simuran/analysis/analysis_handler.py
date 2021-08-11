@@ -86,7 +86,7 @@ class AnalysisHandler(object):
         pbar_ = None
         if pbar is True:
             pbar_ = tqdm(range(len(self.fns_to_run)))
-        elif pbar is "notebook":
+        elif pbar == "notebook":
             pbar_ = tqdm_notebook(range(len(self.fns_to_run)))
         
         if pbar_ is not None:
