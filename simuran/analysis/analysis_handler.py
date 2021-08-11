@@ -4,6 +4,7 @@ import logging
 
 from indexed import IndexedOrderedDict
 from tqdm import tqdm
+from tqdm.notebook import tqdm as tqdm_notebook
 from simuran.log_handler import log_exception
 from skm_pyutils.py_save import save_mixed_dict_to_csv
 
@@ -65,10 +66,30 @@ class AnalysisHandler(object):
         self.run_all_fns()
 
     def run_all_fns(self, pbar=False):
-        """Run all of the established functions."""
+        """
+        Run all of the established functions.
+        
+        Parameters
+        ----------
+        pbar : string or bool, optional
+            Whether to have a progress bar. Options are
+            False (default) no progress bar.
+            True a tdqm progress bat
+            "notebook" a progress for notebooks
+
+        Returns
+        -------
+        None
+
+        """
         self._was_error = False
-        if pbar:
+        pbar_ = None
+        if pbar is True:
             pbar_ = tqdm(range(len(self.fns_to_run)))
+        elif pbar is "notebook":
+            pbar_ = tqdm_notebook(range(len(self.fns_to_run)))
+        
+        if pbar_ is not None:
             for i in pbar_:
                 fn = self.fns_to_run[i]
                 fn_params = self.fn_params_list[i]
