@@ -409,7 +409,7 @@ class RecordingContainer(AbstractContainer):
             Recording container index, single unit group at that index, group units
 
         """
-        total, all_cells = self.print_units()
+        total, all_cells, _ = self.print_units()
         final_units = []
         input_str = (
             "Please enter the units to analyse, the input options are:\n"
@@ -527,23 +527,28 @@ class RecordingContainer(AbstractContainer):
             The first item in the tuple is the index of the recording in the container,
             The second item in the tuple is some of the units found for that recording,
             which is a tuple consisting of (group, units_in_group).
+        printed : str
+            The string which was printed
 
         """
         total = 0
         all_cells = []
+        full_str = []
         for i in range(len(self)):
             was_available = self[i].available
             self[i].available = ["units"]
             recording = self.get(i)
             available_units = recording.get_available_units()
+            ## TODO many files could have same name, use join on --
             out_str = "--------{}: {}--------\n".format(
                 i, os.path.basename(recording.source_file)
             )
             self[i].available = was_available
+            full_str.append(out_str)
             if f is not None:
                 f.write(out_str)
             else:
-                print(out_str)
+                print(out_str, end="")
 
             any_units = False
             for available_unit in available_units:
@@ -551,22 +556,25 @@ class RecordingContainer(AbstractContainer):
                     out_str = "    {}: Group {} with Units {}\n".format(
                         total, available_unit[0], available_unit[1]
                     )
+                    full_str.append(out_str)
                     if f is not None:
                         f.write(out_str)
                     else:
-                        print(out_str)
+                        print(out_str, end="")
                     all_cells.append([i, available_unit])
                     total += 1
                     any_units = True
 
             if not any_units:
                 out_str = "    NONE\n"
+                full_str.append(out_str)
                 if f is not None:
                     f.write(out_str)
                 else:
-                    print(out_str)
-
-        return total, all_cells
+                    print(out_str, end="")
+    
+        final_str = "".join(full_str)
+        return total, all_cells, final_str
 
     def set_all_units_on(self):
         """Flag all cells as to be analysed."""

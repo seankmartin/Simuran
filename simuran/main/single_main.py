@@ -294,7 +294,7 @@ def write_cells_in_container(
     None
 
     """
-    help_out_loc = os.path.join(in_dir, "all_cells.txt")
+    help_out_loc = os.path.join(in_dir, name)
     if (not os.path.isfile(help_out_loc)) or overwrite:
         print("Printing all units to {}".format(help_out_loc))
         with open(help_out_loc, "w") as f:
