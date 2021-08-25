@@ -16,6 +16,7 @@ from .main.table import (
     recording_container_from_file,
     recording_container_from_df,
     main_analyse_cell_list,
+    dir_to_table,
 )
 
 from .batch_setup import BatchSetup

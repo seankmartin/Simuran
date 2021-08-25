@@ -5,7 +5,11 @@ import pickle
 from pprint import pprint
 
 import pandas as pd
-from skm_pyutils.py_path import get_base_dir_to_files, make_path_if_not_exists
+from skm_pyutils.py_path import (
+    get_base_dir_to_files,
+    make_path_if_not_exists,
+    get_all_files_in_dir,
+)
 from skm_pyutils.py_table import list_to_df, df_from_file
 from skm_pyutils.py_log import get_default_log_loc
 
@@ -18,7 +22,7 @@ from simuran.param_handler import ParamHandler
 from simuran.config_handler import parse_config
 
 
-def dir_to_table(directory):
+def dir_to_table(directory, cell_id="cell_list", file_id="file_list", ext=".txt"):
     """
     Convert directory structure into a table.
 
@@ -26,22 +30,76 @@ def dir_to_table(directory):
     ----------
     directory : str
         The starting directory.
+    cell_id : str, optional
+        The starting string to any cell list file.
+        Defaults to "cell_list"
+    file_id : str, optional
+        The starting string to any file list file.
+        Defaults to "file_list"
+    ext : str, optional
+        The extension of the files.
+        defaults to ".txt"
+
+    Returns
+    -------
+    df : pandas.DataFrame
+        The dataframe of the directory information.
 
     """
-    pass
+    txt_files = get_all_files_in_dir(
+        directory, ext=ext, recursive=True, return_absolute=False
+    )
+    d = {}
+    for f in txt_files:
+        basename = os.path.basename(f)
+        if basename.startswith(cell_id):
+            l = len(cell_id) + 1
+            ok = "cell"
+        elif basename.startswith(file_id):
+            l = len(file_id) + 1
+            ok = "file"
+        else:
+            continue
+        k = (
+            os.path.dirname(f).replace(os.sep, "--")
+            + "--"
+            + os.path.splitext(basename)[0][l:]
+        )
+        if k not in d:
+            d[k] = {}
+        d[k][ok] = os.path.join(directory, f)
 
+    saved_info = []
+    for k, v in d.items():
+        cell_loc = v.get("cell", None)
+        file_loc = v.get("file", None)
+        if (cell_loc is None) or (file_loc is None):
+            continue
+        if k.startswith("--"):
+            start_dir = None
+        else:
+            start_dir = (os.sep).join(k.split("--")[:-1])
 
-def table_to_dir(table):
-    """
-    Convert pandas table structure into directory structure.
+        with open(file_loc, "r") as f:
+            if start_dir is not None:
+                files = [
+                    os.path.join(directory, start_dir, name.strip())
+                    for name in f.readlines()
+                ]
+            else:
+                files = [
+                    os.path.join(directory, name.strip()) for name in f.readlines()
+                ]
 
-    Parameters
-    ----------
-    table : pandas.DataFrame
-        Pandas dataframe containing the information.
+        with open(cell_loc, "r") as f:
+            for line in f.readlines()[1:]:
+                (idx, g, r) = line.split(",")
+                fname = files[int(idx)]
+                dirname, basename = os.path.split(fname)
+                saved_info.append([dirname, basename, int(g), int(r)])
 
-    """
-    pass
+    df = list_to_df(saved_info, headers=["Directory", "Filename", "Group", "Unit"])
+    return df
 
 
 def process_paths_from_df(df):
