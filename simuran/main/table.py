@@ -10,7 +10,7 @@ from skm_pyutils.py_path import (
     make_path_if_not_exists,
     get_all_files_in_dir,
 )
-from skm_pyutils.py_table import list_to_df, df_from_file
+from skm_pyutils.py_table import list_to_df, df_from_file, df_to_file
 from skm_pyutils.py_log import get_default_log_loc
 
 from simuran.log_handler import log_exception, print, log
@@ -104,7 +104,9 @@ def dir_to_table(directory, cell_id="cell_list", file_id="file_list", ext=".txt"
 
 def process_paths_from_df(df):
     """
-    Turn a list of cells into a SIMURAN compatible list.
+    Turn a dataframe of cells into a SIMURAN compatible list.
+
+    It is assumed that the dataframe is grouped by filename
 
     Parameters
     ----------
@@ -145,21 +147,23 @@ def process_paths_from_df(df):
     return file_list, cell_list, mapping_list
 
 
-def excel_convert(filename, start_dir, optional_func=None):
+def data_convert(filename, start_dir, optional_func=None):
     """
-    Convert an excel file into a directory structure.
+    Convert an data file into a directory structure.
+
+    It is assumed that the data is grouped by filename.
 
     Parameters
     ----------
     filename : str
-        The path to the excel file.
+        The path to the data file (excel, csv).
     start_dir : str
         The directory to start the conversion to.
     optional_func : function, optional
         An optional function to apply to the filename.
 
     """
-    df = pd.read_excel(filename)
+    df = df_from_file(filename)
 
     os.makedirs(start_dir, exist_ok=True)
     f_out = os.path.join(start_dir, "file_list.txt")
@@ -196,12 +200,12 @@ def excel_convert(filename, start_dir, optional_func=None):
 
 def populate_table_directories(filename, dir_to_start, ext=None, re_filter=None):
     """
-    Find the directories that match given filenames.
+    Find the directories that match given filenames in filename.
     
     Parameters
     ----------
     filename : str
-        The path to an excel file describing the filenames to search for.
+        The path to a data file (excel, csv) describing the filenames to search for.
         "Filename" must be a column of this excel file.
     dir_to_start : str
         The directory to start the search in
@@ -216,7 +220,7 @@ def populate_table_directories(filename, dir_to_start, ext=None, re_filter=None)
         The original dataframe with an added Directory column.
 
     """
-    df = pd.read_excel(filename)
+    df = df_from_file(filename)
 
     if "Filename" not in df.columns:
         raise ValueError("Filename must be a column of the dataset")
@@ -251,7 +255,7 @@ def populate_table_directories(filename, dir_to_start, ext=None, re_filter=None)
     out_fname = base + "_filled" + out_ext
 
     try:
-        new_df.to_excel(out_fname, index=False)
+        df_to_file(new_df, out_fname)
     except PermissionError:
         print("Please close {}".format(out_fname))
     print("Wrote excel file to {}".format(out_fname))
@@ -422,9 +426,7 @@ def analyse_cell_list(
             if name not in df.columns:
                 df[name] = values
 
-    # TODO replace this by csv as faster
-    os.makedirs(os.path.dirname(out_fname), exist_ok=True)
-    df.to_excel(out_fname, index=False)
+    df_to_file(df, out_fname)
 
     os.makedirs(os.path.dirname(pickle_name), exist_ok=True)
     with open(pickle_name, "wb") as f:
@@ -464,7 +466,7 @@ def index_ephys_files(
     loader_name : str
         The loader to use for the file population.
     out_loc : str, optional
-        csv file to save results to if provided.
+        path to file to save results to if provided.
     overwrite : bool, optional
         Whether to overwrite an existing output, by default True.
     post_process_fn : function, optional
@@ -489,7 +491,7 @@ def index_ephys_files(
             f"{out_loc} exists, so loading this - "
             + "please delete to reindex or pass overwrite as True."
         )
-        return pd.read_csv(out_loc)
+        return df_from_file(out_loc)
 
     if post_process_kwargs is None:
         post_process_kwargs = {}
@@ -510,8 +512,7 @@ def index_ephys_files(
         results_df = post_process_fn(results_df, **post_process_kwargs)
 
     if out_loc != "":
-        make_path_if_not_exists(out_loc)
-        results_df.to_csv(out_loc, index=False)
+        df_to_file(results_df, out_loc)
 
     return results_df
 
