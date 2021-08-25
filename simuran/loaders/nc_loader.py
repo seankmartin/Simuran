@@ -280,8 +280,8 @@ class NCLoader(BaseLoader):
                         if len(durations) != len(set_files):
                             durations.append(np.nan)
 
-            headers = ["filename", "folder", "time", "duration"]
-            in_list = [set_files, root_folders, times, durations]
+            headers = ["Directory", "Filename", "Time", "Duration"]
+            in_list = [root_folders, set_files, times, durations]
             results_df = list_to_df(in_list, transpose=True, headers=headers)
             return results_df
         else:
