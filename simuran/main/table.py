@@ -567,22 +567,25 @@ def recording_container_from_df(df, base_dir, param_dir, load=False):
     simuran.RecordingContainer
 
     """
-    needed = ["filename", "folder", "mapping"]
+    needed = ["Filename", "Mapping"]
     for need in needed:
         if need not in df.columns:
             raise ValueError(f"{need} is a required column")
 
+    has_folder = "Directory" in df.columns
+
     rc = RecordingContainer()
 
     for row in df.itertuples():
-        dirname = row.folder
-        f = row.filename
-        fname = os.path.join(dirname, f)
+        fname = row.Filename
+        if has_folder:
+            dirname = row.Directory
+            fname = os.path.join(dirname, fname)
         base_dir = os.path.abspath(os.path.join(param_dir, "..", "recording_mappings"))
         if row.mapping != "NOT_EXIST":
-            mapping_f = os.path.join(base_dir, row.mapping)
+            mapping_f = os.path.join(base_dir, row.Mapping)
             if not os.path.exists(mapping_f):
-                mapping_f = os.path.join(param_dir, row.mapping)
+                mapping_f = os.path.join(param_dir, row.Mapping)
             if not os.path.exists(mapping_f):
                 raise ValueError(f"{mapping_f} could not be found in {param_dir}")
             recording = Recording(param_file=mapping_f, base_file=fname, load=load)
@@ -612,7 +615,6 @@ def main_analyse_cell_list(params, dirname_replacement, overwrite=False):
 
     cfg = parse_config()
     cfg.update(ph.get("fn_kwargs", {}))
-    print(cfg)
     return analyse_cell_list(
         filename=ph["cell_list_path"],
         fn_to_use=ph["function_to_run"],
