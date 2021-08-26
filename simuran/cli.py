@@ -219,6 +219,7 @@ def main():
         simuran.config_handler.set_config_path(parsed.config)
         cfg = simuran.config_handler.parse_config()
     else:
+        simuran.config_handler.set_config_path(None)
         cfg = {}
 
     if not parsed.nosave:

@@ -394,6 +394,11 @@ def analyse_cell_list(
             used_recs.append(recording.source_file)
     ah.run_all_fns(pbar=True)
 
+    if len(ah.results.items()) == 0:
+        raise RuntimeError(
+            f"Unable to analyse any cells, see {log_loc} for more information."
+        )
+
     result_list = []
     last_order = -1
 
