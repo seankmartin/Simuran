@@ -438,6 +438,7 @@ def analyse_cell_list(
         pickle.dump(df, f)
 
     if after_fn is not None:
+        ## TODO extra info should really be a dict
         after_fn(df, (out_dir, os.path.basename(filename)), **fn_kwargs)
 
     return df
