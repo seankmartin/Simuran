@@ -11,7 +11,14 @@ from simuran.param_handler import ParamHandler
 
 
 def create_task(
-    batch_file, analysis_functions=[], num_workers=1, dirname="", cfg_path="", reason=""
+    batch_file,
+    analysis_functions=[],
+    num_workers=1,
+    dirname="",
+    cfg_path="",
+    reason="",
+    overwrite=True,
+    save=True,
 ):
     """
     Create a doit task.
@@ -26,6 +33,14 @@ def create_task(
         The number of workers to use for the task, by default 1
     dirname : str, optional
         The directory name to replace __dirname__ by in SIMURAN.
+    cfg_path : str, optional
+        The path to the configuration file.
+    reason : str, optional
+        A description of the reason for running the task.
+    overwrite : bool, optional
+        Whether to overwrite the existing results. By default True.
+    save : bool, optional
+        Whether to save the run to SUMATRA logs. By default True.
 
     Returns
     -------
@@ -71,7 +86,15 @@ def create_task(
             os.path.splitext(os.path.basename(batch_file))[0] + "_dump.pickle",
         )
     ]
-    action = f"simuran -r -m -o -n {num_workers}"
+    if overwrite:
+        overwrite_part = "-o "
+    else:
+        overwrite_part = ""
+    if save:
+        save_part = ""
+    else:
+        save_part = "-ns "
+    action = f"simuran -r -m {overwrite_part}{save_part}-n {num_workers}"
     if dirname != "":
         action += f" --dirname {dirname}"
     if cfg_path != "":
@@ -111,7 +134,14 @@ def create_task(
 
 
 def create_list_task(
-    batch_file, analysis_functions=[], num_workers=1, dirname="", cfg_path="", reason=""
+    batch_file,
+    analysis_functions=[],
+    num_workers=1,
+    dirname="",
+    cfg_path="",
+    reason="",
+    overwrite=True,
+    save=True,
 ):
     """
     Create a doit task.
@@ -126,6 +156,14 @@ def create_list_task(
         The number of workers to use for the task, by default 1
     dirname : str, optional
         The directory name to replace __dirname__ by in SIMURAN.
+    cfg_path : str, optional
+        The path to the configuration file.
+    reason : str, optional
+        A description of the reason for running the task.
+    overwrite : bool, optional
+        Whether to overwrite the existing results. By default True.
+    save : bool, optional
+        Whether to save the run to SUMATRA logs. By default True.
 
     Returns
     -------
@@ -159,7 +197,15 @@ def create_list_task(
             os.path.splitext(os.path.basename(batch_file))[0] + "_dump.pickle",
         )
     ]
-    action = f"simuran -l -o -n {num_workers}"
+    if overwrite:
+        overwrite_part = "-o "
+    else:
+        overwrite_part = ""
+    if save:
+        save_part = ""
+    else:
+        save_part = "-ns "
+    action = f"simuran -l {overwrite_part}{save_part}-n {num_workers}"
     if dirname != "":
         action += f" --dirname {dirname}"
     if cfg_path != "":
