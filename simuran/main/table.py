@@ -4,16 +4,19 @@ import os
 import pickle
 from pprint import pprint
 
-import pandas as pd
 from skm_pyutils.py_path import (
     get_base_dir_to_files,
-    make_path_if_not_exists,
     get_all_files_in_dir,
 )
-from skm_pyutils.py_table import list_to_df, df_from_file, df_to_file
+from skm_pyutils.py_table import (
+    list_to_df,
+    df_from_file,
+    df_to_file,
+    df_subset_from_rows,
+)
 from skm_pyutils.py_log import get_default_log_loc
 
-from simuran.log_handler import log_exception, print, log
+from simuran.log_handler import log_exception, print
 from simuran.loaders.loader_list import loaders_dict
 from simuran.recording import Recording
 from simuran.recording_container import RecordingContainer
@@ -137,12 +140,14 @@ def process_paths_from_df(df):
         fname = value.Filename
         if len(vals) != 0:
             path = os.path.join(*vals, fname)
-            if path != last_fname:
-                curr_idx += 1
-                last_fname = path
-                file_list.append(path)
-                mapping_list.append(value.Mapping)
-            cell_list.append((curr_idx, value.Group, value.Unit))
+        else:
+            path = fname
+        if path != last_fname:
+            curr_idx += 1
+            last_fname = path
+            file_list.append(path)
+            mapping_list.append(value.Mapping)
+        cell_list.append((curr_idx, value.Group, value.Unit))
 
     return file_list, cell_list, mapping_list
 
@@ -372,19 +377,24 @@ def analyse_cell_list(
     if n_not_loaded != 0:
         print(f"Unable to load {n_not_loaded} recordings")
 
-    n_skip = 0
-    for info in cell_list:
+    skipped = []
+    for i, info in enumerate(cell_list):
+        row_info = orig_df.iloc[i]
         file_idx, group_no, cell_no = info
         if file_idx in bad_idx:
-            n_skip += 1
+            skipped.append(i)
             continue
 
         record_unit_idx = rc[file_idx].units.group_by_property("group", group_no)[1][0]
         if rc[file_idx].units[record_unit_idx].units_to_use is None:
             rc[file_idx].units[record_unit_idx].units_to_use = []
         rc[file_idx].units[record_unit_idx].units_to_use.append(cell_no)
-    if n_skip != 0:
-        print(f"Unable to analyse {n_skip} cells due to recording problems")
+        rc[file_idx].units[record_unit_idx].info[cell_no] = row_info
+
+    if len(skipped) != 0:
+        print(f"Unable to analyse {len(skipped)} cells due to recording problems")
+    unskipped = [i for i in range(len(orig_df)) if i not in skipped]
+    orig_df_subset = df_subset_from_rows(orig_df, unskipped)
 
     ah = AnalysisHandler()
     used_recs = []
@@ -426,10 +436,9 @@ def analyse_cell_list(
         print("WARNING: Not all cells were correctly analysed.")
         print(f"Analysed {nrows_new} cells out of {nrows_original} cells.")
         print("Please evaluate the result with caution.")
-    else:
-        for name, values in orig_df.iteritems():
-            if name not in df.columns:
-                df[name] = values
+    for name, _ in orig_df.iteritems():
+        if name not in df.columns:
+            df[name] = orig_df_subset[name]
 
     df_to_file(df, out_fname)
 
@@ -632,16 +641,3 @@ def main_analyse_cell_list(params, dirname_replacement, overwrite=False):
         fn_kwargs=cfg,
         overwrite=ph.get("overwrite", overwrite),
     )
-
-
-if __name__ == "__main__":
-    main_out_fname = r"D:\SubRet_recordings_imaging\muscimol_data\cell_lists\cell list_musc_Sean_filled.xlsx"
-    main_out_fname_filled = r"D:\SubRet_recordings_imaging\SIMURAN\cell_lists\CTRL_Lesion_cells_filled_results.xlsx"
-    in_start_dir = r"D:\SubRet_recordings_imaging"
-
-    # if not os.path.isfile(main_out_fname_filled):
-    #     populate_table_directories(
-    #         main_out_fname, in_start_dir, ".set", "^Can*"
-    #     )
-
-    analyse_cell_list(main_out_fname)
