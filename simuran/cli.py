@@ -11,6 +11,7 @@ from sumatra.projects import load_project
 from sumatra.programs import Executable
 from sumatra.core import STATUS_FORMAT
 from sumatra.parameters import SimpleParameterSet
+from sumatra.versioncontrol import UncommittedModificationsError
 from skm_pyutils.py_log import (
     setup_text_logging,
     get_default_log_loc,
@@ -229,13 +230,17 @@ def main():
             if isinstance(v, dict):
                 cfg[k] = str(v)
         sp = SimpleParameterSet(cfg)
-        record = project.new_record(
-            parameters=sp,
-            script_args=" ".join(sys.argv[1:]),
-            reason=parsed.reason,
-            executable=ex,
-            main_file=parsed.batch_config_path,
-        )
+        try:
+            record = project.new_record(
+                parameters=sp,
+                script_args=" ".join(sys.argv[1:]),
+                reason=parsed.reason,
+                executable=ex,
+                main_file=parsed.batch_config_path,
+            )
+        except UncommittedModificationsError:
+            print("Please commit your code changes before running, or use -ns flag")
+            exit(-1)
         start_time = time.time()
 
     log.set_level(parsed.log)
