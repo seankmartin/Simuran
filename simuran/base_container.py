@@ -272,6 +272,10 @@ class AbstractContainer(ABC):
         simuran.base_container.data_from_attr_list
 
         """
+        if len(friendly_names) == 0:
+            friendly_names = None
+
+        orig_attr_list_len = len(attr_list)
         attr_list = [("source_dir",), ("source_name",)] + attr_list
         for i in range(len(self)):
             if self[i].source_file is not None:
@@ -282,6 +286,10 @@ class AbstractContainer(ABC):
                 self[i].source_name = None
         if friendly_names is not None:
             friendly_names = ["Recording directory", "Recording name"] + friendly_names
+        else:
+            l1 = ["Recording directory", "Recording name"]
+            l2 = [None] * orig_attr_list_len
+            friendly_names = l1 + l2
 
         data_list = self.data_from_attr_list(
             attr_list, friendly_names=friendly_names, decimals=decimals

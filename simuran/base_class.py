@@ -339,6 +339,8 @@ class BaseSimuran(ABC):
                     key = "_".join(attr_tuple)
                 else:
                     key = friendly_names[i]
+                    if key is None:
+                        key = "_".join(attr_tuple)
                 data_out[key] = item
         return data_out
 
