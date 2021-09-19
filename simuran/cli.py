@@ -194,6 +194,12 @@ def main():
         help="Directory to replace __dirname__ by in parameter files.",
     )
     parser.add_argument(
+        "--out_dirname",
+        type=str,
+        default="",
+        help="Directory to replace __dirname__ by in parameter files.",
+    )
+    parser.add_argument(
         "--log",
         type=str,
         default="warning",
@@ -270,6 +276,7 @@ def main():
             num_cpus=parsed.num_workers,
             overwrite=parsed.overwrite,
             dirname=parsed.dirname,
+            out_fn_dirname=parsed.out_dirname,
         )
     elif parsed.grab_params:
         output_location = os.path.join(
@@ -304,6 +311,7 @@ def main():
             only_check=parsed.dummy,
             num_cpus=parsed.num_workers,
             dirname=parsed.dirname,
+            out_fn_dirname=parsed.out_dirname,
         )
 
     if not parsed.nosave:

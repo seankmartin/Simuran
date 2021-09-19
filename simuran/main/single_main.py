@@ -371,7 +371,7 @@ def subsample_container(
                 recording_container.subsample_by_name(select_recordings, inplace=True)
 
 
-def set_output_locations(batch_name, function_config_path):
+def set_output_locations(batch_name, function_config_path, out_fn_dirname=None):
     """
     Set up the output directory and name based on the input.
 
@@ -399,7 +399,9 @@ def set_output_locations(batch_name, function_config_path):
     try:
         start_str = os.path.splitext(os.path.basename(batch_name))[0]
         out_dirname2 = start_str
-        if function_config_path is not None:
+        if out_fn_dirname is not None:
+            out_dirname1 = out_fn_dirname
+        elif function_config_path is not None:
             out_dirname1 = os.path.splitext(os.path.basename(function_config_path))[0]
             start_str = (
                 os.path.splitext(os.path.basename(function_config_path))[0]
@@ -764,6 +766,7 @@ def analyse_files(
     num_cpus=1,
     handle_errors=False,
     dirname="",
+    out_fn_dirname=None,
 ):
     """
     Run the main control functionality.
@@ -839,6 +842,9 @@ def analyse_files(
         Whether to raise errors, default is False.
     dirname : str, optional
         What to replace __dirname__ by in config files.
+    out_fn_dirname : str, optional
+        Where to save the results to.
+        If None is the function name.
 
     Returns
     -------
@@ -862,7 +868,7 @@ def analyse_files(
     in_dir = location if os.path.isdir(location) else os.path.dirname(location)
     batch_setup = check_input_params(location, batch_name, dirname_replacement=dirname)
     batch_params = batch_setup.ph
-    out_dir, out_name = set_output_locations(batch_name, function_config_path)
+    out_dir, out_name = set_output_locations(batch_name, function_config_path, out_fn_dirname)
     out_loc = os.path.join(out_dir, out_name)
 
     if should_modify_path:
@@ -963,6 +969,7 @@ def run(
     should_modify_path=True,
     num_cpus=1,
     dirname="",
+    out_fn_dirname=None,
 ):
     """
     Run main more readily without having to set as many params.
@@ -1015,6 +1022,9 @@ def run(
     dirname : str, optional
         The name to replace __dirname__ by in parameter files,
         by default uses dirname(param_file).
+    out_fn_dirname : str, optional
+        Where to save the results to.
+        If None is the function name.
 
     Returns
     -------
@@ -1115,4 +1125,5 @@ def run(
         num_cpus=num_cpus,
         handle_errors=handle_errors,
         dirname=dirname,
+        out_fn_dirname=out_fn_dirname,
     )
