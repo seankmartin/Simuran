@@ -251,6 +251,8 @@ def main():
 
     log.set_level(parsed.log)
 
+    out_dirname = None if parsed.out_dirname == "" else parsed.out_dirname
+
     if parsed.dummy is True:
         parsed.skip_batch_setup = False
 
@@ -276,7 +278,7 @@ def main():
             num_cpus=parsed.num_workers,
             overwrite=parsed.overwrite,
             dirname=parsed.dirname,
-            out_fn_dirname=parsed.out_dirname,
+            out_fn_dirname=out_dirname,
         )
     elif parsed.grab_params:
         output_location = os.path.join(
@@ -311,7 +313,7 @@ def main():
             only_check=parsed.dummy,
             num_cpus=parsed.num_workers,
             dirname=parsed.dirname,
-            out_fn_dirname=parsed.out_dirname,
+            out_fn_dirname=out_dirname,
         )
 
     if not parsed.nosave:

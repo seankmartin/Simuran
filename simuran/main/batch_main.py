@@ -8,7 +8,7 @@ from simuran.log_handler import log_exception, print
 from simuran.main.single_main import run, modify_path
 from simuran.param_handler import ParamHandler
 from simuran.main.merge import merge_files, csv_merge
-from simuran.config_handler import parse_config
+from simuran.config_handler import parse_config, get_config_path
 
 
 def _get_dict_entry(run_dict_list, function_to_use, index):
@@ -226,15 +226,28 @@ def batch_run(
     if isinstance(to_merge, str):
         to_merge = [to_merge]
     out_dir = os.path.abspath(os.path.join(run_path_to_use, "..", "sim_results"))
+    out_fn_dirname = kwargs.get("out_fn_dirname", None)
     fn_name = (
         ""
         if function_to_use is None
         else "--" + os.path.splitext(os.path.basename(function_to_use))[0]
     )
+    if out_fn_dirname is not None:
+        to_merge = [out_fn_dirname]
+
+    cfg_path = get_config_path()
+    try:
+        cfg_name = os.path.splitext(os.path.basename(cfg_path))[0]
+    except BaseException:
+        cfg_name = None
+    cfg_fin = "--" + cfg_name if cfg_name is not None else ""
     pickle_name = os.path.join(
         out_dir,
         "pickles",
-        os.path.splitext(os.path.basename(run_dict_loc))[0] + fn_name + "_dump.pickle",
+        os.path.splitext(os.path.basename(run_dict_loc))[0]
+        + fn_name
+        + cfg_fin
+        + "_dump.pickle",
     )
     if (
         (idx is None)
