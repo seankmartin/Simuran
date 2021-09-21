@@ -81,7 +81,7 @@ class BaseSignal(BaseSimuran):
         if not hasattr(np_array, "unit"):
             self.samples = np_array * u.mV
         else:
-            self.samples = np_array
+            self.samples = np_array.to(u.mV)
         self.sampling_rate = sampling_rate
         self.timestamps = [i / sampling_rate for i in range(len(self.samples))] * u.s
 
@@ -178,6 +178,14 @@ class BaseSignal(BaseSimuran):
     def get_duration(self):
         """Get the length of the signal in the unit of timestamps."""
         return max(self.timestamps) - min(self.timestamps)
+
+    def get_start(self):
+        """Get the first time recorded"""
+        return self.timestamps[0]
+
+    def get_end(self):
+        """Get the last time recorded"""
+        return self.timestamps[-1]
 
     def get_sampling_rate(self):
         """Return the sampling rate."""
