@@ -22,7 +22,7 @@ from simuran.recording import Recording
 from simuran.recording_container import RecordingContainer
 from simuran.analysis.analysis_handler import AnalysisHandler
 from simuran.param_handler import ParamHandler
-from simuran.config_handler import parse_config
+from simuran.config_handler import parse_config, get_config_path
 
 
 def dir_to_table(directory, cell_id="cell_list", file_id="file_list", ext=".txt"):
@@ -336,8 +336,14 @@ def analyse_cell_list(
     base, ext = os.path.splitext(os.path.basename(filename))
     res_name = "_" + fn_to_use.__name__ + "_results"
     out_fname = os.path.join(out_dir, base + res_name + ext)
+    cfg_path = get_config_path()
+    try:
+        cfg_name = os.path.splitext(os.path.basename(cfg_path))[0]
+    except BaseException:
+        cfg_name = None
+    cfg_fin = "--" + cfg_name if cfg_name is not None else ""
     pickle_name = os.path.abspath(
-        os.path.join(out_dir, "..", "pickles", base + res_name + "_dump.pickle")
+        os.path.join(out_dir, "..", "pickles", base + res_name + cfg_fin + "_dump.pickle")
     )
     if os.path.exists(pickle_name) and not overwrite:
         print(

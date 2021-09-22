@@ -27,7 +27,10 @@ def set_config_path(cfg_path, fname="config_path.txt"):
         if cfg_path is None:
             f.write("None")
         else:
-            f.write(cfg_path)
+            if os.path.exists(cfg_path):
+                f.write(os.path.abspath(cfg_path))
+            else:
+                raise ValueError(f"{cfg_path} does not exist for config")
 
 
 def get_config_path(fname="config_path.txt"):
