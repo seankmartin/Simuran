@@ -577,7 +577,7 @@ def run_all_analysis(
                 recording_container[i].source_file, recording_container.base_dir
             )
             pbar.set_description("Running on {}".format(disp_name))
-            multiprocessing_func(
+            figures = multiprocessing_func(
                 i,
                 recording_container,
                 functions,
@@ -589,7 +589,7 @@ def run_all_analysis(
                 out_dir,
                 handle_errors,
                 cfg,
-            ),
+            )
 
     if args_fn is not None:
         function_args = args_fn(recording_container, i, final_figs)
