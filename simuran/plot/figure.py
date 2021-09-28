@@ -4,6 +4,7 @@ import os
 import matplotlib.pyplot as plt
 
 from simuran.plot.base_plot import save_simuran_plot
+from simuran.log_handler import log
 
 
 class SimuranFigure(object):
@@ -97,11 +98,20 @@ class SimuranFigure(object):
     def close(self):
         """Close the underlying figure if not closed."""
         if not self.closed:
+            self.closed = True
             try:
                 plt.close(self.figure)
             except BaseException:
-                self.figure.close()
-            self.closed = True
+                if hasattr(self.figure, "close"):
+                    self.figure.close()
+                elif hasattr(self.figure, "_close"):
+                    self.figure._close(None)
+                else:
+                    if self.filename is None:
+                        log.warning("Unable to close figure")
+                    else:
+                        log.warning("Unable to close {}".format(self.filename))
+                    self.closed = False
 
     def isdone(self):
         """Return if this figure is ready for saving."""
