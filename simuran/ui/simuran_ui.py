@@ -10,9 +10,10 @@ class SimuranUI(object):
         self.width = kwargs.get("width", 1200)
         self.height = kwargs.get("height", 1200)
         self.viewport = None
-        self.main_window_id = None
+        self.main_window_id = kwargs.get("main_window_id", "M1")
         self.nodes = []
 
+    # Control functions
     def main(self):
         dpg.create_context()
         self.setup_viewport()
@@ -33,7 +34,9 @@ class SimuranUI(object):
 
             if frame == 200:
                 # dpg.add_node(label="Node 3", parent="NEditor", before="NEditor", show=True)
-                dpg.add_button(label="Generated dynamically", parent="M1", show=True)
+                dpg.add_button(
+                    label="Generated dynamically", parent=self.main_window_id, show=True
+                )
 
             # you can manually stop by using stop_dearpygui()
             dpg.render_dearpygui_frame()
@@ -55,6 +58,7 @@ class SimuranUI(object):
 
         self.viewport = vp
 
+    # Callbacks and handlers
     def show_popup_menu(self):
         mouse_pos = dpg.get_mouse_pos(local=False)
         dpg.configure_item("NodeAddWindow", show=True, pos=mouse_pos)
@@ -66,53 +70,53 @@ class SimuranUI(object):
         self.nodes.append(tag)
         print(self.nodes)
 
-    def setup_main_window(self):
-        self.main_window_id = "M1"
+    def global_handlers(self):
+        with dpg.handler_registry(label="global handlers"):
+            # Use this for right click
+            # dpg.add_mouse_click_handler(button=1, callback=self.show_popup_menu)
+            dpg.add_key_press_handler(key=78, callback=self.show_popup_menu)
 
-        node_to_add = create_example_node()
-        with dpg.window(label="SIMURAN Demo", tag=self.main_window_id):
-
-            # Popup node add window
-            with dpg.handler_registry():
-                # Use this for right click
-                # dpg.add_mouse_click_handler(button=1, callback=self.show_popup_menu)
-
-                dpg.add_key_press_handler(key=78, callback=self.show_popup_menu)
-
-            with dpg.window(
-                label="Node add", show=False, id="NodeAddWindow", modal=True
-            ):  
-                dpg.add_button(
-                    label="New node",
-                    width=75,
-                    callback=lambda: self.create_node(node_to_add)
-                )
-                dpg.add_button(
-                    label="Close",
-                    width=75,
-                    callback=lambda: dpg.configure_item("NodeAddWindow", show=False),
-                )
-
-        dpg.set_primary_window(self.main_window_id, True)
-
-    def create_node_editor(self):
-        # callback runs when user attempts to connect attributes
-        def link_callback(sender, app_data, user_data):
+    def link_callback(self, sender, app_data, user_data):
             # app_data -> (link_id1, link_id2)
             dpg.add_node_link(app_data[0], app_data[1], parent=sender)
             print("Added link from {} to {}".format(app_data[0], app_data[1]))
             print(user_data)
 
-        # callback runs when user attempts to disconnect attributes
-        def delink_callback(sender, app_data, user_data):
-            # app_data -> link_id
-            dpg.delete_item(app_data)
-            print("Deleted link {}".format(app_data))
-            print(user_data)
+    # callback runs when user attempts to disconnect attributes
+    def delink_callback(self, sender, app_data, user_data):
+        # app_data -> link_id
+        dpg.delete_item(app_data)
+        print("Deleted link {}".format(app_data))
+        print(user_data)
 
-        def mouse_context(sender, app_data, user_data):
-            print(sender, app_data, user_data)
+    def mouse_context(self, sender, app_data, user_data):
+        print(sender, app_data, user_data)
 
+    # Windows
+    def create_add_node_window(self):
+        # Loop over node factories
+        node_to_add = create_example_node()
+
+        with dpg.window(label="Add Node", show=False, id="NodeAddWindow", modal=True):
+            dpg.add_button(
+                label="New node",
+                width=75,
+                callback=lambda: self.create_node(node_to_add),
+            )
+            dpg.add_button(
+                label="Close",
+                width=75,
+                callback=lambda: dpg.configure_item("NodeAddWindow", show=False),
+            )
+
+    def setup_main_window(self):
+        with dpg.window(label="SIMURAN Demo", tag=self.main_window_id):
+            self.create_add_node_window()
+            self.global_handlers()
+
+        dpg.set_primary_window(self.main_window_id, True)
+
+    def create_node_editor(self):
         dpg.add_window(
             label="Node editor",
             tag="NodeWindow",
@@ -123,8 +127,8 @@ class SimuranUI(object):
         )
         with dpg.node_editor(
             label="NEditor",
-            callback=link_callback,
-            delink_callback=delink_callback,
+            callback=self.link_callback,
+            delink_callback=self.delink_callback,
             tag="E1",
             parent="NodeWindow",
         ):
@@ -146,9 +150,11 @@ class SimuranUI(object):
                 ):
                     dpg.add_input_float(label="F4", width=200)
 
-        with dpg.item_handler_registry(tag="widget handler") as handler:
-            dpg.add_item_clicked_handler(button=1, callback=mouse_context)
-        dpg.bind_item_handler_registry("Node1", "widget handler")
+        # TODO make a node context handler.
+        with dpg.item_handler_registry(tag="node context handler") as handler:
+            dpg.add_item_clicked_handler(button=1, callback=self.mouse_context)
+        dpg.bind_item_handler_registry("Node1", "node context handler")
+
 
 if __name__ == "__main__":
     su = SimuranUI()
