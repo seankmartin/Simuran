@@ -65,7 +65,7 @@ class BaseNode(object):
         else:
             raise ValueError("{} is not a valid link id".format(link_id))
 
-    def create(self, attributes, position=[]):
+    def create(self, attributes, clicked_callback, position=[]):
         dpg.add_node(
             label=self.label,
             parent=self.parent,
@@ -105,6 +105,15 @@ class BaseNode(object):
                 content["type"] = type_
                 self.content_tags.append(content_tag)
 
+        # real version node.tag
+        dpg.add_item_clicked_handler(
+            button=1,
+            callback=clicked_callback,
+            user_data=self.tag,
+            parent="node context handler",
+        )
+        dpg.bind_item_handler_registry(self.tag, "node context handler")
+
     def __str__(self):
         return "SIMURAN node with label {}, tag {} and contains {}".format(
             self.label, self.tag, [self.attribute_tags, self.content_tags]
@@ -116,12 +125,14 @@ class BaseNode(object):
 
         return plot_path
 
+
 class NodeFactory(object):
     def __init__(self, **kwargs):
         self.node_class = kwargs.get("node_class", None)
         self.label = kwargs.get("label", "Custom name")
         self.debug = kwargs.get("debug", False)
         self.attributes = kwargs.get("attributes", [])
+        self.clicked_callback = kwargs.get("clicked_callback", None)
 
         # Keep track of the ID of created items
         self.created_nodes = []
@@ -136,7 +147,7 @@ class NodeFactory(object):
         position = kwargs.get("position", [])
 
         new_node = self.node_class(parent=editor_id)
-        new_node.create(self.attributes, position=position)
+        new_node.create(self.attributes, self.clicked_callback, position=position)
 
         self.created_nodes.append(new_node.tag)
 

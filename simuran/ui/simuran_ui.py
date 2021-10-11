@@ -12,9 +12,11 @@ class SimuranUI(object):
         self.height = kwargs.get("height", 1200)
         self.viewport = None
         self.main_window_id = kwargs.get("main_window_id", "M1")
-        self.nodes = []
+        self.nodes = {}
         self.node_factories = []
         self.button_to_node_mapping = {}
+        self.debug = kwargs.get("debug", False)
+        self.last_clicked_node = None
 
     # Control functions
     def main(self):
@@ -23,11 +25,17 @@ class SimuranUI(object):
         self.setup_viewport()
         self.setup_main_window()
         self.create_node_editor()
+
+        if self.debug:
+            dpg.show_item_registry()
+
         self.start_render()
 
     def init_nodes(self):
         # Currently a set list, should be expanded
-        self.node_factories = create_example_nodes()
+        for node in create_example_nodes():
+            node.clicked_callback = self.show_plot_menu
+            self.node_factories.append(node)
 
     def start_render(self):
         # dpg.start_dearpygui()
@@ -56,16 +64,23 @@ class SimuranUI(object):
         self.viewport = vp
 
     # Callbacks and handlers
-    def show_popup_menu(self):
+    def show_popup_menu(self, sender, app_data, user_data):
         mouse_pos = dpg.get_mouse_pos(local=False)
         dpg.configure_item("NodeAddWindow", show=True, pos=mouse_pos)
 
+    def show_plot_menu(self, sender, app_data, user_data):
+        # TODO pass through the node selected here
+        self.last_clicked_node = user_data
+        print("Clicked node {}".format(self.last_clicked_node))
+        mouse_pos = dpg.get_mouse_pos(local=False)
+        dpg.configure_item("NodeContextWindow", show=True, pos=mouse_pos)
+
     def create_node(self, sender, app_data, user_data):
-        node = self.button_to_node_mapping[sender]
+        node_factory = self.button_to_node_mapping[sender]
         total_pos = dpg.get_mouse_pos(local=False)
         position = [max(total_pos[0] - 250, 0), max(total_pos[1] - 60, 0)]
-        tag = node.create("E1", position=position)
-        self.nodes.append(tag)
+        node = node_factory.create("E1", position=position)
+        self.nodes[node.tag] = node
 
     def global_handlers(self):
         with dpg.handler_registry(label="global handlers"):
@@ -86,11 +101,21 @@ class SimuranUI(object):
         print("Deleted link {}".format(app_data))
         print(user_data)
 
-    def mouse_context(self, sender, app_data, user_data):
-        print(sender, app_data, user_data)
-
     def show_plots(self, sender, app_data, user_data):
-        
+        node_clicked = self.last_clicked_node
+        path = self.nodes[node_clicked].get_path_to_plots()
+        width, height, channels, data = dpg.load_image(path)
+
+        # TODO avoid making multiple textures - memory concerns.
+        # On window close, remove.
+        t_id = dpg.generate_uuid()
+        with dpg.texture_registry():
+            dpg.add_static_texture(width, height, data, tag=t_id)
+
+        with dpg.window(
+            label="Plot information from {}".format(self.nodes[node_clicked].label)
+        ):
+            dpg.add_image(t_id)
 
     # Windows
     def create_add_node_window(self):
@@ -110,20 +135,27 @@ class SimuranUI(object):
                 callback=lambda: dpg.configure_item("NodeAddWindow", show=False),
             )
 
-    def show_node_info_window(self):
+    def create_node_info_window(self):
         with dpg.window(
             label="Node context", show=False, id="NodeContextWindow", modal=True
         ):
             dpg.add_button(
                 label="Show plots",
-                width=75,
+                width=100,
                 callback=self.show_plots,
+            )
+            dpg.add_button(
+                label="Close",
+                width=75,
+                indent=12,
+                callback=lambda: dpg.configure_item("NodeContextWindow", show=False),
             )
 
     def setup_main_window(self):
         with dpg.window(label="SIMURAN Demo", tag=self.main_window_id):
             dpg.add_text("Space for menu")
             self.create_add_node_window()
+            self.create_node_info_window()
             self.global_handlers()
 
         dpg.set_primary_window(self.main_window_id, True)
@@ -144,7 +176,7 @@ class SimuranUI(object):
             tag="E1",
             parent="NodeWindow",
         ):
-            with dpg.node(label="Node 1", tag="Node1"):
+            with dpg.node(label="Node 1", tag="Node 1"):
                 with dpg.node_attribute(label="Node A1"):
                     dpg.add_input_float(label="F1", width=150)
 
@@ -153,7 +185,7 @@ class SimuranUI(object):
                 ):
                     dpg.add_input_float(label="F2", width=150)
 
-            with dpg.node(label="Node 2"):
+            with dpg.node(label="Node 2", tag="Node 2"):
                 with dpg.node_attribute(label="Node A3"):
                     dpg.add_input_float(label="F3", width=200)
 
@@ -161,13 +193,8 @@ class SimuranUI(object):
                     label="Node A4", attribute_type=dpg.mvNode_Attr_Output
                 ):
                     dpg.add_input_float(label="F4", width=200)
-
-        # TODO make a node context handler.
-        with dpg.item_handler_registry(tag="node context handler") as handler:
-            dpg.add_item_clicked_handler(button=1, callback=self.mouse_context)
-        dpg.bind_item_handler_registry("Node1", "node context handler")
-
+        dpg.add_item_handler_registry(tag="node context handler")
 
 if __name__ == "__main__":
-    su = SimuranUI()
+    su = SimuranUI(debug=True)
     su.main()
