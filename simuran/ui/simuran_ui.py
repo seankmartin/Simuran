@@ -61,7 +61,7 @@ class SimuranUI(object):
 
     def create_node(self, node):
         total_pos = dpg.get_mouse_pos(local=False)
-        position = [max(total_pos[0] - 200, 0), max(total_pos[1] - 10, 0)]
+        position = [max(total_pos[0] - 250, 0), max(total_pos[1] - 60, 0)]
         tag = node.create("E1", position=position)
         self.nodes.append(tag)
         print(self.nodes)
@@ -74,7 +74,10 @@ class SimuranUI(object):
 
             # Popup node add window
             with dpg.handler_registry():
-                dpg.add_mouse_click_handler(button=1, callback=self.show_popup_menu)
+                # Use this for right click
+                # dpg.add_mouse_click_handler(button=1, callback=self.show_popup_menu)
+
+                dpg.add_key_press_handler(key=78, callback=self.show_popup_menu)
 
             with dpg.window(
                 label="Node add", show=False, id="NodeAddWindow", modal=True
@@ -106,6 +109,9 @@ class SimuranUI(object):
             dpg.delete_item(app_data)
             print("Deleted link {}".format(app_data))
             print(user_data)
+
+        def mouse_context(sender, app_data, user_data):
+            print(sender, app_data, user_data)
 
         dpg.add_window(
             label="Node editor",
@@ -140,6 +146,9 @@ class SimuranUI(object):
                 ):
                     dpg.add_input_float(label="F4", width=200)
 
+        with dpg.item_handler_registry(tag="widget handler") as handler:
+            dpg.add_item_clicked_handler(button=1, callback=mouse_context)
+        dpg.bind_item_handler_registry("Node1", "widget handler")
 
 if __name__ == "__main__":
     su = SimuranUI()
