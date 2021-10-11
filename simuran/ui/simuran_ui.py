@@ -14,6 +14,7 @@ class SimuranUI(object):
         self.main_window_id = kwargs.get("main_window_id", "M1")
         self.nodes = []
         self.node_factories = []
+        self.button_to_node_mapping = {}
 
     # Control functions
     def main(self):
@@ -60,7 +61,7 @@ class SimuranUI(object):
         dpg.configure_item("NodeAddWindow", show=True, pos=mouse_pos)
 
     def create_node(self, sender, app_data, user_data):
-        i, node = user_data
+        node = self.button_to_node_mapping[sender]
         total_pos = dpg.get_mouse_pos(local=False)
         position = [max(total_pos[0] - 250, 0), max(total_pos[1] - 60, 0)]
         tag = node.create("E1", position=position)
@@ -88,17 +89,20 @@ class SimuranUI(object):
     def mouse_context(self, sender, app_data, user_data):
         print(sender, app_data, user_data)
 
+    def show_plots(self, sender, app_data, user_data):
+        
+
     # Windows
     def create_add_node_window(self):
         with dpg.window(label="Add Node", show=False, id="NodeAddWindow", modal=True):
 
-            for i, node in enumerate(self.node_factories):
-                dpg.add_button(
+            for node in self.node_factories:
+                tag = dpg.add_button(
                     label=node.label,
                     width=200,
                     callback=self.create_node,
-                    user_data=[i, node]
                 )
+                self.button_to_node_mapping[tag] = node
             dpg.add_button(
                 label="Close",
                 width=75,
@@ -107,15 +111,18 @@ class SimuranUI(object):
             )
 
     def show_node_info_window(self):
-        with dpg.window(label="Add Node", show=False, id="NodeAddWindow", modal=True):
+        with dpg.window(
+            label="Node context", show=False, id="NodeContextWindow", modal=True
+        ):
             dpg.add_button(
-                label=node.label,
+                label="Show plots",
                 width=75,
-                callback=lambda: self.create_node(node),
+                callback=self.show_plots,
             )
 
     def setup_main_window(self):
         with dpg.window(label="SIMURAN Demo", tag=self.main_window_id):
+            dpg.add_text("Space for menu")
             self.create_add_node_window()
             self.global_handlers()
 

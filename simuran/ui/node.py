@@ -1,4 +1,8 @@
-"""Handles creating nodes in the UI"""
+"""
+Handles creating nodes in the UI.
+
+Uses the factory method design pattern.
+"""
 
 import dearpygui.dearpygui as dpg
 from rich import print
@@ -7,20 +11,16 @@ from rich import print
 
 # TODO this needs to be a factory method
 # And then nodes - so node factories make nodes
+
+# TODO abstract
 class BaseNode(object):
-    def __init__(self, **kwargs):
-        self.label = kwargs.get("label", "Custom name")
-
-        # TODO will need work
-        self.attributes = kwargs.get(
-            "attributes",
-        )
-
-        self.stored_attrs = []
-        self.stored_content = []
+    def __init__(self, tag, **kwargs):
+        self.tag = tag
         self.links = {}
 
-        self.debug = kwargs.get("debug", False)
+    
+    def add_link(self, link_id, sender, receiver):
+        self.links[link_id] = (sender, receiver)
 
     def on_connect(self, sender, receiver):
         # Needs work for context
@@ -52,6 +52,20 @@ class BaseNode(object):
             self.on_disconnect(sender, receiver)
         else:
             raise ValueError("{} is not a valid link id".format(link_id))
+    
+    def create(self, editor_id, attributes, contents):
+        
+
+    def get_path_to_plots(self, )
+
+class NodeFactory(object):
+    def __init__(self, **kwargs):
+        self.label = kwargs.get("label", "Custom name")
+        self.debug = kwargs.get("debug", False)
+        self.attributes = kwargs.get("attributes", [])
+
+        # Keep track of the ID of created items
+        self.created_nodes = []
 
     def get_attribute_id(self, id_):
         for i, attribute in enumerate(self.stored_attrs):
@@ -63,6 +77,7 @@ class BaseNode(object):
         position = kwargs.get("position", [])
 
         node_tag = kwargs.get("tag", dpg.generate_uuid())
+        self.created_nodes.append(node_tag)
 
         if self.debug:
             print(self)
@@ -76,7 +91,7 @@ class BaseNode(object):
         )
         for attribute in self.attributes:
             attribute_tag = dpg.generate_uuid()
-            self.stored_attrs.append(attribute_tag)
+            self.created_attributes.append(attribute_tag)
             contents = attribute.pop("contents", [])
             dpg.add_node_attribute(
                 parent=node_tag,
@@ -103,15 +118,12 @@ class BaseNode(object):
                         ("INT", "FLOAT", "TEXT"),
                     )
                 content["type"] = type_
-                self.stored_content.append(content_tag)
+                self.created_contents.append(content_tag)
 
         return node_tag
 
-    def add_link(self, link_id, sender, receiver):
-        self.links[link_id] = (sender, receiver)
-
     def __str__(self):
         return (
-            f"SIMURAN Node with label {self.label},"
+            f"SIMURAN Node Factory with label {self.label},"
             + f" and attributes {self.attributes}"
         )
