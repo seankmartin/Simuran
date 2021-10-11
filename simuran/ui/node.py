@@ -1,10 +1,12 @@
 """Handles creating nodes in the UI"""
 
 import dearpygui.dearpygui as dpg
+from rich import print
 
 # Should probably convert to abstract
 
 # TODO this needs to be a factory method
+# And then nodes - so node factories make nodes
 class BaseNode(object):
     def __init__(self, **kwargs):
         self.label = kwargs.get("label", "Custom name")
@@ -15,9 +17,10 @@ class BaseNode(object):
         )
 
         self.stored_attrs = []
+        self.stored_content = []
         self.links = {}
 
-        self.debug = False
+        self.debug = kwargs.get("debug", False)
 
     def on_connect(self, sender, receiver):
         # Needs work for context
@@ -59,45 +62,56 @@ class BaseNode(object):
     def create(self, editor_id, **kwargs):
         position = kwargs.get("position", [])
 
-        tag = kwargs.get("tag", dpg.generate_uuid())
+        node_tag = kwargs.get("tag", dpg.generate_uuid())
 
+        if self.debug:
+            print(self)
         dpg.add_node(
             label=self.label,
             parent=editor_id,
             show=True,
             pos=position,
-            tag=tag,
+            tag=node_tag,
             use_internal_label=self.debug,
         )
         for attribute in self.attributes:
-            attribute["parent"] = tag
-            attribute["use_internal_label"] = self.debug
-            attribute["tag"] = dpg.generate_uuid()
-            self.stored_attrs.append(attribute["tag"])
+            attribute_tag = dpg.generate_uuid()
+            self.stored_attrs.append(attribute_tag)
             contents = attribute.pop("contents", [])
-            dpg.add_node_attribute(**attribute)
+            dpg.add_node_attribute(
+                parent=node_tag,
+                tag=attribute_tag,
+                use_internal_label=self.debug,
+                **attribute,
+            )
             attribute["contents"] = contents
 
             for content in contents:
-                content["parent"] = attribute["tag"]
-                content["tag"] = dpg.generate_uuid()
                 type_ = content.pop("type", "TEXT")
+                content_tag = dpg.generate_uuid()
                 if type_ == "INT":
-                    dpg.add_input_int(**content)
+                    dpg.add_input_int(parent=attribute_tag, tag=content_tag, **content)
                 elif type_ == "FLOAT":
-                    dpg.add_input_int(**content)
+                    dpg.add_input_float(
+                        parent=attribute_tag, tag=content_tag, **content
+                    )
                 elif type_ == "TEXT":
-                    dpg.add_input_int(**content)
+                    dpg.add_input_text(parent=attribute_tag, tag=content_tag, **content)
                 else:
                     raise ValueError(
                         "Unsupported content type {}, options are {}".format(type_),
                         ("INT", "FLOAT", "TEXT"),
                     )
+                content["type"] = type_
+                self.stored_content.append(content_tag)
 
-        print(self.attributes)
-        print(self.stored_attrs)
-
-        return tag
+        return node_tag
 
     def add_link(self, link_id, sender, receiver):
         self.links[link_id] = (sender, receiver)
+
+    def __str__(self):
+        return (
+            f"SIMURAN Node with label {self.label},"
+            + f" and attributes {self.attributes}"
+        )

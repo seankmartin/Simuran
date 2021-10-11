@@ -1,8 +1,9 @@
 import os
 
 import dearpygui.dearpygui as dpg
+from rich import print
 
-from simuran.ui.example_node import create_example_node
+from simuran.ui.example_node import create_example_nodes
 
 
 class SimuranUI(object):
@@ -12,14 +13,20 @@ class SimuranUI(object):
         self.viewport = None
         self.main_window_id = kwargs.get("main_window_id", "M1")
         self.nodes = []
+        self.node_factories = []
 
     # Control functions
     def main(self):
         dpg.create_context()
+        self.init_nodes()
         self.setup_viewport()
         self.setup_main_window()
         self.create_node_editor()
         self.start_render()
+
+    def init_nodes(self):
+        # Currently a set list, should be expanded
+        self.node_factories = create_example_nodes()
 
     def start_render(self):
         # dpg.start_dearpygui()
@@ -27,18 +34,7 @@ class SimuranUI(object):
 
         while dpg.is_dearpygui_running():
             # insert here any code you would like to run in the render loop
-            frame += 1
-
-            if frame % 1000 == 0:
-                print(frame)
-
-            if frame == 200:
-                # dpg.add_node(label="Node 3", parent="NEditor", before="NEditor", show=True)
-                dpg.add_button(
-                    label="Generated dynamically", parent=self.main_window_id, show=True
-                )
-
-            # you can manually stop by using stop_dearpygui()
+            # frame += 1
             dpg.render_dearpygui_frame()
 
         dpg.destroy_context()
@@ -63,12 +59,12 @@ class SimuranUI(object):
         mouse_pos = dpg.get_mouse_pos(local=False)
         dpg.configure_item("NodeAddWindow", show=True, pos=mouse_pos)
 
-    def create_node(self, node):
+    def create_node(self, sender, app_data, user_data):
+        i, node = user_data
         total_pos = dpg.get_mouse_pos(local=False)
         position = [max(total_pos[0] - 250, 0), max(total_pos[1] - 60, 0)]
         tag = node.create("E1", position=position)
         self.nodes.append(tag)
-        print(self.nodes)
 
     def global_handlers(self):
         with dpg.handler_registry(label="global handlers"):
@@ -77,10 +73,10 @@ class SimuranUI(object):
             dpg.add_key_press_handler(key=78, callback=self.show_popup_menu)
 
     def link_callback(self, sender, app_data, user_data):
-            # app_data -> (link_id1, link_id2)
-            dpg.add_node_link(app_data[0], app_data[1], parent=sender)
-            print("Added link from {} to {}".format(app_data[0], app_data[1]))
-            print(user_data)
+        # app_data -> (link_id1, link_id2)
+        dpg.add_node_link(app_data[0], app_data[1], parent=sender)
+        print("Added link from {} to {}".format(app_data[0], app_data[1]))
+        print(user_data)
 
     # callback runs when user attempts to disconnect attributes
     def delink_callback(self, sender, app_data, user_data):
@@ -94,19 +90,28 @@ class SimuranUI(object):
 
     # Windows
     def create_add_node_window(self):
-        # Loop over node factories
-        node_to_add = create_example_node()
-
         with dpg.window(label="Add Node", show=False, id="NodeAddWindow", modal=True):
-            dpg.add_button(
-                label="New node",
-                width=75,
-                callback=lambda: self.create_node(node_to_add),
-            )
+
+            for i, node in enumerate(self.node_factories):
+                dpg.add_button(
+                    label=node.label,
+                    width=200,
+                    callback=self.create_node,
+                    user_data=[i, node]
+                )
             dpg.add_button(
                 label="Close",
                 width=75,
+                indent=75,
                 callback=lambda: dpg.configure_item("NodeAddWindow", show=False),
+            )
+
+    def show_node_info_window(self):
+        with dpg.window(label="Add Node", show=False, id="NodeAddWindow", modal=True):
+            dpg.add_button(
+                label=node.label,
+                width=75,
+                callback=lambda: self.create_node(node),
             )
 
     def setup_main_window(self):

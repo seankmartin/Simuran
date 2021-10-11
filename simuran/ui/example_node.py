@@ -1,6 +1,7 @@
 from simuran.ui.node import BaseNode
 
 import dearpygui.dearpygui as dpg
+from rich import print
 
 
 class NodeWithFunction(BaseNode):
@@ -8,9 +9,11 @@ class NodeWithFunction(BaseNode):
         super().__init__(**kwargs)
         self.label = kwargs.get("label", "Node with function")
 
+        print(self)
 
-def create_example_node():
-    contents = [
+
+def create_example_nodes():
+    contents1 = [
         dict(
             type="INT",
             width=150,
@@ -20,16 +23,36 @@ def create_example_node():
         )
     ]
 
-    attributes = [
+    attributes1 = [
         dict(
             label="Attr 1",
             attribute_type=dpg.mvNode_Attr_Input,
             shape=dpg.mvNode_PinShape_Triangle,
             category="Example",
-            contents=contents,
+            contents=contents1,
         )
     ]
 
-    node = NodeWithFunction(attributes=attributes)
+    node1 = NodeWithFunction(attributes=attributes1, debug=True)
+    node1.label = "First node with function"
 
-    return node
+    contents2 = [
+        dict(
+            type="TEXT",
+            width=150,
+            label="Say hi",
+        )
+    ]
+
+    attributes2 = [
+        dict(
+            label="Attr 1",
+            attribute_type=dpg.mvNode_Attr_Static,
+            category="Example",
+            contents=contents2,
+        )
+    ]
+
+    node2 = NodeWithFunction(attributes=attributes2, debug=True)
+
+    return [node1, node2]
