@@ -14,11 +14,23 @@ from rich import print
 
 # TODO abstract
 class BaseNode(object):
-    def __init__(self, tag, **kwargs):
-        self.tag = tag
-        self.links = {}
+    def __init__(self, parent, label="Node", num_created=0, tag=None, debug=False):
+        if tag is None:
+            self.tag = dpg.generate_uuid()
+        else:
+            self.tag = tag
+        self.parent = parent
+        self.attribute_tags = []
+        self.content_tags = []
+        if num_created > 0:
+            self.label = label + f" {num_created}"
+        else:
+            self.label = label
+        self.debug = debug
 
-    
+        # TODO this should hold application state
+        self.state = {}
+
     def add_link(self, link_id, sender, receiver):
         self.links[link_id] = (sender, receiver)
 
@@ -52,49 +64,22 @@ class BaseNode(object):
             self.on_disconnect(sender, receiver)
         else:
             raise ValueError("{} is not a valid link id".format(link_id))
-    
-    def create(self, editor_id, attributes, contents):
-        
 
-    def get_path_to_plots(self, )
-
-class NodeFactory(object):
-    def __init__(self, **kwargs):
-        self.label = kwargs.get("label", "Custom name")
-        self.debug = kwargs.get("debug", False)
-        self.attributes = kwargs.get("attributes", [])
-
-        # Keep track of the ID of created items
-        self.created_nodes = []
-
-    def get_attribute_id(self, id_):
-        for i, attribute in enumerate(self.stored_attrs):
-            if id_ == attribute.get("tag", None):
-                return True, attribute, i
-        return False, None, None
-
-    def create(self, editor_id, **kwargs):
-        position = kwargs.get("position", [])
-
-        node_tag = kwargs.get("tag", dpg.generate_uuid())
-        self.created_nodes.append(node_tag)
-
-        if self.debug:
-            print(self)
+    def create(self, attributes, position=[]):
         dpg.add_node(
             label=self.label,
-            parent=editor_id,
+            parent=self.parent,
             show=True,
             pos=position,
-            tag=node_tag,
+            tag=self.tag,
             use_internal_label=self.debug,
         )
-        for attribute in self.attributes:
+        for attribute in attributes:
             attribute_tag = dpg.generate_uuid()
-            self.created_attributes.append(attribute_tag)
+            self.attribute_tags.append(attribute_tag)
             contents = attribute.pop("contents", [])
             dpg.add_node_attribute(
-                parent=node_tag,
+                parent=self.tag,
                 tag=attribute_tag,
                 use_internal_label=self.debug,
                 **attribute,
@@ -118,9 +103,47 @@ class NodeFactory(object):
                         ("INT", "FLOAT", "TEXT"),
                     )
                 content["type"] = type_
-                self.created_contents.append(content_tag)
+                self.content_tags.append(content_tag)
 
-        return node_tag
+    def __str__(self):
+        return "SIMURAN node with label {}, tag {} and contains {}".format(
+            self.label, self.tag, [self.attribute_tags, self.content_tags]
+        )
+
+    def get_path_to_plots(self):
+        # TEMP should come from state
+        plot_path = r"E:\Repos\privateCode\UI\CSR1-openfield--plots--CSR1_small sq--07092017--07092017_CSubRet1_smallsq_d3_1_power_SUB.png"
+
+        return plot_path
+
+class NodeFactory(object):
+    def __init__(self, **kwargs):
+        self.node_class = kwargs.get("node_class", None)
+        self.label = kwargs.get("label", "Custom name")
+        self.debug = kwargs.get("debug", False)
+        self.attributes = kwargs.get("attributes", [])
+
+        # Keep track of the ID of created items
+        self.created_nodes = []
+
+    def get_attribute_id(self, id_):
+        for i, attribute in enumerate(self.stored_attrs):
+            if id_ == attribute.get("tag", None):
+                return True, attribute, i
+        return False, None, None
+
+    def create(self, editor_id, **kwargs):
+        position = kwargs.get("position", [])
+
+        new_node = self.node_class(parent=editor_id)
+        new_node.create(self.attributes, position=position)
+
+        self.created_nodes.append(new_node.tag)
+
+        if self.debug:
+            print(self)
+
+        return new_node
 
     def __str__(self):
         return (

@@ -1,13 +1,14 @@
-from simuran.ui.node import BaseNode
+from simuran.ui.node import BaseNode, NodeFactory
 
 import dearpygui.dearpygui as dpg
 from rich import print
 
 
-class NodeWithFunction(BaseNode):
+class NodeWithFunction(NodeFactory):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.label = kwargs.get("label", "Node with function")
+        self.node_class = BaseNode
 
         print(self)
 
