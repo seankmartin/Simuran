@@ -2,6 +2,8 @@ import os
 
 import dearpygui.dearpygui as dpg
 from rich import print
+import PIL
+import numpy as np
 
 from simuran.ui.example_node import create_example_nodes
 
@@ -17,6 +19,7 @@ class SimuranUI(object):
         self.button_to_node_mapping = {}
         self.debug = kwargs.get("debug", False)
         self.last_clicked_node = None
+        self.loaded_images = {}
 
     # Control functions
     def main(self):
@@ -104,18 +107,30 @@ class SimuranUI(object):
     def show_plots(self, sender, app_data, user_data):
         node_clicked = self.last_clicked_node
         path = self.nodes[node_clicked].get_path_to_plots()
-        width, height, channels, data = dpg.load_image(path)
+        if path not in self.loaded_images.keys():
+            t_id = dpg.generate_uuid()
+            image = PIL.Image.open(path)
+            image = image.resize((1200, 800), PIL.Image.ANTIALIAS)
+            has_alpha = image.mode == "RGBA"
+            if not has_alpha:
+                image.putalpha(255)
+            dpg_image = np.frombuffer(image.tobytes(), dtype=np.uint8) / 255.0
 
-        # TODO avoid making multiple textures - memory concerns.
-        # On window close, remove.
-        t_id = dpg.generate_uuid()
-        with dpg.texture_registry():
-            dpg.add_static_texture(width, height, data, tag=t_id)
+            dpg.add_static_texture(
+                tag=t_id,
+                default_value=dpg_image,
+                width=1200,
+                height=800,
+                parent="plot_registry",
+            )
+            self.loaded_images[path] = t_id
+        else:
+            t_id = self.loaded_images[path]
 
         with dpg.window(
             label="Plot information from {}".format(self.nodes[node_clicked].label)
         ):
-            dpg.add_image(t_id)
+            dpg.add_image(label="drawing", texture_id=t_id)
 
     # Windows
     def create_add_node_window(self):
@@ -194,6 +209,8 @@ class SimuranUI(object):
                 ):
                     dpg.add_input_float(label="F4", width=200)
         dpg.add_item_handler_registry(tag="node context handler")
+        dpg.add_texture_registry(tag="plot_registry")
+
 
 if __name__ == "__main__":
     su = SimuranUI(debug=True)

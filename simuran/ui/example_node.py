@@ -31,6 +31,7 @@ def create_example_nodes():
             shape=dpg.mvNode_PinShape_Triangle,
             category="Example",
             contents=contents1,
+            tooltip="Great extra information",
         )
     ]
 
@@ -51,6 +52,7 @@ def create_example_nodes():
             attribute_type=dpg.mvNode_Attr_Static,
             category="Example",
             contents=contents2,
+            tooltip="Great extra information - won't change",
         )
     ]
 

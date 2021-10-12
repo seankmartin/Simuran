@@ -65,7 +65,7 @@ class BaseNode(object):
         else:
             raise ValueError("{} is not a valid link id".format(link_id))
 
-    def create(self, attributes, clicked_callback, position=[]):
+    def create(self, attributes, clicked_callback, tooltip=None, position=[]):
         dpg.add_node(
             label=self.label,
             parent=self.parent,
@@ -74,17 +74,24 @@ class BaseNode(object):
             tag=self.tag,
             use_internal_label=self.debug,
         )
+
         for attribute in attributes:
             attribute_tag = dpg.generate_uuid()
             self.attribute_tags.append(attribute_tag)
             contents = attribute.pop("contents", [])
+            attribute_tooltip = attribute.pop("tooltip", None)
             dpg.add_node_attribute(
                 parent=self.tag,
                 tag=attribute_tag,
                 use_internal_label=self.debug,
                 **attribute,
             )
-            attribute["contents"] = contents
+            if attribute_tooltip is not None:
+                with dpg.tooltip(attribute_tag):
+                    dpg.add_text(attribute_tooltip)
+                attribute["tooltip"] = attribute_tooltip
+            if len(contents) != 0:
+                attribute["contents"] = contents
 
             for content in contents:
                 type_ = content.pop("type", "TEXT")
