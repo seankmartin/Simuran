@@ -1,11 +1,16 @@
-import os
-
-import dearpygui.dearpygui as dpg
+import click_spinner
 from rich import print
-import PIL
-import numpy as np
 
-from simuran.ui.example_node import create_example_nodes
+print("Starting application...")
+with click_spinner.spinner():
+    import os
+    import typer
+
+    import dearpygui.dearpygui as dpg
+    import PIL
+    import numpy as np
+
+    from simuran.ui.example_node import create_example_nodes
 
 
 class SimuranUI(object):
@@ -193,6 +198,9 @@ class SimuranUI(object):
         dpg.add_texture_registry(tag="plot_registry")
 
 
-if __name__ == "__main__":
-    su = SimuranUI(debug=True)
+def main_ui(debug : bool = False):
+    su = SimuranUI(debug=debug)
     su.main()
+
+if __name__ == "__main__":
+    typer.run(main_ui)

@@ -10,9 +10,6 @@ class NodeWithFunction(NodeFactory):
         self.label = kwargs.get("label", "Node with function")
         self.node_class = BaseNode
 
-        print(self)
-
-
 def create_example_nodes():
     contents1 = [
         dict(
@@ -35,7 +32,7 @@ def create_example_nodes():
         )
     ]
 
-    node1 = NodeWithFunction(attributes=attributes1, debug=True)
+    node1 = NodeWithFunction(attributes=attributes1, debug=False)
     node1.label = "First node with function"
 
     contents2 = [
@@ -56,6 +53,6 @@ def create_example_nodes():
         )
     ]
 
-    node2 = NodeWithFunction(attributes=attributes2, debug=True)
+    node2 = NodeWithFunction(attributes=attributes2, debug=False)
 
     return [node1, node2]

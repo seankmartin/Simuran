@@ -11,3 +11,8 @@ mne
 pandas
 pytest
 astropy
+rich
+dearpygui
+pillow
+typer
+click-spinner

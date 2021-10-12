@@ -30,6 +30,11 @@ INSTALL_REQUIRES = [
     "doit",
     "astropy",
     "mne",
+    "rich",
+    "dearpygui",
+    "pillow",
+    "typer",
+    "click-spinner",
 ]
 
 CLASSIFIERS = [
