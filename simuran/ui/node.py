@@ -14,18 +14,15 @@ from rich import print
 
 # TODO abstract
 class BaseNode(object):
-    def __init__(self, parent, label="Node", num_created=0, tag=None, debug=False):
+    def __init__(self, parent, label="Node", tag=None, debug=False):
         if tag is None:
             self.tag = dpg.generate_uuid()
         else:
             self.tag = tag
+        self.label = label
         self.parent = parent
-        self.attribute_tags = []
-        self.content_tags = []
-        if num_created > 0:
-            self.label = label + f" {num_created}"
-        else:
-            self.label = label
+        self.attributes = {}
+        self.contents = {}
         self.debug = debug
 
         # TODO this should hold application state
@@ -77,7 +74,7 @@ class BaseNode(object):
 
         for attribute in attributes:
             attribute_tag = dpg.generate_uuid()
-            self.attribute_tags.append(attribute_tag)
+            self.attributes[attribute_tag] = attribute
             contents = attribute.pop("contents", [])
             attribute_tooltip = attribute.pop("tooltip", None)
             dpg.add_node_attribute(
@@ -110,7 +107,7 @@ class BaseNode(object):
                         ("INT", "FLOAT", "TEXT"),
                     )
                 content["type"] = type_
-                self.content_tags.append(content_tag)
+                self.contents[content_tag] = content
 
         # real version node.tag
         dpg.add_item_clicked_handler(
@@ -131,6 +128,24 @@ class BaseNode(object):
         plot_path = r"E:\Repos\privateCode\UI\CSR1-openfield--plots--CSR1_small sq--07092017--07092017_CSubRet1_smallsq_d3_1_power_SUB.png"
 
         return plot_path
+
+    def get_values(self):
+        return dpg.get_values(list(self.contents.keys()))
+
+    def get_content_with_label(self, label):
+        for content_tag, content in self.contents.items():
+            if label == content.get("label", ""):
+                return content_tag, content
+        return None, None
+
+    def set_source_file(self, fpath, label=None):
+        if label is None:
+            for content_tag, content in self.contents.items():
+                if content.get("label", "").startswith("File"):
+                    break
+        else:
+            content_tag, content = self.get_content_with_label(label)
+        dpg.set_value(content_tag, fpath)
 
 
 class NodeFactory(object):
@@ -153,7 +168,13 @@ class NodeFactory(object):
     def create(self, editor_id, **kwargs):
         position = kwargs.get("position", [])
 
-        new_node = self.node_class(parent=editor_id)
+        num_nodes = len(self.created_nodes)
+        new_node_label = self.label
+        if num_nodes > 0:
+            new_node_label = new_node_label + " " + str(num_nodes)
+        new_node = self.node_class(
+            parent=editor_id, label=new_node_label, debug=self.debug
+        )
         new_node.create(self.attributes, self.clicked_callback, position=position)
 
         self.created_nodes.append(new_node.tag)

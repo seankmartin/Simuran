@@ -34,6 +34,7 @@ class SimuranUI(object):
         self.setup_main_window()
         self.create_node_editor()
         self.create_menu_bar()
+        self.create_file_selection_window()
 
         if self.debug:
             check = dpg.show_item_registry()
@@ -42,7 +43,8 @@ class SimuranUI(object):
         self.start_render()
 
     def init_nodes(self):
-        # Currently a set list, should be expanded
+        # TODO currently a set list, should be expanded
+        # TODO change the context menu based on category.
         for node in create_example_nodes():
             node.clicked_callback = self.show_plot_menu
             self.node_factories.append(node)
@@ -154,18 +156,24 @@ class SimuranUI(object):
             )
 
     def create_node_info_window(self):
+
         with dpg.window(
             label="Node context", show=False, id="NodeContextWindow", modal=True
         ):
             dpg.add_button(
                 label="Show plots",
-                width=100,
+                width=200,
                 callback=self.show_plots,
+            )
+            dpg.add_button(
+                label="Select file path",
+                width=200,
+                callback=lambda: dpg.show_item("file_dialog_id"),
             )
             dpg.add_button(
                 label="Close",
                 width=75,
-                indent=12,
+                indent=75,
                 callback=lambda: dpg.configure_item("NodeContextWindow", show=False),
             )
 
@@ -207,9 +215,7 @@ class SimuranUI(object):
                 dpg.add_menu_item(label="Save As", callback=print_me)
 
                 with dpg.menu(label="Settings"):
-                    dpg.add_menu_item(
-                        label="Setting 1", callback=print_me, check=True
-                    )
+                    dpg.add_menu_item(label="Setting 1", callback=print_me, check=True)
                     dpg.add_menu_item(label="Setting 2", callback=print_me)
 
             dpg.add_menu_item(label="Help", callback=print_me)
@@ -218,6 +224,34 @@ class SimuranUI(object):
                 dpg.add_checkbox(label="Pick Me", callback=print_me)
                 dpg.add_button(label="Press Me", callback=print_me)
                 dpg.add_color_picker(label="Color Me", callback=print_me)
+
+    def create_file_selection_window(self):
+        def callback(sender, app_data, user_data):
+            selections = app_data["selections"]
+            for basename, fpath in selections.items():
+                last_node = self.nodes[self.last_clicked_node]
+                last_node.set_source_file(fpath)
+
+        with dpg.file_dialog(
+            directory_selector=False, show=False, callback=callback, id="file_dialog_id"
+        ):
+            dpg.add_file_extension(".*")
+            dpg.add_file_extension("", color=(150, 255, 150, 255))
+            dpg.add_file_extension(
+                "Source files (*.cpp *.h *.hpp){.cpp,.h,.hpp}", color=(0, 255, 255, 255)
+            )
+            dpg.add_file_extension(
+                ".h", color=(255, 0, 255, 255), custom_text="[header]"
+            )
+            dpg.add_file_extension(
+                ".py", color=(0, 255, 0, 255), custom_text="[Python]"
+            )
+
+            dpg.add_button(
+                label="File Selector",
+                callback=lambda: dpg.show_item("file_dialog_id"),
+                parent=self.main_window_id,
+            )
 
 
 def main_ui(debug: bool = False):

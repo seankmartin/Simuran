@@ -38,8 +38,8 @@ def create_example_nodes():
     contents2 = [
         dict(
             type="TEXT",
-            width=150,
-            label="Say hi",
+            width=350,
+            label="File selector",
         )
     ]
 
@@ -49,7 +49,7 @@ def create_example_nodes():
             attribute_type=dpg.mvNode_Attr_Static,
             category="Example",
             contents=contents2,
-            tooltip="Great extra information - won't change",
+            tooltip="Choose the source file by right clicking the node.",
         )
     ]
 
