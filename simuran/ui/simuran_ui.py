@@ -30,7 +30,8 @@ class SimuranUI(object):
         self.create_node_editor()
 
         if self.debug:
-            dpg.show_item_registry()
+            check = dpg.show_item_registry()
+            print(check)
 
         self.start_render()
 
@@ -74,7 +75,6 @@ class SimuranUI(object):
     def show_plot_menu(self, sender, app_data, user_data):
         # TODO pass through the node selected here
         self.last_clicked_node = user_data
-        print("Clicked node {}".format(self.last_clicked_node))
         mouse_pos = dpg.get_mouse_pos(local=False)
         dpg.configure_item("NodeContextWindow", show=True, pos=mouse_pos)
 
@@ -95,14 +95,12 @@ class SimuranUI(object):
         # app_data -> (link_id1, link_id2)
         dpg.add_node_link(app_data[0], app_data[1], parent=sender)
         print("Added link from {} to {}".format(app_data[0], app_data[1]))
-        print(user_data)
 
     # callback runs when user attempts to disconnect attributes
     def delink_callback(self, sender, app_data, user_data):
         # app_data -> link_id
         dpg.delete_item(app_data)
         print("Deleted link {}".format(app_data))
-        print(user_data)
 
     def show_plots(self, sender, app_data, user_data):
         node_clicked = self.last_clicked_node
@@ -184,30 +182,13 @@ class SimuranUI(object):
             pos=[200, 0],
             horizontal_scrollbar=True,
         )
-        with dpg.node_editor(
+        dpg.add_node_editor(
             label="NEditor",
             callback=self.link_callback,
             delink_callback=self.delink_callback,
             tag="E1",
             parent="NodeWindow",
-        ):
-            with dpg.node(label="Node 1", tag="Node 1"):
-                with dpg.node_attribute(label="Node A1"):
-                    dpg.add_input_float(label="F1", width=150)
-
-                with dpg.node_attribute(
-                    label="Node A2", attribute_type=dpg.mvNode_Attr_Output
-                ):
-                    dpg.add_input_float(label="F2", width=150)
-
-            with dpg.node(label="Node 2", tag="Node 2"):
-                with dpg.node_attribute(label="Node A3"):
-                    dpg.add_input_float(label="F3", width=200)
-
-                with dpg.node_attribute(
-                    label="Node A4", attribute_type=dpg.mvNode_Attr_Output
-                ):
-                    dpg.add_input_float(label="F4", width=200)
+        )
         dpg.add_item_handler_registry(tag="node context handler")
         dpg.add_texture_registry(tag="plot_registry")
 
