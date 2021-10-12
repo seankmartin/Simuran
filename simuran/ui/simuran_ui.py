@@ -33,6 +33,7 @@ class SimuranUI(object):
         self.setup_viewport()
         self.setup_main_window()
         self.create_node_editor()
+        self.create_menu_bar()
 
         if self.debug:
             check = dpg.show_item_registry()
@@ -101,7 +102,6 @@ class SimuranUI(object):
         dpg.add_node_link(app_data[0], app_data[1], parent=sender)
         print("Added link from {} to {}".format(app_data[0], app_data[1]))
 
-    # callback runs when user attempts to disconnect attributes
     def delink_callback(self, sender, app_data, user_data):
         # app_data -> link_id
         dpg.delete_item(app_data)
@@ -197,10 +197,33 @@ class SimuranUI(object):
         dpg.add_item_handler_registry(tag="node context handler")
         dpg.add_texture_registry(tag="plot_registry")
 
+    def create_menu_bar(self):
+        def print_me(sender):
+            print(f"Menu Item: {sender}")
 
-def main_ui(debug : bool = False):
+        with dpg.menu_bar(parent=self.main_window_id):
+            with dpg.menu(label="File"):
+                dpg.add_menu_item(label="Save", callback=print_me)
+                dpg.add_menu_item(label="Save As", callback=print_me)
+
+                with dpg.menu(label="Settings"):
+                    dpg.add_menu_item(
+                        label="Setting 1", callback=print_me, check=True
+                    )
+                    dpg.add_menu_item(label="Setting 2", callback=print_me)
+
+            dpg.add_menu_item(label="Help", callback=print_me)
+
+            with dpg.menu(label="Widget Items"):
+                dpg.add_checkbox(label="Pick Me", callback=print_me)
+                dpg.add_button(label="Press Me", callback=print_me)
+                dpg.add_color_picker(label="Color Me", callback=print_me)
+
+
+def main_ui(debug: bool = False):
     su = SimuranUI(debug=debug)
     su.main()
+
 
 if __name__ == "__main__":
     typer.run(main_ui)
