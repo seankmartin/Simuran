@@ -25,6 +25,7 @@ class SimuranUI(object):
         self.debug = kwargs.get("debug", False)
         self.last_clicked_node = None
         self.loaded_images = {}
+        self.links = {}
 
     # Control functions
     def main(self):
@@ -37,8 +38,7 @@ class SimuranUI(object):
         self.create_file_selection_window()
 
         if self.debug:
-            check = dpg.show_item_registry()
-            print(check)
+            dpg.show_item_registry()
 
         self.start_render()
 
@@ -92,6 +92,8 @@ class SimuranUI(object):
         position = [max(total_pos[0] - 250, 0), max(total_pos[1] - 60, 0)]
         node = node_factory.create("E1", position=position)
         self.nodes[node.tag] = node
+        dpg.configure_item("NodeAddWindow", show=False)
+        node.debug = self.debug
 
     def global_handlers(self):
         with dpg.handler_registry(label="global handlers"):
@@ -101,13 +103,30 @@ class SimuranUI(object):
 
     def link_callback(self, sender, app_data, user_data):
         # app_data -> (link_id1, link_id2)
-        dpg.add_node_link(app_data[0], app_data[1], parent=sender)
-        print("Added link from {} to {}".format(app_data[0], app_data[1]))
+        from_tag, to_tag = app_data[0], app_data[1]
+        link_tag = dpg.add_node_link(from_tag, to_tag, parent=sender)
+        print("Added link from {} to {}".format(from_tag, to_tag))
+
+        for node_id, node in self.nodes.items():
+            if node.has_attribute(from_tag):
+                node.on_connect(from_tag, to_tag)
+            if node.has_attribute(to_tag):
+                node.on_connect(from_tag, to_tag)
+        
+        self.links[link_tag] = (from_tag, to_tag)
+            
 
     def delink_callback(self, sender, app_data, user_data):
         # app_data -> link_id
         dpg.delete_item(app_data)
         print("Deleted link {}".format(app_data))
+        from_tag, to_tag = self.links.pop(app_data)
+
+        for node_id, node in self.nodes.items():
+            if node.has_attribute(from_tag):
+                node.on_disconnect(from_tag, to_tag)
+            if node.has_attribute(to_tag):
+                node.on_disconnect(from_tag, to_tag)
 
     def file_select_callback(self, sender, app_data, user_data):
         selections = app_data["selections"]
@@ -264,5 +283,8 @@ def main_ui(debug: bool = False):
     su.main()
 
 
-if __name__ == "__main__":
+def cli_entry():
     typer.run(main_ui)
+
+if __name__ == "__main__":
+    cli_entry()

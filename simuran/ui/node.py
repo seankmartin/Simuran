@@ -28,30 +28,42 @@ class BaseNode(object):
         # TODO this should hold application state
         self.state = {}
 
+        self.input_attributes = {}
+
     def add_link(self, link_id, sender, receiver):
         self.links[link_id] = (sender, receiver)
 
     def on_connect(self, sender, receiver):
         # Needs work for context
-        sender_attr = self.get_attribute_id(sender)
-        receiver_attr = self.get_attribute_id(receiver)
+        sender_attr = self.get_attribute(sender)
+        receiver_attr = self.get_attribute(receiver)
 
-        if sender_attr[0]:
-            print("Connected to {} as sender".format(receiver))
+        if sender_attr is not None:
 
-        if receiver_attr[0]:
-            print("Connected to {} as receiver".format(sender))
+            if self.debug:
+                print("{}: Connected to {} as sender".format(self.tag, receiver))
+
+        if receiver_attr is not None:
+            self.input_attributes[f"{sender}--{receiver}"] = sender_attr
+
+            if self.debug:
+                print("{}: Connected to {} as receiver".format(self.tag, sender))
 
     def on_disconnect(self, sender, receiver):
         # Needs work for context
-        sender_attr = self.get_attribute_id(sender)
-        receiver_attr = self.get_attribute_id(receiver)
+        sender_attr = self.get_attribute(sender)
+        receiver_attr = self.get_attribute(receiver)
 
-        if sender_attr[0]:
-            print("Disconnected from {} as sender".format(receiver))
+        if sender_attr is not None:
 
-        if receiver_attr[0]:
-            print("Disconnected from {} as receiver".format(sender))
+            if self.debug:
+                print("{}: Disconnected from {} as sender".format(self.tag, receiver))
+
+        if receiver_attr is not None:
+            sender_attr = self.input_attributes.pop(f"{sender}--{receiver}")
+
+            if self.debug:
+                print("{}: Disconnected from {} as receiver".format(self.tag, sender))
 
     def delete(self, link_id):
         # Needs work for context
@@ -108,9 +120,7 @@ class BaseNode(object):
                         user_data=self.tag,
                         parent="node context handler",
                     )
-                    dpg.bind_item_handler_registry(
-                        content_tag, "node context handler"
-                    )
+                    dpg.bind_item_handler_registry(content_tag, "node context handler")
                 else:
                     raise ValueError(
                         "Unsupported content type {}, options are {}".format(type_),
@@ -142,11 +152,24 @@ class BaseNode(object):
     def get_values(self):
         return dpg.get_values(list(self.contents.keys()))
 
+    def get_value_of_label(self, label):
+        content_tag, _ = self.get_content_with_label(label)
+        return dpg.get_value(content_tag)
+
     def get_content_with_label(self, label):
         for content_tag, content in self.contents.items():
             if label == content.get("label", ""):
                 return content_tag, content
         return None, None
+
+    def has_attribute(self, tag):
+        return tag in self.attributes.keys()
+
+    def get_attribute(self, tag):
+        if tag in self.attributes.keys():
+            return self.attributes[tag]
+        else:
+            return None
 
     def set_source_file(self, fpath, label=None):
         if label is None:
@@ -169,12 +192,6 @@ class NodeFactory(object):
         # Keep track of the ID of created items
         self.created_nodes = []
 
-    def get_attribute_id(self, id_):
-        for i, attribute in enumerate(self.stored_attrs):
-            if id_ == attribute.get("tag", None):
-                return True, attribute, i
-        return False, None, None
-
     def create(self, editor_id, **kwargs):
         position = kwargs.get("position", [])
 
@@ -185,6 +202,7 @@ class NodeFactory(object):
         new_node = self.node_class(
             parent=editor_id, label=new_node_label, debug=self.debug
         )
+        new_node.name = self.label
         new_node.create(self.attributes, self.clicked_callback, position=position)
 
         self.created_nodes.append(new_node.tag)
