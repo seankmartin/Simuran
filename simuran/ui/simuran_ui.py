@@ -109,6 +109,19 @@ class SimuranUI(object):
         dpg.delete_item(app_data)
         print("Deleted link {}".format(app_data))
 
+    def file_select_callback(self, sender, app_data, user_data):
+        selections = app_data["selections"]
+
+        if user_data is None:
+            for basename, fpath in selections.items():
+                last_node = self.nodes[self.last_clicked_node]
+                last_node.set_source_file(fpath)
+        else:
+            if len(selections) == 1:
+                dpg.set_value(user_data)
+            else:
+                print("Selected multiple files, please choose one.")
+
     def show_plots(self, sender, app_data, user_data):
         node_clicked = self.last_clicked_node
         path = self.nodes[node_clicked].get_path_to_plots()
@@ -226,23 +239,15 @@ class SimuranUI(object):
                 dpg.add_color_picker(label="Color Me", callback=print_me)
 
     def create_file_selection_window(self):
-        def callback(sender, app_data, user_data):
-            selections = app_data["selections"]
-            for basename, fpath in selections.items():
-                last_node = self.nodes[self.last_clicked_node]
-                last_node.set_source_file(fpath)
 
         with dpg.file_dialog(
-            directory_selector=False, show=False, callback=callback, id="file_dialog_id"
+            directory_selector=False,
+            show=False,
+            callback=self.file_select_callback,
+            id="file_dialog_id",
         ):
             dpg.add_file_extension(".*")
             dpg.add_file_extension("", color=(150, 255, 150, 255))
-            dpg.add_file_extension(
-                "Source files (*.cpp *.h *.hpp){.cpp,.h,.hpp}", color=(0, 255, 255, 255)
-            )
-            dpg.add_file_extension(
-                ".h", color=(255, 0, 255, 255), custom_text="[header]"
-            )
             dpg.add_file_extension(
                 ".py", color=(0, 255, 0, 255), custom_text="[Python]"
             )

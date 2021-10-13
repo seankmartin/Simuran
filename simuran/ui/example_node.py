@@ -10,6 +10,34 @@ class NodeWithFunction(NodeFactory):
         self.label = kwargs.get("label", "Node with function")
         self.node_class = BaseNode
 
+
+## TODO make a converter from py files
+class FileSelectNodeFactory(NodeFactory):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        contents = [
+            dict(
+                type="TEXT",
+                width=300,
+                label="File selector",
+            )
+        ]
+
+        self.attributes = [
+            dict(
+                label="Attr 1",
+                attribute_type=dpg.mvNode_Attr_Output,
+                shape=dpg.mvNode_PinShape_Triangle,
+                category="File select",
+                contents=contents,
+                tooltip="Choose the source file by right clicking the node.",
+            )
+        ]
+        self.label = "Neural data source file"
+        self.node_class = BaseNode
+
+
 def create_example_nodes():
     contents1 = [
         dict(
@@ -35,24 +63,6 @@ def create_example_nodes():
     node1 = NodeWithFunction(attributes=attributes1, debug=False)
     node1.label = "First node with function"
 
-    contents2 = [
-        dict(
-            type="TEXT",
-            width=350,
-            label="File selector",
-        )
-    ]
-
-    attributes2 = [
-        dict(
-            label="Attr 1",
-            attribute_type=dpg.mvNode_Attr_Static,
-            category="Example",
-            contents=contents2,
-            tooltip="Choose the source file by right clicking the node.",
-        )
-    ]
-
-    node2 = NodeWithFunction(attributes=attributes2, debug=False)
+    node2 = FileSelectNodeFactory()
 
     return [node1, node2]

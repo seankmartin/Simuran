@@ -101,6 +101,16 @@ class BaseNode(object):
                     )
                 elif type_ == "TEXT":
                     dpg.add_input_text(parent=attribute_tag, tag=content_tag, **content)
+                    # TODO perhaps a separate menu for selecting files
+                    dpg.add_item_clicked_handler(
+                        button=1,
+                        callback=clicked_callback,
+                        user_data=self.tag,
+                        parent="node context handler",
+                    )
+                    dpg.bind_item_handler_registry(
+                        content_tag, "node context handler"
+                    )
                 else:
                     raise ValueError(
                         "Unsupported content type {}, options are {}".format(type_),
@@ -150,7 +160,7 @@ class BaseNode(object):
 
 class NodeFactory(object):
     def __init__(self, **kwargs):
-        self.node_class = kwargs.get("node_class", None)
+        self.node_class = kwargs.get("node_class", BaseNode)
         self.label = kwargs.get("label", "Custom name")
         self.debug = kwargs.get("debug", False)
         self.attributes = kwargs.get("attributes", [])
