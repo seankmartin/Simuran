@@ -81,9 +81,9 @@ class Recording(BaseSimuran):
         self.source_file = base_file
         self.source_files = {}
         if param_file is not None:
-            self._setup_from_file(param_file, load=load)
+            self.setup_from_file(param_file, load=load)
         elif params is not None:
-            self._setup_from_dict(params, load=load)
+            self.setup_from_dict(params, load=load)
 
     def load(self, *args, **kwargs):
         """Load each available attribute."""
@@ -288,7 +288,7 @@ class Recording(BaseSimuran):
                 source_files[name] = item.source_file
         self.source_files = source_files
 
-    def _setup_from_file(self, param_file, load=True):
+    def setup_from_file(self, param_file, load=True):
         """
         Set up this recording from a source parameter file.
 
@@ -307,7 +307,7 @@ class Recording(BaseSimuran):
         self.param_handler = ParamHandler(in_loc=param_file)
         self._setup(load=load)
 
-    def _setup_from_dict(self, params, load=True):
+    def setup_from_dict(self, params, load=True):
         """
         Set up this recording from a dictionary of parameters.
 

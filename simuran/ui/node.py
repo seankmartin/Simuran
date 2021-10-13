@@ -4,6 +4,8 @@ Handles creating nodes in the UI.
 Uses the factory method design pattern.
 """
 
+from copy import copy
+
 import dearpygui.dearpygui as dpg
 from rich import print
 
@@ -96,9 +98,11 @@ class BaseNode(object):
                 **attribute,
             )
             if attribute_tooltip is not None:
-                with dpg.tooltip(attribute_tag):
-                    dpg.add_text(attribute_tooltip)
+                tooltip_tag = dpg.generate_uuid()
+                with dpg.tooltip(parent=attribute_tag):
+                    dpg.add_text(default_value=attribute_tooltip, tag=tooltip_tag)
                 attribute["tooltip"] = attribute_tooltip
+                attribute["tooltip_tag"] = tooltip_tag
             if len(contents) != 0:
                 attribute["contents"] = contents
 
@@ -127,6 +131,7 @@ class BaseNode(object):
                         ("INT", "FLOAT", "TEXT"),
                     )
                 content["type"] = type_
+                content["parent"] = attribute_tag
                 self.contents[content_tag] = content
 
         # real version node.tag
@@ -171,6 +176,9 @@ class BaseNode(object):
         else:
             return None
 
+    def get_owning_attribute(self, content_tag):
+        return self.attributes[self.contents[content_tag]["parent"]]
+
     def set_source_file(self, fpath, label=None):
         if label is None:
             for content_tag, content in self.contents.items():
@@ -179,6 +187,10 @@ class BaseNode(object):
         else:
             content_tag, content = self.get_content_with_label(label)
         dpg.set_value(content_tag, fpath)
+
+        owning_attribute = self.get_owning_attribute(content_tag)
+        tooltip_tag = owning_attribute["tooltip_tag"]
+        dpg.set_value(tooltip_tag, fpath)
 
 
 class NodeFactory(object):
@@ -203,7 +215,7 @@ class NodeFactory(object):
             parent=editor_id, label=new_node_label, debug=self.debug
         )
         new_node.name = self.label
-        new_node.create(self.attributes, self.clicked_callback, position=position)
+        new_node.create(copy(self.attributes), self.clicked_callback, position=position)
 
         self.created_nodes.append(new_node.tag)
 
