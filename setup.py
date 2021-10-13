@@ -35,6 +35,7 @@ INSTALL_REQUIRES = [
     "pillow",
     "typer",
     "click-spinner",
+    "sumatra @ git+git://github.com/seankmartin/sumatra.git",
 ]
 
 CLASSIFIERS = [
@@ -53,7 +54,7 @@ ENTRY_POINTS = {
     "console_scripts": [
         "simuran = simuran.cli:cli_entry",
         "simuran-merge = simuran.cli:merge_entry",
-        "simuran-ui = simuran.ui.simuran_ui:main_ui",
+        "simuran-ui = simuran.ui.simuran_ui:cli_entry",
     ],
 }
 

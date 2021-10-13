@@ -83,6 +83,7 @@ def establish_logger(loglevel, params):
     log.info("New run with params {}".format(params))
 
 
+## TODO convert interface to typer
 def main():
     """
     Start the SIMURAN command line interface.

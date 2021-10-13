@@ -16,3 +16,4 @@ dearpygui
 pillow
 typer
 click-spinner
+-e git+git://github.com/seankmartin/sumatra.git#egg=sumatra
