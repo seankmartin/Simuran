@@ -1,11 +1,12 @@
-import click_spinner
-from rich import print
-
 print("Starting application...")
+
+import click_spinner
 with click_spinner.spinner():
     import os
-    import typer
+    import traceback
 
+    from rich import print
+    import typer
     import dearpygui.dearpygui as dpg
     import PIL
     import numpy as np
@@ -32,12 +33,13 @@ class SimuranUI(object):
         dpg.create_context()
         self.init_nodes()
         self.setup_viewport()
-        self.setup_main_window()
+        self.create_main_window()
         self.create_node_editor()
         self.create_menu_bar()
         self.create_file_selection_window()
 
         if self.debug:
+            dpg.show_debug()
             dpg.show_item_registry()
 
         self.start_render()
@@ -50,14 +52,7 @@ class SimuranUI(object):
             self.node_factories.append(node)
 
     def start_render(self):
-        # dpg.start_dearpygui()
-        frame = 0
-
-        while dpg.is_dearpygui_running():
-            # insert here any code you would like to run in the render loop
-            # frame += 1
-            dpg.render_dearpygui_frame()
-
+        dpg.start_dearpygui()
         dpg.destroy_context()
 
     def setup_viewport(self):
@@ -112,9 +107,8 @@ class SimuranUI(object):
                 node.on_connect(from_tag, to_tag)
             if node.has_attribute(to_tag):
                 node.on_connect(from_tag, to_tag)
-        
+
         self.links[link_tag] = (from_tag, to_tag)
-            
 
     def delink_callback(self, sender, app_data, user_data):
         # app_data -> link_id
@@ -141,7 +135,7 @@ class SimuranUI(object):
             else:
                 print("Selected multiple files, please choose one.")
 
-    def show_plots(self, sender, app_data, user_data):
+    def show_plots_callback(self, sender, app_data, user_data):
         node_clicked = self.last_clicked_node
         path = self.nodes[node_clicked].get_path_to_plots()
         if path not in self.loaded_images.keys():
@@ -169,6 +163,47 @@ class SimuranUI(object):
         ):
             dpg.add_image(label="drawing", texture_id=t_id)
 
+    def run_graph_callback(self, sender, app_data, user_data):
+        dpg.configure_item("MainRunButton", enabled=False, label="Running...")
+        # TODO revise this for performance (e.g. multiprocessing or live running)
+        def kill_process():
+            print("There was an error in processing. Aborting.")
+            dpg.configure_item("MainRunButton", enabled=True, label="Run")
+            return False
+
+        try:
+            connected_nodes = set()
+            # Process source nodes
+            for tag, node in self.nodes.items():
+                if node.category == "Source":
+                    keep_going = node.process(self.nodes)
+                    if not keep_going:
+                        kill_process()
+                    downstream_node_idxs = node.get_downstream_nodes(self.nodes)
+                    for i in downstream_node_idxs:
+                        connected_nodes.add(i)
+
+            # Process connected nodes
+            condition = True
+            while condition:
+                intermediate_connected_nodes = set()
+                for element in connected_nodes:
+                    node = self.nodes[element]
+                    keep_going = node.process(self.nodes)
+                    if not keep_going:
+                        kill_process()
+                    downstream_node_idxs = node.get_downstream_nodes(self.nodes)
+                    for i in downstream_node_idxs:
+                        intermediate_connected_nodes.add(i)
+                condition = len(intermediate_connected_nodes) != 0
+                connected_nodes = intermediate_connected_nodes
+            dpg.configure_item("MainRunButton", enabled=True, label="Run")
+        except:
+            traceback.print_exc()
+            dpg.configure_item("MainRunButton", enabled=True, label="Run")
+
+        return True
+
     # Windows
     def create_add_node_window(self):
         with dpg.window(label="Add Node", show=False, id="NodeAddWindow", modal=True):
@@ -195,7 +230,7 @@ class SimuranUI(object):
             dpg.add_button(
                 label="Show plots",
                 width=200,
-                callback=self.show_plots,
+                callback=self.show_plots_callback,
             )
             dpg.add_button(
                 label="Select file path",
@@ -209,12 +244,20 @@ class SimuranUI(object):
                 callback=lambda: dpg.configure_item("NodeContextWindow", show=False),
             )
 
-    def setup_main_window(self):
+    def create_main_window(self):
         with dpg.window(label="SIMURAN Demo", tag=self.main_window_id):
-            dpg.add_text("Space for menu")
+            dpg.add_text("Main menu")
             self.create_add_node_window()
             self.create_node_info_window()
             self.global_handlers()
+
+            dpg.add_button(
+                label="Run",
+                width=150,
+                indent=25,
+                callback=self.run_graph_callback,
+                tag="MainRunButton"
+            )
 
         dpg.set_primary_window(self.main_window_id, True)
 
@@ -271,12 +314,6 @@ class SimuranUI(object):
                 ".py", color=(0, 255, 0, 255), custom_text="[Python]"
             )
 
-            dpg.add_button(
-                label="File Selector",
-                callback=lambda: dpg.show_item("file_dialog_id"),
-                parent=self.main_window_id,
-            )
-
 
 def main_ui(debug: bool = False):
     su = SimuranUI(debug=debug)
@@ -285,6 +322,7 @@ def main_ui(debug: bool = False):
 
 def cli_entry():
     typer.run(main_ui)
+
 
 if __name__ == "__main__":
     cli_entry()

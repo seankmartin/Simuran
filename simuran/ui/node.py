@@ -26,14 +26,15 @@ class BaseNode(object):
         self.attributes = {}
         self.contents = {}
         self.debug = debug
+        self.category = None
 
         # TODO this should hold application state
         self.state = {}
 
         self.input_attributes = {}
+        self.output_attributes = {}
 
-    def add_link(self, link_id, sender, receiver):
-        self.links[link_id] = (sender, receiver)
+        self.plot_paths = None
 
     def on_connect(self, sender, receiver):
         # Needs work for context
@@ -41,6 +42,7 @@ class BaseNode(object):
         receiver_attr = self.get_attribute(receiver)
 
         if sender_attr is not None:
+            self.input_attributes[f"{sender}--{receiver}"] = receiver_attr
 
             if self.debug:
                 print("{}: Connected to {} as sender".format(self.tag, receiver))
@@ -57,6 +59,7 @@ class BaseNode(object):
         receiver_attr = self.get_attribute(receiver)
 
         if sender_attr is not None:
+            receiver_attr = self.input_attributes.pop(f"{sender}--{receiver}")
 
             if self.debug:
                 print("{}: Disconnected from {} as sender".format(self.tag, receiver))
@@ -66,15 +69,6 @@ class BaseNode(object):
 
             if self.debug:
                 print("{}: Disconnected from {} as receiver".format(self.tag, sender))
-
-    def delete(self, link_id):
-        # Needs work for context
-        if link_id in self.links.keys():
-            sender, receiver = self.links.pop(link_id)
-            print("Deleted link {} to {}".format(sender, receiver))
-            self.on_disconnect(sender, receiver)
-        else:
-            raise ValueError("{} is not a valid link id".format(link_id))
 
     def create(self, attributes, clicked_callback, tooltip=None, position=[]):
         dpg.add_node(
@@ -143,6 +137,10 @@ class BaseNode(object):
         )
         dpg.bind_item_handler_registry(self.tag, "node context handler")
 
+    def process(self, nodes):
+        if self.debug:
+            print(f"Processing {self.tag} -- {self.label}")
+
     def __str__(self):
         return "SIMURAN node with label {}, tag {} and contains {}".format(
             self.label, self.tag, [self.attribute_tags, self.content_tags]
@@ -192,11 +190,23 @@ class BaseNode(object):
         tooltip_tag = owning_attribute["tooltip_tag"]
         dpg.set_value(tooltip_tag, fpath)
 
+    def get_downstream_nodes(self, nodes):
+        downstream_nodes = []
+        output_attributes = self.output_attributes.values()
+        for i, node in enumerate(nodes):
+            for attribute in output_attributes:
+                if node.has_attribute(attribute):
+                    downstream_nodes.append(node.tag)
+        return downstream_nodes
+
+
+
 
 class NodeFactory(object):
     def __init__(self, **kwargs):
         self.node_class = kwargs.get("node_class", BaseNode)
         self.label = kwargs.get("label", "Custom name")
+        self.category = kwargs.get("category", "default")
         self.debug = kwargs.get("debug", False)
         self.attributes = kwargs.get("attributes", [])
         self.clicked_callback = kwargs.get("clicked_callback", None)
@@ -215,6 +225,7 @@ class NodeFactory(object):
             parent=editor_id, label=new_node_label, debug=self.debug
         )
         new_node.name = self.label
+        new_node.category = self.category
         new_node.create(copy(self.attributes), self.clicked_callback, position=position)
 
         self.created_nodes.append(new_node.tag)
