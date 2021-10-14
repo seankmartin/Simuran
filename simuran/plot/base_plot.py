@@ -85,6 +85,11 @@ def save_simuran_plot(fig, save_location, **kwargs):
     """
     Save a figure using some default settings.
 
+    By default saves both a raster image (bitmap e.g. PNG, JPG)
+    and a vector image (e.g. PDF, SVG).
+    This can be disabled by setting format to None for the raster
+    and vector_format to none for the vector
+
     Parameters
     ----------
     fig : matplotlib.figure.Figure
@@ -116,16 +121,32 @@ def save_simuran_plot(fig, save_location, **kwargs):
     bbox_inches = kwargs.get("bbox_inches", "tight")
     pad_inches = kwargs.get("pad_inches", 0.1)
     verbose = kwargs.get("verbose", False)
-    out_format = kwargs.get("format", None)
 
+    # Save bitmap
+    out_format = kwargs.get("format", "png")
     if out_format is not None:
         save_location = os.path.splitext(save_location)[0] + "." + out_format
 
-    if verbose:
-        print("Saving figure to {}".format(save_location))
+        if verbose:
+            print("Saving raster image to {}".format(save_location))
 
-    skm_pyutils.py_path.make_path_if_not_exists(save_location)
-    fig.savefig(save_location, dpi=dpi, bbox_inches=bbox_inches, pad_inches=pad_inches)
+        skm_pyutils.py_path.make_path_if_not_exists(save_location)
+        fig.savefig(
+            save_location, dpi=dpi, bbox_inches=bbox_inches, pad_inches=pad_inches
+        )
+
+    # Save vector
+    out_format = kwargs.get("vector_format", "pdf")
+    if out_format is not None:
+        save_location = os.path.splitext(save_location)[0] + "." + out_format
+
+        if verbose:
+            print("Saving vector image to {}".format(save_location))
+
+        skm_pyutils.py_path.make_path_if_not_exists(save_location)
+        fig.savefig(
+            save_location, dpi=dpi, bbox_inches=bbox_inches, pad_inches=pad_inches
+        )
 
     return save_location
 
@@ -139,5 +160,7 @@ def set_plot_style(palette="dark"):
     """Set the seaborn palette and style."""
     sns.set_palette(palette)
     sns.set_context(
-        "paper", font_scale=1.4, rc={"lines.linewidth": 3.2},
+        "paper",
+        font_scale=1.4,
+        rc={"lines.linewidth": 3.2},
     )

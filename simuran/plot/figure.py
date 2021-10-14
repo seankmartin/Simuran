@@ -47,13 +47,22 @@ class SimuranFigure(object):
         """Set the value of self.filename."""
         self.filename = filename
 
-    def get_filename(self):
-        """Get the filename that will be saved to."""
+    def get_filenames(self):
+        """Get the filenames that will be saved to."""
+        filenames = {}
+        
+        # raster image
         out_format = self.kwargs.get("format", None)
         if out_format is not None:
             filename = os.path.splitext(self.filename)[0] + "." + out_format
-        else:
-            filename = self.filename
+            filenames["raster"] = filename
+
+        # vector image
+        out_format = self.kwargs.get("vector_format", None)
+        if out_format is not None:
+            filename = os.path.splitext(self.filename)[0] + "." + out_format
+            filenames["vector"] = filename
+
         return filename
 
     def set_figure(self, figure):
