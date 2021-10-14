@@ -4,7 +4,7 @@ Handles creating nodes in the UI.
 Uses the factory method design pattern.
 """
 
-from copy import copy
+from copy import deepcopy
 
 import dearpygui.dearpygui as dpg
 from rich import print
@@ -42,13 +42,13 @@ class BaseNode(object):
         receiver_attr = self.get_attribute(receiver)
 
         if sender_attr is not None:
-            self.input_attributes[f"{sender}--{receiver}"] = receiver_attr
+            self.output_attributes[f"{sender}--{receiver}"] = receiver
 
             if self.debug:
                 print("{}: Connected to {} as sender".format(self.tag, receiver))
 
         if receiver_attr is not None:
-            self.input_attributes[f"{sender}--{receiver}"] = sender_attr
+            self.input_attributes[f"{sender}--{receiver}"] = sender
 
             if self.debug:
                 print("{}: Connected to {} as receiver".format(self.tag, sender))
@@ -59,7 +59,7 @@ class BaseNode(object):
         receiver_attr = self.get_attribute(receiver)
 
         if sender_attr is not None:
-            receiver_attr = self.input_attributes.pop(f"{sender}--{receiver}")
+            receiver_attr = self.output_attributes.pop(f"{sender}--{receiver}")
 
             if self.debug:
                 print("{}: Disconnected from {} as sender".format(self.tag, receiver))
@@ -112,13 +112,14 @@ class BaseNode(object):
                 elif type_ == "TEXT":
                     dpg.add_input_text(parent=attribute_tag, tag=content_tag, **content)
                     # TODO perhaps a separate menu for selecting files
-                    dpg.add_item_clicked_handler(
-                        button=1,
-                        callback=clicked_callback,
-                        user_data=self.tag,
-                        parent="node context handler",
-                    )
-                    dpg.bind_item_handler_registry(content_tag, "node context handler")
+                    handler_tag = dpg.generate_uuid()
+                    with dpg.item_handler_registry(tag=handler_tag) as handler:
+                        dpg.add_item_clicked_handler(
+                            button=1,
+                            callback=clicked_callback,
+                            user_data=["content", content["label"], self.tag],
+                        )
+                    dpg.bind_item_handler_registry(content_tag, handler_tag)
                 else:
                     raise ValueError(
                         "Unsupported content type {}, options are {}".format(type_),
@@ -132,7 +133,7 @@ class BaseNode(object):
         dpg.add_item_clicked_handler(
             button=1,
             callback=clicked_callback,
-            user_data=self.tag,
+            user_data=["node", self.tag],
             parent="node context handler",
         )
         dpg.bind_item_handler_registry(self.tag, "node context handler")
@@ -146,11 +147,8 @@ class BaseNode(object):
             self.label, self.tag, [self.attribute_tags, self.content_tags]
         )
 
-    def get_path_to_plots(self):
-        # TEMP should come from state
-        plot_path = r"E:\Repos\privateCode\UI\CSR1-openfield--plots--CSR1_small sq--07092017--07092017_CSubRet1_smallsq_d3_1_power_SUB.png"
-
-        return plot_path
+    def get_paths_to_plots(self):
+        return self.plot_paths
 
     def get_values(self):
         return dpg.get_values(list(self.contents.keys()))
@@ -193,13 +191,11 @@ class BaseNode(object):
     def get_downstream_nodes(self, nodes):
         downstream_nodes = []
         output_attributes = self.output_attributes.values()
-        for i, node in enumerate(nodes):
+        for key, node in nodes.items():
             for attribute in output_attributes:
                 if node.has_attribute(attribute):
                     downstream_nodes.append(node.tag)
         return downstream_nodes
-
-
 
 
 class NodeFactory(object):
@@ -226,7 +222,9 @@ class NodeFactory(object):
         )
         new_node.name = self.label
         new_node.category = self.category
-        new_node.create(copy(self.attributes), self.clicked_callback, position=position)
+        new_node.create(
+            deepcopy(self.attributes), self.clicked_callback, position=position
+        )
 
         self.created_nodes.append(new_node.tag)
 

@@ -12,27 +12,43 @@ from simuran.plot.figure import SimuranFigure
 class RecordingNodeFactory(NodeFactory):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.label = kwargs.get("label", "Recording file")
+        self.label = kwargs.get("label", "Neural data source file")
         self.node_class = RecordingNode
-        self.category="Source"
+        self.category = "Source"
 
         contents = [
             dict(
                 type="TEXT",
                 width=200,
-                label="File selector",
+                label="File: Recording mapping",
+            )
+        ]
+
+        contents2 = [
+            dict(
+                type="TEXT",
+                width=200,
+                label="File: Recording source",
             )
         ]
 
         self.attributes = [
             dict(
-                label="Attr 1",
+                label="File: Recording mapping",
                 attribute_type=dpg.mvNode_Attr_Output,
                 shape=dpg.mvNode_PinShape_Triangle,
                 category="File select",
                 contents=contents,
                 tooltip="Choose the source file by right clicking the node.",
-            )
+            ),
+            dict(
+                label="File: Recording source",
+                attribute_type=dpg.mvNode_Attr_Static,
+                shape=dpg.mvNode_PinShape_Triangle,
+                category="File select",
+                contents=contents2,
+                tooltip="Choose the source file by right clicking the node.",
+            ),
         ]
 
 
@@ -41,13 +57,18 @@ class RecordingNode(BaseNode):
         super().__init__(parent, label=label, tag=tag, debug=debug)
         self.recording = Recording()
         self.last_loaded_param_file = None
+        self.last_loaded_source_file = None
+        self.param_file = None
+        self.source_file = None
 
     def process(self, nodes):
         super().process(nodes)
 
         # Use set parameters
-        self.param_file = self.get_value_of_label(label="File selector")
-        
+        self.param_file = self.get_value_of_label(label="File: Recording mapping")
+        self.source_file = self.get_value_of_label(label="File: Recording source")
+
+
         if self.param_file == "":
             print("ERROR: No file selected")
             return False
@@ -56,9 +77,28 @@ class RecordingNode(BaseNode):
             print(f"ERROR: Non existant file {self.param_file} selected")
             return False
 
-        if self.last_loaded_param_file != self.param_file:
+        if self.source_file == "":
+            print("ERROR: No file selected")
+            return False
+
+        if not os.path.isfile(self.source_file):
+            print(f"ERROR: Non existant file {self.source_file} selected")
+            return False
+
+        if (
+            self.last_loaded_param_file != self.param_file
+            or self.last_loaded_source_file != self.source_file
+        ):
+            if self.debug:
+                print(f"Loading {self.source_file} with params {self.param_file}")
+            self.recording.source_file = self.source_file
             self.recording.setup_from_file(self.param_file, load=True)
             self.last_loaded_param_file = self.param_file
+            self.last_loaded_source_file = self.source_file
+            if self.debug:
+                print(f"Loaded {self.source_file} with params {self.param_file}")
+        else:
+            print(f"Already Loaded {self.source_file} with params {self.param_file}")
 
         return True
 
@@ -66,8 +106,8 @@ class RecordingNode(BaseNode):
 class LFPCleanNodeFactory(NodeFactory):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.label = kwargs.get("label", "Node with function")
-        self.node_class = BaseNode
+        self.label = kwargs.get("label", "LFP signal cleaning")
+        self.node_class = LFPCleanNode
         self.category = "Processing"
 
         # TODO make this match input
@@ -107,14 +147,12 @@ class LFPCleanNodeFactory(NodeFactory):
                 tooltip="Options: avg, zscore, ica",
             ),
         ]
-        self.label = "Neural data source file"
-        self.node_class = LFPCleanNode
 
 
 class LFPCleanNode(BaseNode):
     def __init__(self, parent, label="Node", tag=None, debug=False):
         super().__init__(parent, label=label, tag=tag, debug=debug)
-        self.lfp_clean = LFPClean()
+        self.lfp_clean = LFPClean(visualise=True, show_vis=False)
 
     def process(self, nodes):
         super().process(nodes)
@@ -122,15 +160,24 @@ class LFPCleanNode(BaseNode):
         # Use set parameters
         method = self.get_value_of_label(label="Clean method")
         self.lfp_clean.method = method
+        if method == "":
+            method = "avg"
 
         # Use the input data
         for key, value in self.input_attributes.items():
-            if value.label == "Input recording":
-                source_file_tag = key.split("--")[0]
-                try:
-                    source_file_tag = int(source_file_tag)
-                except ValueError:
-                    pass
+            sender, receiver = key.split("--")
+            try:
+                sender = int(sender)
+            except ValueError:
+                pass
+            try:
+                receiver = int(receiver)
+            except ValueError:
+                pass
+
+            attr = self.get_attribute(receiver)
+            if attr["label"] == "Input recording":
+                source_file_tag = sender
                 break
 
         for node in nodes.values():
@@ -165,7 +212,9 @@ class LFPCleanNode(BaseNode):
         for f in all_figs:
             figure, name = f
             fname = os.path.join(OUTPUT_DIR, "lfp_clean", name_for_save + name)
-            fig = SimuranFigure(figure=figure, filename=fname, done=True)
+            fig = SimuranFigure(
+                figure=figure, filename=fname, done=True, verbose=self.debug
+            )
             fig.save()
             bitmap_fnames.append(fig.get_filenames()["raster"])
 

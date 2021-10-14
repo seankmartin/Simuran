@@ -1,6 +1,7 @@
 print("Starting application...")
 
 import click_spinner
+
 with click_spinner.spinner():
     import os
     import traceback
@@ -25,6 +26,7 @@ class SimuranUI(object):
         self.button_to_node_mapping = {}
         self.debug = kwargs.get("debug", False)
         self.last_clicked_node = None
+        self.last_clicked_content = None
         self.loaded_images = {}
         self.links = {}
 
@@ -76,8 +78,18 @@ class SimuranUI(object):
         dpg.configure_item("NodeAddWindow", show=True, pos=mouse_pos)
 
     def show_plot_menu(self, sender, app_data, user_data):
+        if self.debug:
+            print(f"Clicked {user_data}")
         # TODO pass through the node selected here
-        self.last_clicked_node = user_data
+        if user_data[0] == "node":
+            self.last_clicked_node = user_data[1]
+            self.last_clicked_content = None
+        elif user_data[0] == "content":
+            self.last_clicked_content = user_data[1]
+            self.last_clicked_node = user_data[2]
+        else:
+            print("Unrecognised clicked type {}".format(user_data[0]))
+
         mouse_pos = dpg.get_mouse_pos(local=False)
         dpg.configure_item("NodeContextWindow", show=True, pos=mouse_pos)
 
@@ -128,40 +140,43 @@ class SimuranUI(object):
         if user_data is None:
             for basename, fpath in selections.items():
                 last_node = self.nodes[self.last_clicked_node]
-                last_node.set_source_file(fpath)
+                last_node.set_source_file(fpath, label=self.last_clicked_content)
         else:
             if len(selections) == 1:
-                dpg.set_value(user_data)
+                dpg.set_value(user_data, selections[0])
             else:
                 print("Selected multiple files, please choose one.")
 
     def show_plots_callback(self, sender, app_data, user_data):
         node_clicked = self.last_clicked_node
-        path = self.nodes[node_clicked].get_path_to_plots()
-        if path not in self.loaded_images.keys():
-            t_id = dpg.generate_uuid()
-            image = PIL.Image.open(path)
-            image = image.resize((1200, 800), PIL.Image.ANTIALIAS)
-            has_alpha = image.mode == "RGBA"
-            if not has_alpha:
-                image.putalpha(255)
-            dpg_image = np.frombuffer(image.tobytes(), dtype=np.uint8) / 255.0
+        paths = self.nodes[node_clicked].get_path_to_plots()
+        for i, path in enumerate(paths):
+            if path not in self.loaded_images.keys():
+                t_id = dpg.generate_uuid()
+                image = PIL.Image.open(path)
+                image = image.resize((1200, 800), PIL.Image.ANTIALIAS)
+                has_alpha = image.mode == "RGBA"
+                if not has_alpha:
+                    image.putalpha(255)
+                dpg_image = np.frombuffer(image.tobytes(), dtype=np.uint8) / 255.0
 
-            dpg.add_static_texture(
-                tag=t_id,
-                default_value=dpg_image,
+                dpg.add_static_texture(
+                    tag=t_id,
+                    default_value=dpg_image,
+                    width=1200,
+                    height=800,
+                    parent="plot_registry",
+                )
+                self.loaded_images[path] = t_id
+            else:
+                t_id = self.loaded_images[path]
+
+            with dpg.window(
+                label="Plot information from {}".format(self.nodes[node_clicked].label),
                 width=1200,
                 height=800,
-                parent="plot_registry",
-            )
-            self.loaded_images[path] = t_id
-        else:
-            t_id = self.loaded_images[path]
-
-        with dpg.window(
-            label="Plot information from {}".format(self.nodes[node_clicked].label)
-        ):
-            dpg.add_image(label="drawing", texture_id=t_id)
+            ):
+                dpg.add_image(label="drawing", texture_id=t_id)
 
     def run_graph_callback(self, sender, app_data, user_data):
         dpg.configure_item("MainRunButton", enabled=False, label="Running...")
@@ -179,24 +194,28 @@ class SimuranUI(object):
                     keep_going = node.process(self.nodes)
                     if not keep_going:
                         kill_process()
-                    downstream_node_idxs = node.get_downstream_nodes(self.nodes)
-                    for i in downstream_node_idxs:
+                    downstream_node_tags = node.get_downstream_nodes(self.nodes)
+                    for i in downstream_node_tags:
                         connected_nodes.add(i)
 
             # Process connected nodes
             condition = True
             while condition:
+                if self.debug:
+                    print(f"Downstream nodes {connected_nodes}")
+
                 intermediate_connected_nodes = set()
                 for element in connected_nodes:
                     node = self.nodes[element]
                     keep_going = node.process(self.nodes)
                     if not keep_going:
                         kill_process()
-                    downstream_node_idxs = node.get_downstream_nodes(self.nodes)
-                    for i in downstream_node_idxs:
+                    downstream_node_tags = node.get_downstream_nodes(self.nodes)
+                    for i in downstream_node_tags:
                         intermediate_connected_nodes.add(i)
                 condition = len(intermediate_connected_nodes) != 0
                 connected_nodes = intermediate_connected_nodes
+
             dpg.configure_item("MainRunButton", enabled=True, label="Run")
         except:
             traceback.print_exc()
@@ -256,7 +275,7 @@ class SimuranUI(object):
                 width=150,
                 indent=25,
                 callback=self.run_graph_callback,
-                tag="MainRunButton"
+                tag="MainRunButton",
             )
 
         dpg.set_primary_window(self.main_window_id, True)
