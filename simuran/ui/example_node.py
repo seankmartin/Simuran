@@ -160,7 +160,7 @@ class LFPCleanNode(BaseNode):
         # Use set parameters
         method = self.get_value_of_label(label="Clean method")
         self.lfp_clean.method = method
-        if method == "":
+        if method == "" or method.startswith(" "):
             method = "avg"
 
         # Use the input data
@@ -216,7 +216,7 @@ class LFPCleanNode(BaseNode):
                 figure=figure, filename=fname, done=True, verbose=self.debug
             )
             fig.save()
-            bitmap_fnames.append(fig.get_filenames()["raster"])
+            bitmap_fnames.append(fig.output_filenames["raster"])
 
         self.plot_paths = bitmap_fnames
 

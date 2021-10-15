@@ -149,7 +149,7 @@ class SimuranUI(object):
 
     def show_plots_callback(self, sender, app_data, user_data):
         node_clicked = self.last_clicked_node
-        paths = self.nodes[node_clicked].get_path_to_plots()
+        paths = self.nodes[node_clicked].plot_paths
         for i, path in enumerate(paths):
             if path not in self.loaded_images.keys():
                 t_id = dpg.generate_uuid()

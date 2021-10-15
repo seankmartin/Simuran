@@ -15,6 +15,7 @@ from rich import print
 # And then nodes - so node factories make nodes
 
 # TODO abstract
+# TODO remove getter and setter
 class BaseNode(object):
     def __init__(self, parent, label="Node", tag=None, debug=False):
         if tag is None:
@@ -146,9 +147,6 @@ class BaseNode(object):
         return "SIMURAN node with label {}, tag {} and contains {}".format(
             self.label, self.tag, [self.attribute_tags, self.content_tags]
         )
-
-    def get_paths_to_plots(self):
-        return self.plot_paths
 
     def get_values(self):
         return dpg.get_values(list(self.contents.keys()))
