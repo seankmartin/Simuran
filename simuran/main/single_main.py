@@ -62,10 +62,10 @@ def save_figures(figures, out_dir, figure_names=[], verbose=False, set_done=Fals
         if len(figure_names) != len(figures):
             for i, f in enumerate(figures):
                 if f.filename is None:
-                    f.set_filename("fig{}.png".format(i))
+                    f.filename = "fig{}.png".format(i)
         else:
             for f, name in zip(figures, figure_names):
-                f.set_filename(name)
+                f.filename = name
 
         for f in figures:
             if f.isdone():
