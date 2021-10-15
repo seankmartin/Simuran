@@ -31,6 +31,7 @@ class SimuranFigure(object):
         """Holds a figure as well as a filename."""
         self.figure = figure
         self.filename = filename
+        self._output_filenames = {}
         self.kwargs = kwargs
         self.done = done
         self.closed = False
@@ -39,37 +40,30 @@ class SimuranFigure(object):
         """On deletion, closes the underlying figure."""
         self.close()
 
-    def set_done(self, done):
-        """Set the value of self.done."""
-        self.done = done
-
-    def set_filename(self, filename):
-        """Set the value of self.filename."""
-        self.filename = filename
-
-    def get_filenames(self):
+    @ property
+    def output_filenames(self):
         """Get the filenames that will be saved to."""
-        filenames = {}
+        self._output_filenames = {}
         
         # raster image
-        out_format = self.kwargs.get("format", None)
+        out_format = self.kwargs.get("format", "png")
         if out_format is not None:
             filename = os.path.splitext(self.filename)[0] + "." + out_format
-            filenames["raster"] = filename
+            self._output_filenames["raster"] = filename
 
         # vector image
-        out_format = self.kwargs.get("vector_format", None)
+        out_format = self.kwargs.get("vector_format", "pdf")
         if out_format is not None:
             filename = os.path.splitext(self.filename)[0] + "." + out_format
-            filenames["vector"] = filename
+            self._output_filenames["vector"] = filename
 
-        return filename
+        return self._output_filenames
 
-    def set_figure(self, figure):
-        """Set the value of self.figure."""
-        self.figure = figure
+    @output_filenames.setter
+    def output_filenames(self, value):
+        self._output_filenames = value
 
-    def set_kwargs(self, **kwargs):
+    def update_kwargs(self, **kwargs):
         """Update self.kwargs."""
         for key, val in kwargs.items():
             self.kwargs[key] = val
@@ -108,6 +102,8 @@ class SimuranFigure(object):
         """Close the underlying figure if not closed."""
         if not self.closed:
             self.closed = True
+            if self.figure is None:
+                return
             try:
                 plt.close(self.figure)
             except BaseException:
