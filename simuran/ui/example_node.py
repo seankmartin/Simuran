@@ -186,7 +186,7 @@ class LFPCleanNode(BaseNode):
                 break
 
         # TODO need to figure out method kwargs
-        results = self.lfp_clean.clean(input_recording)
+        results = self.lfp_clean.clean(input_recording, min_f=1, max_f=100)
 
         # TODO work on naming
         clean_fig = results["fig"]

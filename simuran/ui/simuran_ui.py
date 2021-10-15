@@ -6,6 +6,9 @@ with click_spinner.spinner():
     import os
     import traceback
 
+    import matplotlib
+
+    matplotlib.use("TkAgg")
     from rich import print
     import typer
     import dearpygui.dearpygui as dpg
@@ -18,7 +21,7 @@ with click_spinner.spinner():
 class SimuranUI(object):
     def __init__(self, **kwargs):
         self.width = kwargs.get("width", 1200)
-        self.height = kwargs.get("height", 1200)
+        self.height = kwargs.get("height", 800)
         self.viewport = None
         self.main_window_id = kwargs.get("main_window_id", "M1")
         self.nodes = {}
@@ -59,7 +62,7 @@ class SimuranUI(object):
 
     def setup_viewport(self):
         vp = dpg.create_viewport(
-            title="SIMURAN demo", width=1200, height=900
+            title="SIMURAN demo", width=self.width, height=self.height
         )  # create viewport takes in config options too!
 
         # must be called before showing viewport
@@ -112,7 +115,6 @@ class SimuranUI(object):
         # app_data -> (link_id1, link_id2)
         from_tag, to_tag = app_data[0], app_data[1]
         link_tag = dpg.add_node_link(from_tag, to_tag, parent=sender)
-        print("Added link from {} to {}".format(from_tag, to_tag))
 
         for node_id, node in self.nodes.items():
             if node.has_attribute(from_tag):
@@ -125,7 +127,6 @@ class SimuranUI(object):
     def delink_callback(self, sender, app_data, user_data):
         # app_data -> link_id
         dpg.delete_item(app_data)
-        print("Deleted link {}".format(app_data))
         from_tag, to_tag = self.links.pop(app_data)
 
         for node_id, node in self.nodes.items():
@@ -154,7 +155,9 @@ class SimuranUI(object):
             if path not in self.loaded_images.keys():
                 t_id = dpg.generate_uuid()
                 image = PIL.Image.open(path)
-                image = image.resize((1200, 800), PIL.Image.ANTIALIAS)
+                image = image.resize(
+                    (self.width - 50, self.height - 40), PIL.Image.ANTIALIAS
+                )
                 has_alpha = image.mode == "RGBA"
                 if not has_alpha:
                     image.putalpha(255)
@@ -163,8 +166,8 @@ class SimuranUI(object):
                 dpg.add_static_texture(
                     tag=t_id,
                     default_value=dpg_image,
-                    width=1200,
-                    height=800,
+                    width=self.width - 50,
+                    height=self.height - 40,
                     parent="plot_registry",
                 )
                 self.loaded_images[path] = t_id
@@ -173,8 +176,8 @@ class SimuranUI(object):
 
             with dpg.window(
                 label="Plot information from {}".format(self.nodes[node_clicked].label),
-                width=1200,
-                height=800,
+                width=self.width - 50,
+                height=self.height - 40,
             ):
                 dpg.add_image(label="drawing", texture_id=t_id)
 
@@ -284,10 +287,10 @@ class SimuranUI(object):
         dpg.add_window(
             label="Node editor",
             tag="NodeWindow",
-            width=1000,
-            height=800,
+            width=self.width - 250,
+            height=self.height - 50,
             pos=[200, 0],
-            horizontal_scrollbar=True,
+            horizontal_scrollbar=False,
         )
         dpg.add_node_editor(
             label="NEditor",
