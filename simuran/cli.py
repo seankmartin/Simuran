@@ -7,11 +7,18 @@ import logging
 import datetime
 import traceback
 
-from sumatra.projects import load_project
-from sumatra.programs import Executable
-from sumatra.core import STATUS_FORMAT
-from sumatra.parameters import SimpleParameterSet
-from sumatra.versioncontrol import UncommittedModificationsError
+try:
+    from sumatra.projects import load_project
+    from sumatra.programs import Executable
+    from sumatra.core import STATUS_FORMAT
+    from sumatra.parameters import SimpleParameterSet
+    from sumatra.versioncontrol import UncommittedModificationsError
+    has_sumatra = True
+except ImportError:
+    print("Sumatra is not installed, continuing without saving project log")
+    print("See github.com/seankmartin/sumatra to install")
+    has_sumatra = False
+
 from skm_pyutils.py_log import (
     setup_text_logging,
     get_default_log_loc,
@@ -230,7 +237,7 @@ def main():
         simuran.config_handler.set_config_path(None)
         cfg = {}
 
-    if not parsed.nosave:
+    if (not parsed.nosave) and has_sumatra:
         ex = Executable(path="simuran", version=VERSION, name="simuran")
         project = load_project()
         for k, v in cfg.items():
@@ -317,7 +324,7 @@ def main():
             out_fn_dirname=out_dirname,
         )
 
-    if not parsed.nosave:
+    if (not parsed.nosave) and has_sumatra:
         record.stdout_stderr = ""
         record.duration = time.time() - start_time
         record.output_data = record.datastore.find_new_data(record.timestamp)
