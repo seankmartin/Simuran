@@ -67,8 +67,10 @@ class SimuranUI(object):
 
         # must be called before showing viewport
         here = os.path.dirname(os.path.realpath(__file__))
-        dpg.set_viewport_small_icon(os.path.join(here, "favicon.ico"))
-        dpg.set_viewport_large_icon(os.path.join(here, "favicon.ico"))
+        favicon_path = os.path.join(here, "favicon.ico")
+        if os.path.exists(favicon_path):
+            dpg.set_viewport_small_icon(os.path.join(here, "favicon.ico"))
+            dpg.set_viewport_large_icon(os.path.join(here, "favicon.ico"))
 
         dpg.setup_dearpygui()
         dpg.show_viewport()

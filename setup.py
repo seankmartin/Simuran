@@ -19,15 +19,16 @@ URL = "https://github.com/seankmartin/SIMURAN"
 DOWNLOAD_URL = "https://github.com/seankmartin/SIMURAN"
 VERSION = "0.0.1"
 
+## TODO revise this. List only what is needed here, and full requirements and versions in requirements.txt
+## Also separate out the UI requirements - don't need this if only using as dependency.
+## Also, packages like neurochat should be in seperate.
 INSTALL_REQUIRES = [
     "matplotlib >= 3.0.2",
     "numpy >= 1.15.0",
     "skm_pyutils",
     "seaborn",
-    "more_itertools",
     "indexed",
     "tqdm",
-    "doit",
     "astropy",
     "mne",
     "rich",
@@ -35,7 +36,6 @@ INSTALL_REQUIRES = [
     "pillow",
     "typer",
     "click-spinner",
-    "sumatra @ git+git://github.com/seankmartin/sumatra.git",
 ]
 
 CLASSIFIERS = [
