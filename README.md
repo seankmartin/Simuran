@@ -10,6 +10,22 @@
 Simultaneous Multi-Region Analysis.
 The general design is to have single objects with large amounts of information and an intuitive system to set this up.
 
+## OS specific setup
+
+### MAC OS
+
+- To use the UI, you will need to perform at least the following. brew install libpng
+- It is possible you may also need the MAC command line developer tools, but perhaps not.
+- To use doit on MAC, you will need the developer tools.
+
+### Extra functionality
+
+On top of the true requirements for this package.
+
+1. sumatra: see my repositories, allows for tracking runs of the code.
+2. gitpython: also git. Allows sumatra to check your version control (assuming using git and svn etc.)
+3. doit: PyPI, allows for setting up experiments with version tracking like mac.
+
 ## Objective
 
 Describe what is in your data and facilitate batch processing.
