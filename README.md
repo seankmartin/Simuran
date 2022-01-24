@@ -34,10 +34,6 @@ Provide some analysis methods and allow for easy creation of further analyses.
 ## Installation
 
 ```Bash
-git clone https://github.com/seankmartin/PythonUtils
-cd PythonUtils
-pip install -e .
-cd ..
 git clone https://github.com/seankmartin/SIMURAN
 cd SIMURAN
 pip install -e .
@@ -45,9 +41,12 @@ git clone https://github.com/seankmartin/sumatra
 cd sumatra
 pip install -e .
 pip install GitPython
+pip install doit
 ```
 
 ## Quick start
+
+To start the UI demo just type`simuran-ui`
 
 Download files from TBD into simuran_analysis.
 
@@ -95,6 +94,9 @@ Interface with other programs such as SpikeInterface to allow for many different
 2. List front facing functions
 3. Clean up the naming in main
 4. Add copy operations to the primary classes
+5. Use Python 3.10 to upgrade docstrings and use better type hinting.
+6. Can I make sumatra (with my changes) a subdependency or something?? (or maybe try change the original)
+7. Rebuild to CLI using Rich and typer.
 
 ## Using custom analysis code
 
