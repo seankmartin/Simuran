@@ -14,6 +14,5 @@ try:
 
     loaders_dict["nc_loader"] = NCLoader
     loaders_dict["neurochat"] = NCLoader
-except BaseException:
-    print("Error importing NeuroChaT:")
-    traceback.print_exc(file=sys.stdout)
+except ModuleNotFoundError:
+    print("INFO: The NeuroChaT package is not installed.")
