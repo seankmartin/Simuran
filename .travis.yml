@@ -1,6 +1,13 @@
 language: python
 python:
-    - "3.8"
+    - 3.7
+    - 3.8
+before_intall:
+    - python --version
+    - pip install -U pip
+    - pip install -U pytest
+    - pip install codecov
+    - pip install pytest-cov
 install:
     - python -m pip install --upgrade pip
     - python -m pip install --upgrade setuptools
@@ -8,3 +15,5 @@ install:
     - python -m pip install .
 script:
     - python -m pytest
+after_success:
+    - codecov
