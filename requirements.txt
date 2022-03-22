@@ -1,8 +1,8 @@
 numpy
--e git+git://github.com/seankmartin/PythonUtils.git#egg=skm_pyutils
+-e git+https://github.com/seankmartin/PythonUtils.git#egg=skm_pyutils
 seaborn
 matplotlib
--e git+git://github.com/seankmartin/NeuroChaT.git#egg=neurochat
+-e git+https://github.com/seankmartin/NeuroChaT.git#egg=neurochat
 indexed
 tqdm
 doit
@@ -15,5 +15,5 @@ dearpygui
 pillow
 typer
 click-spinner
--e git+git://github.com/seankmartin/sumatra.git#egg=sumatra
+-e git+https://github.com/seankmartin/sumatra.git#egg=sumatra
 GitPython
