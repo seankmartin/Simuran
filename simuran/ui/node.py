@@ -123,8 +123,9 @@ class BaseNode(object):
                     dpg.bind_item_handler_registry(content_tag, handler_tag)
                 else:
                     raise ValueError(
-                        "Unsupported content type {}, options are {}".format(type_),
-                        ("INT", "FLOAT", "TEXT"),
+                        "Unsupported content type {}, options are {}".format(
+                            type_, ("INT", "FLOAT", "TEXT")
+                        ),
                     )
                 content["type"] = type_
                 content["parent"] = attribute_tag

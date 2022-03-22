@@ -295,9 +295,6 @@ def get_maze_from_folder(s):
     elif "smallsqresting" in temp:
         return "small_sq"
 
-    elif "donut" in temp:
-        return "donut"
-
     elif "one" in temp and "wall":
         return "bigsq1wall"
 

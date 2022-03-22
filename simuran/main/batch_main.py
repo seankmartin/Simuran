@@ -22,7 +22,13 @@ def _get_dict_entry(run_dict_list, function_to_use, index):
 
 
 def multiprocessing_func(
-    i, run_dict_list, function_to_use, kwargs, handle_errors, save_info, keep_container,
+    i,
+    run_dict_list,
+    function_to_use,
+    kwargs,
+    handle_errors,
+    save_info,
+    keep_container,
 ):
     """This is run for each item to be analysed."""
     # TODO printing would have to be stored and done at the end for multi worker
@@ -40,9 +46,10 @@ def multiprocessing_func(
             results, recording_container = run(
                 batch_param_loc, fn_param_loc, **full_kwargs
             )
-        except BaseException as e:
+        except Exception as e:
             log_exception(
-                e, "Running batch on iteration {} using {}".format(i, batch_param_loc),
+                e,
+                "Running batch on iteration {} using {}".format(i, batch_param_loc),
             )
     else:
         results, recording_container = run(batch_param_loc, fn_param_loc, **full_kwargs)
@@ -106,7 +113,9 @@ def batch_main(
     all_info = []
 
     if idx is not None:
-        run_dict, batch_param_loc, fn_param_loc = _get_dict_entry(idx)
+        run_dict, batch_param_loc, fn_param_loc = _get_dict_entry(
+            run_dict_list, function_to_use, idx
+        )
         full_kwargs = {**run_dict, **kwargs}
         info = run(batch_param_loc, fn_param_loc, **full_kwargs)
         return info
@@ -238,7 +247,7 @@ def batch_run(
     cfg_path = get_config_path()
     try:
         cfg_name = os.path.splitext(os.path.basename(cfg_path))[0]
-    except BaseException:
+    except Exception:
         cfg_name = None
     cfg_fin = "--" + cfg_name if cfg_name is not None else ""
     pickle_name = os.path.join(

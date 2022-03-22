@@ -170,7 +170,7 @@ def plot_lfp(
         )
         a = np.round(split, 2)
         b = np.round(min(seg_splits[j + 1], in_range[1]), 2)
-        out_name = os.path.join(out_dir, "{}_{}_to_{}s.png".format(a, b))
+        out_name = os.path.join(out_dir, "{}_{}_to_{}s.png".format(start_name, a, b))
 
         # Do the actual plotting.
         for i, (key, lfp) in enumerate(lfp_dict_s.items()):

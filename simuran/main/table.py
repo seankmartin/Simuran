@@ -3,6 +3,7 @@
 import os
 import pickle
 from pprint import pprint
+import pandas as pd
 
 from skm_pyutils.py_path import (
     get_base_dir_to_files,
@@ -135,8 +136,8 @@ def process_paths_from_df(df):
 
     for value in df.itertuples():
         directories = value[1 : df.columns.get_loc("Filename") + 1]
-        # val == val checks for NaN
-        vals = [val for val in directories if val == val]
+        # TODO ensure same functionality as val == val check
+        vals = [val for val in directories if not pd.isna(val)]
         fname = value.Filename
         if len(vals) != 0:
             path = os.path.join(*vals, fname)
@@ -185,8 +186,8 @@ def data_convert(filename, start_dir, optional_func=None):
     for value in df.itertuples():
         directories = value[1 : df.columns.get_loc("Filename") + 1]
         vals = directories[1:]
-        # val == val checks for NaN
-        vals = [val for val in vals if val == val]
+        # TODO ensure same functionality as val == val check
+        vals = [val for val in vals if not pd.isna(val)]
         fname = value.Filename
         if optional_func is not None:
             fname = optional_func(fname)

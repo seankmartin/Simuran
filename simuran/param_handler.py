@@ -279,7 +279,7 @@ class ParamHandler(object):
 
         """
         re_filt = ""
-        if starting_filt is []:
+        if starting_filt == []:
             starting_filt = None
         dirs = self.batch_write(
             start_dir, re_filters=starting_filt, check_only=True, return_absolute=False
