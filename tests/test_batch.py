@@ -2,7 +2,6 @@ import os
 
 import simuran.batch_setup
 import simuran.param_handler
-import skm_pyutils.py_path
 
 here = os.path.dirname(os.path.abspath(__file__))
 

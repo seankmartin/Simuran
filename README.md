@@ -28,8 +28,13 @@ On top of the true requirements for this package.
 1. sumatra: see my repositories, allows for tracking runs of the code.
 2. gitpython: also git. Allows sumatra to check your version control (assuming using git and svn etc.)
 3. doit: PyPI, allows for setting up experiments with version tracking like mac.
+4. d-tale: Pandas table autovisualisation.
 
 ## Objective
+
+A project may function like so:
+
+1. Project exploration. Metadata handling etc.
 
 Describe what is in your data and facilitate batch processing.
 Provide some analysis methods and allow for easy creation of further analyses.
@@ -97,6 +102,7 @@ SIMURAN can use any code that is on the Python path. The easiest way to manage t
 1. Fork SIMURAN and place your custom analysis code in the SIMURAN package under the directory labelled custom.
 2. Place your code on path separately, such as by creating a `setup.py` file for your code, or a `pyproject.toml` file for installation.
 3. If you place python code and/or a file with the `.pth` extension in a directory named analysis in the same directory that batch_config_path is in, this `.pth` file will be automatically processed and its contents placed on path. If this option is chosen, it is recommended to store the analysis functions directly so that anyone can run the code without modification.
+4. See [examples](https://github.com/seankmartin/neuro-tools/tree/master/SIMURAN).
 
 ## Inspiration
 
