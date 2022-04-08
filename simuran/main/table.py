@@ -155,7 +155,7 @@ def process_paths_from_df(df):
 
 def data_convert(filename, start_dir, optional_func=None):
     """
-    Convert an data file into a directory structure.
+    Convert a data file into a directory structure.
 
     It is assumed that the data is grouped by filename.
 

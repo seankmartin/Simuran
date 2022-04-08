@@ -3,12 +3,19 @@
 import os
 from copy import deepcopy
 import csv
+import pathlib
+from typing import Union, TYPE_CHECKING
+from __future__ import annotations
 
 from simuran.base_container import AbstractContainer
 from simuran.recording import Recording
+
 from skm_pyutils.py_log import FileStdoutLogger, FileLogger
 from skm_pyutils.py_path import get_all_files_in_dir
 from skm_pyutils.py_path import get_dirs_matching_regex
+
+if TYPE_CHECKING:
+    import pandas as pd
 
 # TODO make this easier
 log = FileStdoutLogger()
@@ -50,6 +57,62 @@ class RecordingContainer(AbstractContainer):
         self.base_dir = None
         self.invalid_recording_locations = []
 
+    def from_table(
+        self,
+        table: pd.DataFrame,
+        param_dir: Union[str, pathlib.Path],
+        load: bool = False,
+    ):
+        """
+        Create a Recording container from a pandas dataframe.
+
+        Parameters
+        ----------
+        df : pandas.DataFrame
+            The dataframe to load from.
+        base_dir : str
+            The base directory of the recording container
+        param_dir : str
+            A path to the directory containing parameter files
+        load : bool, optional
+            Whether to load the data for the recording container.
+            Defaults to False.
+
+        Returns
+        -------
+        simuran.RecordingContainer
+
+        """
+        needed = ["Filename", "Mapping"]
+        for need in needed:
+            if need not in table.columns:
+                raise ValueError(f"{need} is a required column")
+
+        has_folder = "Directory" in table.columns
+
+        rc = RecordingContainer()
+
+        for row in table.itertuples():
+            fname = row.Filename
+            if has_folder:
+                dirname = row.Directory
+                fname = os.path.join(dirname, fname)
+            base_dir = os.path.abspath(
+                os.path.join(param_dir, "..", "recording_mappings")
+            )
+            if row.Mapping != "NOT_EXIST":
+                mapping_f = os.path.join(base_dir, row.Mapping)
+                if not os.path.exists(mapping_f):
+                    mapping_f = os.path.join(param_dir, row.Mapping)
+                if not os.path.exists(mapping_f):
+                    raise ValueError(f"{mapping_f} could not be found in {param_dir}")
+                recording = Recording(param_file=mapping_f, base_file=fname, load=load)
+                rc.append(recording)
+
+        rc.base_dir = base_dir
+        return rc
+
+    # TODO perhaps these are move to their own place
     def auto_setup(
         self,
         start_dir,
@@ -217,7 +280,7 @@ class RecordingContainer(AbstractContainer):
     def get_invalid_locations(self):
         """
         Get a list of invalid locations (can not be loaded)
-        
+
         For example, these recordings could have invalid mappings.
 
         Returns
@@ -498,7 +561,10 @@ class RecordingContainer(AbstractContainer):
                 f.write(
                     "{},{},{}\n".format(
                         os.path.normpath(
-                            os.path.relpath(recording.source_file, self.base_dir,)
+                            os.path.relpath(
+                                recording.source_file,
+                                self.base_dir,
+                            )
                         ),
                         u[1],
                         unit_str,
@@ -572,7 +638,7 @@ class RecordingContainer(AbstractContainer):
                     f.write(out_str)
                 else:
                     print(out_str, end="")
-    
+
         final_str = "".join(full_str)
         return total, all_cells, final_str
 
