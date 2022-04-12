@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 
 
-class BaseLoader(ABC):
+class Loader(ABC):
     """
     This abstract class defines the layout of a SIMURAN loader.
 
@@ -27,7 +27,7 @@ class BaseLoader(ABC):
     """
 
     def __init__(self, load_params={}):
-        """See help(BaseLoader)."""
+        """See help(Loader)."""
         self.signal = None
         self.spatial = None
         self.single_unit = None

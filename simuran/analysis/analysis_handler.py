@@ -136,6 +136,7 @@ class AnalysisHandler(object):
         None
 
         """
+        # TODO should this support per iter args/kwargs.
         self.fns_to_run.append(fn)
         self.fn_params_list.append(args)
         self.fn_kwargs_list.append(kwargs)

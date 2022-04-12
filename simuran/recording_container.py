@@ -4,11 +4,12 @@ import os
 from copy import deepcopy
 import csv
 import pathlib
-from typing import Union, TYPE_CHECKING
+from typing import Union, TYPE_CHECKING, Type
 from __future__ import annotations
 
 from simuran.base_container import AbstractContainer
 from simuran.recording import Recording
+from simuran.loaders.loader_list import loaders_dict
 
 from skm_pyutils.py_log import FileStdoutLogger, FileLogger
 from skm_pyutils.py_path import get_all_files_in_dir
@@ -16,6 +17,7 @@ from skm_pyutils.py_path import get_dirs_matching_regex
 
 if TYPE_CHECKING:
     import pandas as pd
+    import simuran.loaders.base_loader
 
 # TODO make this easier
 log = FileStdoutLogger()
@@ -57,9 +59,11 @@ class RecordingContainer(AbstractContainer):
         self.base_dir = None
         self.invalid_recording_locations = []
 
+    @classmethod
     def from_table(
-        self,
+        cls,
         table: pd.DataFrame,
+        loader: Union[str, Type[simuran.loaders.base_loader.Loader]],
         param_dir: Union[str, pathlib.Path],
         load: bool = False,
     ):
@@ -70,8 +74,7 @@ class RecordingContainer(AbstractContainer):
         ----------
         df : pandas.DataFrame
             The dataframe to load from.
-        base_dir : str
-            The base directory of the recording container
+        loader : 
         param_dir : str
             A path to the directory containing parameter files
         load : bool, optional
@@ -90,7 +93,12 @@ class RecordingContainer(AbstractContainer):
 
         has_folder = "Directory" in table.columns
 
-        rc = RecordingContainer()
+        if isinstance(loader, "str"):
+            loader = loaders_dict[loader]
+
+        # TODO use loader here to get the data
+
+        rc = cls(load_on_fly=True)
 
         for row in table.itertuples():
             fname = row.Filename

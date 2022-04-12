@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 import datetime
 
-from simuran.loaders.base_loader import BaseLoader
+from simuran.loaders.base_loader import Loader
 
 
 class BaseSimuran(ABC):
@@ -212,7 +212,7 @@ class BaseSimuran(ABC):
             The passed loader is not a simuran.loader.Loader.
 
         """
-        if not isinstance(loader, BaseLoader):
+        if not isinstance(loader, Loader):
             raise TypeError(
                 "Loader set in set_loader should be derived from BaseLoader"
                 + " actual class is {}".format(loader.__class__.__name__)
