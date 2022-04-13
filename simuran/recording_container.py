@@ -1,11 +1,10 @@
 """This module provides a container for multiple recording objects."""
-
+from __future__ import annotations
 import os
 from copy import deepcopy
 import csv
 import pathlib
 from typing import Union, TYPE_CHECKING, Type
-from __future__ import annotations
 
 from simuran.base_container import AbstractContainer
 from simuran.recording import Recording
@@ -66,7 +65,7 @@ class RecordingContainer(AbstractContainer):
         loader: Union[str, Type[simuran.loaders.base_loader.Loader]],
         param_dir: Union[str, pathlib.Path],
         load: bool = False,
-    ):
+    ) -> RecordingContainer:
         """
         Create a Recording container from a pandas dataframe.
 
