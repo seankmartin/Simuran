@@ -1,6 +1,7 @@
 """This may be a temp, lets see"""
 from typing import Union, Literal
 from pathlib import Path
+from numpy import rec
 
 import pandas as pd
 from skm_pyutils.py_table import df_from_file
@@ -14,42 +15,17 @@ from simuran.recording_container import RecordingContainer
 from simuran.analysis.analysis_handler import AnalysisHandler
 
 # Pseudo of idea
-
 input_file_dir = Path(
     r"D:\AllenBrainObservatory\ophys_data\visual-behavior-ophys-1.0.1"
 )
 
-# TODO params from elsewhere?
-index_location = input_file_dir / "index.csv"
-
-nc_loader_kwargs = {"system": "Axona", "pos_extension": ".pos"}
-
-clean_kwargs = {
-    "pick_property": "group",
-    "channels": ["LFP"],
+# TODO maybe not the nicest way to select a loader
+params = {
+    "loader": "allen_ophys"
 }
 
-# Here is where per file params?
-all_params = {
-    # Cleaning params
-    "clean_method": "pick_zscore",
-    "clean_kwargs": clean_kwargs,
-    # Filtering params
-    "fmin": 1,
-    "fmax": 100,
-    "theta_min": 6,
-    "theta_max": 10,
-    "delta_min": 1.5,
-    "delta_max": 4,
-    "fmax_plot": 40,
-    # Plotting params
-    "psd_scale": "decibels",
-    "image_format": "png",
-    # Path setup
-    "cfg_base_dir": "/content/drive/My Drive/NeuroScience/ATN_CA1",
-    # STA
-    "number_of_shuffles_sta": 5,
-}
+# This might be just nicer
+from simuran.loaders.allen_loader import AllenOphysLoader
 
 # Step 1a (optional) - Help to set up table - maybe see table.py
 def setup_table(input_file_dir: Union[str, Path]) -> pd.DataFrame:
@@ -106,13 +82,49 @@ def establish_analysis():
 
 
 def main():
+    # TODO TEMP ?
+    cache = VisualBehaviorOphysProjectCache.from_s3_cache(cache_dir=input_file_dir)
+
     # Should support params in multiple formats of metadata
     table = setup_table(input_file_dir)
 
     # Step 2 - Read a filtered table, can explore with d-tale etc. before continuing (JASP)
     filtered_table = filter_table(table)
-    rc = recording_container.from_table(filtered_table, "allen")
+    rc = recording_container.from_table(filtered_table, "allen", AllenOphysLoader)
     # TODO I think this step is awkward
+
+    # TODO TEMP let us check a single Allen first
+
+    ## This could be a data class to make it simpler
+    recording = Recording()
+
+    recording.set_loader("str" or "cls")
+
+    # This should support different types
+    # File
+    # Etc.
+    recording.set_params(row)
+
+    # This will call load in the background
+    # If not already loaded
+    recording.get_blah()
+
+    # Alternatively can call
+    recording.load()
+
+    # Inspect what data is available
+    recording.get_attrs()
+
+    # Perhaps have allen specific functions from the loader??
+    recording.print_key_info()
+
+    # For example loop over this and print the df / f
+    # At the end of the day this is just a signal
+    # Best thing to do is to check how NWB stores data
+    # Because NWB stores all nscience data
+    # And then can facilitate storing results back to NWB
+    # etc. etc.
+    # For instance, pynapple just converts to NWB as step1
 
     # Step 3 - Iterate over the table performing a fixed function/s with some optional
     # parameters that change

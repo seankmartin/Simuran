@@ -85,39 +85,63 @@ class RecordingContainer(AbstractContainer):
         simuran.RecordingContainer
 
         """
-        needed = ["Filename", "Mapping"]
-        for need in needed:
-            if need not in table.columns:
-                raise ValueError(f"{need} is a required column")
-
-        has_folder = "Directory" in table.columns
-
         if isinstance(loader, "str"):
-            loader = loaders_dict[loader]
-
-        # TODO use loader here to get the data
+            loader_str = loader
+            loader = loaders_dict.get(loader, None)
+            if loader is None:
+                print(f"ERROR: {loader_str} is not a valid loader")
+                print(f"valid loaders are {list(loaders_dict.keys())}")
 
         rc = cls(load_on_fly=True)
 
-        for row in table.itertuples():
-            fname = row.Filename
-            if has_folder:
-                dirname = row.Directory
-                fname = os.path.join(dirname, fname)
-            base_dir = os.path.abspath(
-                os.path.join(param_dir, "..", "recording_mappings")
-            )
-            if row.Mapping != "NOT_EXIST":
-                mapping_f = os.path.join(base_dir, row.Mapping)
-                if not os.path.exists(mapping_f):
-                    mapping_f = os.path.join(param_dir, row.Mapping)
-                if not os.path.exists(mapping_f):
-                    raise ValueError(f"{mapping_f} could not be found in {param_dir}")
-                recording = Recording(param_file=mapping_f, base_file=fname, load=load)
-                rc.append(recording)
+        for row in table.iterrows():
+            # TODO FIX
+            recording = Recording(row, loader)
+            # pseudo
+            recording.source_file = "nwb"
+            recording.metadata = ".."
+            recording.experiment_id = ".."
 
-        rc.base_dir = base_dir
+            recording = Recording(param_file=mapping_f, base_file=fname, load=load)
+            rc.append(recording)
+
+        rc.base_dir = "f"
+
         return rc
+        ## TODO review old
+        # needed = ["Filename", "Mapping"]
+        # for need in needed:
+        #     if need not in table.columns:
+        #         raise ValueError(f"{need} is a required column")
+
+        # has_folder = "Directory" in table.columns
+
+        # if isinstance(loader, "str"):
+        #     loader = loaders_dict[loader]
+
+        # # TODO use loader here to get the data
+
+        # rc = cls(load_on_fly=True)
+
+        # for row in table.itertuples():
+        #     fname = row.Filename
+        #     if has_folder:
+        #         dirname = row.Directory
+        #         fname = os.path.join(dirname, fname)
+        #     base_dir = os.path.abspath(
+        #         os.path.join(param_dir, "..", "recording_mappings")
+        #     )
+        #     if row.Mapping != "NOT_EXIST":
+        #         mapping_f = os.path.join(base_dir, row.Mapping)
+        #         if not os.path.exists(mapping_f):
+        #             mapping_f = os.path.join(param_dir, row.Mapping)
+        #         if not os.path.exists(mapping_f):
+        #             raise ValueError(f"{mapping_f} could not be found in {param_dir}")
+        #         recording = Recording(param_file=mapping_f, base_file=fname, load=load)
+        #         rc.append(recording)
+
+        # rc.base_dir = base_dir
+        # return rc
 
     # TODO perhaps these are move to their own place
     def auto_setup(

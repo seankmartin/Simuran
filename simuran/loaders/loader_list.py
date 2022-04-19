@@ -16,3 +16,13 @@ try:
     loaders_dict["neurochat"] = NCLoader
 except ModuleNotFoundError:
     print("INFO: The NeuroChaT package is not installed.")
+
+# TODO not quite the right way to check
+try:
+    from allensdk.brain_observatory.behavior.behavior_project_cache import (
+        VisualBehaviorOphysProjectCache,
+    )
+    from simuran.loaders.allen_loader import AllenOphysLoader
+    loaders_dict["allen_ophys"] = AllenOphysLoader
+except ModuleNotFoundError:
+    print("INFO: The allensdk package is not installed.")
