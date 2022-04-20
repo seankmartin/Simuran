@@ -62,7 +62,7 @@ class RecordingContainer(AbstractContainer):
     def from_table(
         cls,
         table: pd.DataFrame,
-        loader: Union[str, Type[simuran.loaders.base_loader.Loader]],
+        loader: Union[str, Type[simuran.loaders.base_loader.BaseLoader]],
         param_dir: Union[str, pathlib.Path],
         load: bool = False,
     ) -> RecordingContainer:
@@ -95,6 +95,8 @@ class RecordingContainer(AbstractContainer):
         rc = cls(load_on_fly=True)
 
         for row in table.iterrows():
+            print(row)
+            exit(-1)
             # TODO FIX
             recording = Recording(row, loader)
             # pseudo
@@ -102,7 +104,7 @@ class RecordingContainer(AbstractContainer):
             recording.metadata = ".."
             recording.experiment_id = ".."
 
-            recording = Recording(param_file=mapping_f, base_file=fname, load=load)
+            # recording = Recording(param_file=mapping_f, base_file=fname, load=load)
             rc.append(recording)
 
         rc.base_dir = "f"

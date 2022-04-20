@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 import datetime
 
-from simuran.loaders.base_loader import Loader
+from simuran.loaders.base_loader import BaseLoader, ParamLoader
 
 
 class BaseSimuran(ABC):
@@ -113,7 +113,8 @@ class BaseSimuran(ABC):
             else:
                 raise TypeError("Input is not a dictionary")
 
-    def setup(self, params):
+    # TODO convert to property
+    def set_params(self, params):
         """
         Store all the keys in params as attributes.
 
@@ -196,8 +197,14 @@ class BaseSimuran(ABC):
             if name in item.keys():
                 return True
         return False
+    
+    # TODO flesh out the properties
+    @property
+    def loader(self):
+        return self._loader
 
-    def set_loader(self, loader):
+    @loader.setter
+    def loader(self, value):
         """
         Set the loader object.
 
@@ -212,12 +219,12 @@ class BaseSimuran(ABC):
             The passed loader is not a simuran.loader.Loader.
 
         """
-        if not isinstance(loader, Loader):
+        if not isinstance(value, BaseLoader) and value is not None:
             raise TypeError(
                 "Loader set in set_loader should be derived from BaseLoader"
-                + " actual class is {}".format(loader.__class__.__name__)
+                + " actual class is {}".format(value.__class__.__name__)
             )
-        self.loader = loader
+        self._loader = value
 
     def set_source_file(self, file):
         """

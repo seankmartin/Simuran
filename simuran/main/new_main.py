@@ -1,7 +1,7 @@
 """This may be a temp, lets see"""
 from typing import Union, Literal
 from pathlib import Path
-from numpy import rec
+import numpy as np
 
 import pandas as pd
 from skm_pyutils.py_table import df_from_file
@@ -9,20 +9,18 @@ from allensdk.brain_observatory.behavior.behavior_project_cache import (
     VisualBehaviorOphysProjectCache,
 )
 import dtale
+from icecream import ic
 
 # TODO should this be one level down
 from simuran.recording_container import RecordingContainer
 from simuran.analysis.analysis_handler import AnalysisHandler
+from simuran.recording import Recording
 
 # Pseudo of idea
-input_file_dir = Path(
-    r"D:\AllenBrainObservatory\ophys_data\visual-behavior-ophys-1.0.1"
-)
+input_file_dir = Path(r"D:\AllenBrainObservatory\ophys_data")
 
 # TODO maybe not the nicest way to select a loader
-params = {
-    "loader": "allen_ophys"
-}
+params = {"loader": "allen_ophys"}
 
 # This might be just nicer
 from simuran.loaders.allen_loader import AllenOphysLoader
@@ -31,7 +29,7 @@ from simuran.loaders.allen_loader import AllenOphysLoader
 def setup_table(input_file_dir: Union[str, Path]) -> pd.DataFrame:
     cache = VisualBehaviorOphysProjectCache.from_s3_cache(cache_dir=input_file_dir)
     experiments = cache.get_ophys_experiment_table()
-    dtale.show(experiments, subprocess=False)
+    # dtale.show(experiments).open_browser()
     return experiments
 
 
@@ -52,21 +50,18 @@ def filter_table(table: pd.DataFrame, inplace: bool = True) -> pd.DataFrame:
     pd.DataFrame
         _description_
     """
-    # Alternatively
-    # values = {"col1": ["options"], "col2": ["options"]}
-    # table.isin(values) # or not with table.~isin
-    # row_mask = table.isin(values).any() # or not with table.~isin
-    # filtered = table[row_mask]
     genotype = "Slc17a7-IRES2-Cre/wt;Camk2a-tTA/wt;Ai93(TITL-GCaMP6f)/wt"
-    query_ = (
-        "project_code == VisualBehaviorMultiscope" "&" f"full_genotype == {genotype}"
-    )
-    if inplace:
-        table.query(query_, inplace=True)
-        return table
-    else:
-        return table.query(query_, inplace=False)
-
+    # Alternatively
+    values = {
+        "project_code": ["VisualBehaviorMultiscope"],
+        "full_genotype": [genotype],
+    }
+    filters = []
+    for k, v in values.items():
+        filters.append(table[k].isin(v))
+    full_mask = np.logical_and.reduce(np.array(filters))
+    filtered_table = table[full_mask]
+    return filtered_table
 
 def establish_analysis():
     # Temp fn here
@@ -90,24 +85,27 @@ def main():
 
     # Step 2 - Read a filtered table, can explore with d-tale etc. before continuing (JASP)
     filtered_table = filter_table(table)
-    rc = recording_container.from_table(filtered_table, "allen", AllenOphysLoader)
+    # rc = RecordingContainer.from_table(filtered_table, "allen", AllenOphysLoader)
     # TODO I think this step is awkward
 
     # TODO TEMP let us check a single Allen first
 
     ## This could be a data class to make it simpler
+    for idx, row in table.iterrows():
+        row_as_dict = row.to_dict()
+        row_as_dict[table.index.name] = idx
+        print(row_as_dict)
+        break
+
     recording = Recording()
-
-    recording.set_loader("str" or "cls")
-
-    # This should support different types
-    # File
-    # Etc.
-    recording.set_params(row)
+    recording.loader = "allen_ophys"
+    # TODO This should support different types, file, dict, series, etc
+    recording.set_params(row_as_dict)
+    print(recording)
 
     # This will call load in the background
     # If not already loaded
-    recording.get_blah()
+    # recording.get_blah()
 
     # Alternatively can call
     recording.load()

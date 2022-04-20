@@ -1,6 +1,7 @@
 """This module holds single experiment related information."""
 import os
 import logging
+from typing import Union
 
 import numpy as np
 import astropy.units as u
@@ -13,6 +14,8 @@ from simuran.eeg import EegArray, Eeg
 from simuran.single_unit import SingleUnit
 from simuran.spatial import Spatial
 from simuran.loaders.loader_list import loaders_dict
+from simuran.loaders.base_loader import BaseLoader
+
 from skm_pyutils.py_config import split_dict
 
 
@@ -77,6 +80,7 @@ class Recording(BaseSimuran):
         self.spatial = None
         self.stimulation = None
         self.available = []
+        # TODO should have a params property
         self.param_handler = None
         self.source_file = base_file
         self.source_files = {}
@@ -89,6 +93,25 @@ class Recording(BaseSimuran):
         """Load each available attribute."""
         for item in self.get_available():
             item.load()
+
+    @BaseSimuran.loader.setter
+    def loader(self, value: Union[str, BaseLoader]):
+        data_loader = value
+        if type(value) is str:
+            data_loader_cls = loaders_dict.get(value, None)
+            if data_loader_cls is None:
+                raise ValueError(
+                    "Unrecognised loader {}, options are {}".format(
+                        self.param_handler.get("loader", None),
+                        list(loaders_dict.keys()),
+                    )
+                )
+            # TODO support params here
+            # TODO am initialising an object here
+            # However, maybe it should be completely just a class?
+            # Let's see - ok for now
+            data_loader = data_loader_cls({})
+        super(__class__, self.__class__).loader.__set__(self, data_loader)
 
     def get_available(self):
         """Get the available attributes."""
@@ -188,12 +211,12 @@ class Recording(BaseSimuran):
     def get_available_units(self):
         """
         Get the list of available units.
-        
+
         Returns
         -------
         list
             list of tuple(group, list of units)
-        
+
         """
         all_units = []
         for i, unit in enumerate(self.units):
