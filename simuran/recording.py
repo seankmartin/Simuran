@@ -89,29 +89,23 @@ class Recording(BaseSimuran):
         elif params is not None:
             self.setup_from_dict(params, load=load)
 
+    ## TODO compare with new_load method
     def load(self, *args, **kwargs):
         """Load each available attribute."""
         for item in self.get_available():
-            item.load()
+            print(item)
+            item.load(self)
 
-    @BaseSimuran.loader.setter
-    def loader(self, value: Union[str, BaseLoader]):
-        data_loader = value
-        if type(value) is str:
-            data_loader_cls = loaders_dict.get(value, None)
-            if data_loader_cls is None:
-                raise ValueError(
-                    "Unrecognised loader {}, options are {}".format(
-                        self.param_handler.get("loader", None),
-                        list(loaders_dict.keys()),
-                    )
-                )
-            # TODO support params here
-            # TODO am initialising an object here
-            # However, maybe it should be completely just a class?
-            # Let's see - ok for now
-            data_loader = data_loader_cls({})
-        super(__class__, self.__class__).loader.__set__(self, data_loader)
+    ## Perhaps consolidate the two?
+    def new_load(self):
+        for val in self.available:
+            if val == "signals":
+                res = self.loader.load_signal(self)
+            elif val == "units":
+                res = self.loader.load_single_unit(self)
+            else:
+                raise ValueError(f"Not supported load {val}")
+        setattr(self, val, res)
 
     def get_available(self):
         """Get the available attributes."""

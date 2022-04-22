@@ -114,7 +114,7 @@ class BaseSimuran(ABC):
                 raise TypeError("Input is not a dictionary")
 
     # TODO convert to property
-    def set_params(self, params):
+    def set_metadata(self, params):
         """
         Store all the keys in params as attributes.
 
@@ -350,6 +350,9 @@ class BaseSimuran(ABC):
                         key = "_".join(attr_tuple)
                 data_out[key] = item
         return data_out
+
+    def get_attrs(self):
+        return self.__dict__
 
     def __str__(self):
         """Call on print."""

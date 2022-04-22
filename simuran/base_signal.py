@@ -54,6 +54,8 @@ class BaseSignal(BaseSimuran):
         self.channel_type = "eeg"
         self.source_file = "<unknown>"
 
+    ## TODO design thoughts!
+    ## Passing source_file vs full recording??
     def load(self, *args, **kwargs):
         """Load the signal."""
         super().load()

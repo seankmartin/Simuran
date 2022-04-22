@@ -1,5 +1,5 @@
 """This may be a temp, lets see"""
-from typing import Union, Literal
+from typing import Union, Literal, TYPE_CHECKING
 from pathlib import Path
 import numpy as np
 
@@ -20,10 +20,15 @@ from simuran.recording import Recording
 input_file_dir = Path(r"D:\AllenBrainObservatory\ophys_data")
 
 # TODO maybe not the nicest way to select a loader
+from simuran.loaders.loader_list import loaders_dict
+
 params = {"loader": "allen_ophys"}
 
 # This might be just nicer
 from simuran.loaders.allen_loader import AllenOphysLoader
+
+if TYPE_CHECKING:
+    from simuran.loaders.base_loader import BaseLoader
 
 # Step 1a (optional) - Help to set up table - maybe see table.py
 def setup_table(input_file_dir: Union[str, Path]) -> pd.DataFrame:
@@ -63,17 +68,31 @@ def filter_table(table: pd.DataFrame, inplace: bool = True) -> pd.DataFrame:
     filtered_table = table[full_mask]
     return filtered_table
 
-def establish_analysis():
+
+def establish_analysis(rec):
     # Temp fn here
     def print_info(recording, *args, **kwargs):
         print(recording)
         print(*args, **kwargs)
-        return recording.source_file
+        return vars(recording)
 
     ah = AnalysisHandler()
-    ah.add_fn(print_info)
+    ah.add_fn(print_info, rec)
 
     return ah
+
+
+# TODO move this out of here
+def loader_from_str(value: str) -> "BaseLoader":
+    data_loader_cls = loaders_dict.get(value, None)
+    if data_loader_cls is None:
+        raise ValueError(
+            "Unrecognised loader {}, options are {}".format(
+                value,
+                list(loaders_dict.keys()),
+            )
+        )
+    return data_loader_cls
 
 
 def main():
@@ -91,30 +110,38 @@ def main():
     # TODO TEMP let us check a single Allen first
 
     ## This could be a data class to make it simpler
-    for idx, row in table.iterrows():
+    for idx, row in filtered_table.iterrows():
         row_as_dict = row.to_dict()
-        row_as_dict[table.index.name] = idx
-        print(row_as_dict)
+        row_as_dict[filtered_table.index.name] = idx
         break
 
     recording = Recording()
-    recording.loader = "allen_ophys"
+    loader1 = AllenOphysLoader(cache=cache)
+    loader2 = loader_from_str("allen_ophys")(cache=cache)
+    recording.loader = loader1
+
     # TODO This should support different types, file, dict, series, etc
-    recording.set_params(row_as_dict)
+    recording.set_metadata(row_as_dict)
+
+    # TODO this should come with params / loader setting
+    recording.available = ["signals"]
     print(recording)
+
+    ## TODO is there a setup step? for recording to set paths?
 
     # This will call load in the background
     # If not already loaded
     # recording.get_blah()
 
     # Alternatively can call
-    recording.load()
+    recording.new_load()
 
     # Inspect what data is available
-    recording.get_attrs()
+    # print(recording.get_attrs())
 
     # Perhaps have allen specific functions from the loader??
-    recording.print_key_info()
+    # recording.print_key_info()
+    print(recording.signals.__dict__)
 
     # For example loop over this and print the df / f
     # At the end of the day this is just a signal
@@ -126,8 +153,9 @@ def main():
 
     # Step 3 - Iterate over the table performing a fixed function/s with some optional
     # parameters that change
-    ah = establish_analysis()
+    ah = establish_analysis(recording)
     ah.run_all_fns()
+    print(ah.results)
 
     # Step 4 - Save output of analysis in multiple formats
     # CSV, straight to JASP etc.

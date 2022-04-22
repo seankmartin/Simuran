@@ -120,6 +120,9 @@ class BaseLoader(ABC):
         """
         pass
 
+    def __str__(self):
+        return "{} with attributes {}".format(self.__class__.__name__, self.__dict__)
+
 class ParamLoader(BaseLoader):
     """Only load parameters"""
     def __init__(self, load_params={}):

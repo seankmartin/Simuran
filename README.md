@@ -121,3 +121,9 @@ SIMURAN can use any code that is on the Python path. The easiest way to manage t
 5. Use CSV instead of excel by default, faster read and write times.
 
 See synk for security vulnerabilities.
+
+## Check using mypy
+
+SIMURAN supports static type checking
+
+mypy file --config TOMAKE

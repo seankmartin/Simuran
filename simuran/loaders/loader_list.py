@@ -8,7 +8,9 @@ Current loaders are:
 import sys
 import traceback
 
-loaders_dict = {"params_only": "params_only_no_cls"}
+from simuran.loaders.base_loader import BaseLoader, ParamLoader
+
+loaders_dict: "dict[str, BaseLoader]" = {"params_only": ParamLoader}
 try:
     from simuran.loaders.nc_loader import NCLoader
 
