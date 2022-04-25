@@ -197,7 +197,7 @@ class BaseSimuran(ABC):
             if name in item.keys():
                 return True
         return False
-    
+
     # TODO flesh out the properties
     @property
     def loader(self):
@@ -353,6 +353,11 @@ class BaseSimuran(ABC):
 
     def get_attrs(self):
         return self.__dict__
+
+    def get_attrs_and_methods(self):
+        class_dir = dir(self)
+        attrs_and_methods = [r for r in class_dir if not r.startswith("_")]
+        return attrs_and_methods
 
     def __str__(self):
         """Call on print."""

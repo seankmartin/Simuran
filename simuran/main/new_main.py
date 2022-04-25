@@ -116,9 +116,8 @@ def main():
         break
 
     recording = Recording()
-    loader1 = AllenOphysLoader(cache=cache)
-    loader2 = loader_from_str("allen_ophys")(cache=cache)
-    recording.loader = loader1
+    recording.loader = AllenOphysLoader(cache=cache)
+    # loader2 = loader_from_str("allen_ophys")(cache=cache)
 
     # TODO This should support different types, file, dict, series, etc
     recording.set_metadata(row_as_dict)

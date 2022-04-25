@@ -105,6 +105,7 @@ class Recording(BaseSimuran):
                 res = self.loader.load_single_unit(self)
             else:
                 raise ValueError(f"Not supported load {val}")
+        ## TODO I used to set the .underlying attr of val
         setattr(self, val, res)
 
     def get_available(self):
