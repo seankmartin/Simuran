@@ -4,12 +4,6 @@ from allensdk.brain_observatory.behavior.behavior_project_cache import (
 
 from simuran.loaders.base_loader import BaseLoader
 
-# TODO how would this fit in with the Base Loader class?
-# TODO work with recording later on
-# NOTE I kind of tied together the params and the loader an awful lot
-# TODO temp inherit from param
-
-## TODO old way not good so working with this for now
 class AllenOphysLoader(BaseLoader):
     def __init__(self, cache):
         self.cache = cache
