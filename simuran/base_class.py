@@ -1,12 +1,12 @@
 """The base class sets up information and methods held in most SIMURAN classes."""
 
-from typing import Union, Any
-from dataclasses import dataclass
-from abc import ABC, abstractmethod
 import datetime
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from typing import Any, Union
 
-import rich
 import dtale
+import rich
 
 from simuran.loaders.base_loader import BaseLoader, ParamLoader
 from simuran.loaders.loader_list import loader_from_str
