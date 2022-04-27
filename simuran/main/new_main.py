@@ -269,19 +269,6 @@ def establish_analysis(rec):
     return ah
 
 
-# TODO move this out of here
-def loader_from_str(value: str) -> "BaseLoader":
-    data_loader_cls = loaders_dict.get(value, None)
-    if data_loader_cls is None:
-        raise ValueError(
-            "Unrecognised loader {}, options are {}".format(
-                value,
-                list(loaders_dict.keys()),
-            )
-        )
-    return data_loader_cls
-
-
 def main():
     # TODO TEMP ?
     cache = VisualBehaviorOphysProjectCache.from_s3_cache(cache_dir=input_file_dir)

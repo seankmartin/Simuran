@@ -3,6 +3,9 @@
 from abc import ABC, abstractmethod
 import datetime
 
+import rich
+import dtale
+
 from simuran.loaders.base_loader import BaseLoader, ParamLoader
 
 
@@ -358,6 +361,20 @@ class BaseSimuran(ABC):
         class_dir = dir(self)
         attrs_and_methods = [r for r in class_dir if not r.startswith("_")]
         return attrs_and_methods
+
+    def explore(self, methods=False, **kwargs):
+        """Note: could also try objexplore""
+        rich.inspect(self, methods=methods, **kwargs)
+        # objexplore.explore(self)
+
+    @staticmethod
+    def rich_explore(obj, methods=False, **kwargs):
+        rich.inspect(obj, methods=methods, **kwargs)
+
+    @staticmethod
+    def show_interactive_table(table):
+        ## TODO maybe should have a config for notebook version
+        dtale.show(table).open_browser()
 
     def __str__(self):
         """Call on print."""
