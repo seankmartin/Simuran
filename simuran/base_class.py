@@ -44,17 +44,16 @@ class BaseSimuran(ABC):
 
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self):
         """See help(BaseSimuran) for more info."""
         super().__init__()
-        self.kwargs = kwargs
-        self.info = {}
+        self.metadata = {}
         self.datetime = datetime.datetime.now()
         self.tag = None
         self.loader = None
         self.source_file = None
         self.last_loaded_source = None
-        self.underlying = None
+        self.data = None
         self.results = {}
 
     @abstractmethod
@@ -88,7 +87,7 @@ class BaseSimuran(ABC):
         if self.loaded():
             return
 
-    def save_attrs(self, attr_dict):
+    def save_attributes(self, attr_dict):
         """
         Store all the keys in attr_dict as attributes.
 
@@ -115,91 +114,6 @@ class BaseSimuran(ABC):
                     setattr(self, key, value)
             else:
                 raise TypeError("Input is not a dictionary")
-
-    # TODO convert to property
-    def set_metadata(self, params):
-        """
-        Store all the keys in params as attributes.
-
-        Parameters
-        ----------
-        params : dict
-            A dictionary of key/value pairs to be stored as attributes.
-
-        Returns
-        -------
-        None
-
-        """
-        self.save_attrs(params)
-
-    def add_info(self, key, name, info):
-        """
-        Store information so self.info[key][name] = info.
-
-        Parameters
-        ----------
-        key : str
-            The first key in the dictionary to store information to.
-        name : str
-            The second key in the dictionary to store information to.
-        info : object
-            The information to store
-
-        Returns
-        -------
-        None
-
-        """
-        if key not in self.info.keys():
-            self.info[key] = {}
-        self.info[key][name] = info
-
-    def get_info(self, key, name):
-        """
-        Retrieve self.info[key][name].
-
-        Parameters
-        ----------
-        key : str
-            The first key in the dictionary to retrieve information from.
-        name : str
-            The second key in the dictionary to retrieve information from.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        ValueError
-            The key and name are not in self.info.
-
-        """
-        if key in self.info.keys():
-            if name in self.info[key].keys():
-                return self.info[key][name]
-        raise ValueError("info has not been initialised in {}".format(self))
-
-    def does_info_exist(self, name):
-        """
-        Check if name exists in any sub dictionaries in self.info.
-
-        Parameters
-        ----------
-        name : str
-            The string to check for.
-
-        Returns
-        -------
-        bool
-            Whether name exists in any sub dictionaries.
-
-        """
-        for item in self.info.values():
-            if name in item.keys():
-                return True
-        return False
 
     # TODO flesh out the properties
     @property
