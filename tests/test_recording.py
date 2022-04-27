@@ -94,7 +94,7 @@ def test_nc_recording_loading(delete=False):
     assert np.all(ex.signals[0].underlying.get_samples() == lfp.get_samples())
     assert np.all(ex.units[0].underlying.get_unit_stamp() == unit.get_unit_stamp())
     assert np.all(ex.units[0].underlying.get_unit_tags() == unit.get_unit_tags())
-    assert np.all(ex.spatial.underlying.get_pos_x() == spatial.get_pos_x())
+    assert np.all(ex.spatial.data.get_pos_x() == spatial.get_pos_x())
 
     ncl = NCLoader()
     ncl.load_params["system"] = "Axona"
