@@ -1,5 +1,7 @@
 """The base class sets up information and methods held in most SIMURAN classes."""
 
+from typing import Union, Any
+from dataclasses import dataclass
 from abc import ABC, abstractmethod
 import datetime
 
@@ -7,8 +9,10 @@ import rich
 import dtale
 
 from simuran.loaders.base_loader import BaseLoader, ParamLoader
+from simuran.loaders.loader_list import loader_from_str
 
 
+@dataclass
 class BaseSimuran(ABC):
     """
     An abstract class which is the base class for most SIMURAN classes.
@@ -87,7 +91,82 @@ class BaseSimuran(ABC):
         if self.loaded():
             return
 
-    def save_attributes(self, attr_dict):
+    # TODO flesh out the properties
+    @property
+    def loader(self) -> None:
+        return self._loader
+
+    @loader.setter
+    def loader(self, value: Union[str, "BaseLoader"]) -> None:
+        """
+        Set the loader object.
+
+        Parameters
+        ----------
+        value : simuran.loader.Loader or str
+            Loader object to set.
+
+        Raises
+        ------
+        TypeError
+            The passed loader is not a simuran.loader.Loader.
+        ValueError
+            The passed loader (str) is not a valid option.
+
+        """
+        if isinstance(value, str):
+            value = loader_from_str(value)
+        if not isinstance(value, BaseLoader) and value is not None:
+            raise TypeError(
+                "Loader set in set_loader should be derived from BaseLoader"
+                + " actual class is {}".format(value.__class__.__name__)
+            )
+        self._loader = value
+
+    def is_loaded(self) -> bool:
+        """
+        Return True if the file has been loaded.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        bool
+            True if the source file has been loaded.
+
+        """
+        loaded = (self.last_loaded_source is not None) and (
+            self.last_loaded_source == self.source_file
+        )
+        return loaded
+
+    def get(self, key: str, default: Any = None) -> Any:
+        """
+        Retrieve the value of key from the attributes.
+
+        This mimics regular dictionary get, but on attributes.
+
+        Parameters
+        ----------
+        key : str
+            The attribute to retrieve
+        default : object, optional
+            What to return if the key is not found, default is None
+
+        Returns
+        -------
+        object
+            The value of the key
+
+        """
+        if hasattr(self, key):
+            return self.key
+        else:
+            return default
+
+    def save_attributes(self, attr_dict: dict) -> None:
         """
         Store all the keys in attr_dict as attributes.
 
@@ -115,90 +194,9 @@ class BaseSimuran(ABC):
             else:
                 raise TypeError("Input is not a dictionary")
 
-    # TODO flesh out the properties
-    @property
-    def loader(self):
-        return self._loader
-
-    @loader.setter
-    def loader(self, value):
-        """
-        Set the loader object.
-
-        Parameters
-        ----------
-        loader : simuran.loader.Loader
-            Loader object to set.
-
-        Raises
-        ------
-        TypeError
-            The passed loader is not a simuran.loader.Loader.
-
-        """
-        if not isinstance(value, BaseLoader) and value is not None:
-            raise TypeError(
-                "Loader set in set_loader should be derived from BaseLoader"
-                + " actual class is {}".format(value.__class__.__name__)
-            )
-        self._loader = value
-
-    def set_source_file(self, file):
-        """
-        Set the source file.
-
-        Parameters
-        ----------
-        file : str
-            [description]
-
-        """
-        self.source_file = file
-
-    def loaded(self):
-        """
-        Return True if the file has been loaded.
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        bool
-            True if the source file has been loaded.
-
-        """
-        loaded = (self.last_loaded_source is not None) and (
-            self.last_loaded_source == self.source_file
-        )
-        return loaded
-
-    def get(self, key, default=None):
-        """
-        Retrieve the value of key from the attributes.
-
-        This mimics regular dictionary get, but on attributes.
-
-        Parameters
-        ----------
-        key : str
-            The attribute to retrieve
-        default : object, optional
-            What to return if the key is not found, default is None
-
-        Returns
-        -------
-        object
-            The value of the key
-
-        """
-        if hasattr(self, key):
-            return self.key
-        else:
-            return default
-
-    def data_dict_from_attr_list(self, attr_list, friendly_names=None):
+    def data_dict_from_attr_list(
+        self, attr_list: list, friendly_names: "list[str]" = None
+    ):
         """
         From a list of attributes, return a dictionary.
 
@@ -221,7 +219,7 @@ class BaseSimuran(ABC):
         ----------
         attr_list : list
             The list of attributes to retrieve.
-        friendly_names : list, optional
+        friendly_names : list of str, optional
             What to name each retrieved attribute, (default None).
             Must be the same size as attr_list or None.
 
@@ -268,28 +266,28 @@ class BaseSimuran(ABC):
                 data_out[key] = item
         return data_out
 
-    def get_attrs(self):
+    def get_attrs(self) -> "dict[str, Any]":
         return self.__dict__
 
-    def get_attrs_and_methods(self):
+    def get_attrs_and_methods(self) -> "dict[str, Any]":
         class_dir = dir(self)
         attrs_and_methods = [r for r in class_dir if not r.startswith("_")]
         return attrs_and_methods
 
-    def explore(self, methods=False, **kwargs):
+    def explore(self, methods: bool = False, **kwargs) -> None:
         """Note: could also try objexplore"""
         rich.inspect(self, methods=methods, **kwargs)
         # objexplore.explore(self)
 
     @staticmethod
-    def rich_explore(obj, methods=False, **kwargs):
+    def rich_explore(obj, methods: bool = False, **kwargs) -> None:
         rich.inspect(obj, methods=methods, **kwargs)
 
     @staticmethod
-    def show_interactive_table(table):
+    def show_interactive_table(table) -> None:
         ## TODO maybe should have a config for notebook version
         dtale.show(table).open_browser()
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Call on print."""
         return "{} with attributes {}".format(self.__class__.__name__, self.__dict__)
