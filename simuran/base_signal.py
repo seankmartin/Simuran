@@ -101,9 +101,9 @@ class BaseSignal(BaseSimuran):
         """Convert to NeuroChaT NLfp object."""
         from neurochat.nc_lfp import NLfp
 
-        if self.underlying is not None:
-            if type(self.underlying) == NLfp:
-                return self.underlying
+        if self.data is not None:
+            if type(self.data) == NLfp:
+                return self.data
 
         lfp = NLfp()
         lfp.set_channel_id(self.channel)
