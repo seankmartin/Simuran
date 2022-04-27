@@ -363,7 +363,7 @@ class BaseSimuran(ABC):
         return attrs_and_methods
 
     def explore(self, methods=False, **kwargs):
-        """Note: could also try objexplore""
+        """Note: could also try objexplore"""
         rich.inspect(self, methods=methods, **kwargs)
         # objexplore.explore(self)
 
