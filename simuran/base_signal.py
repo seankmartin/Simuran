@@ -1,13 +1,13 @@
 """Module to hold the abstract class setting up information held in a signal."""
+import logging
 import math
 from copy import deepcopy
-import logging
-
-from simuran.base_class import BaseSimuran
 
 import mne
 import numpy as np
 from astropy import units as u
+
+from simuran.base_class import BaseSimuran
 
 
 class BaseSignal(BaseSimuran):
@@ -59,15 +59,14 @@ class BaseSignal(BaseSimuran):
     def load(self, *args, **kwargs):
         """Load the signal."""
         super().load()
-        if not self.loaded():
-            load_result = self.loader.load_signal(self.source_file, **kwargs)
-            self.save_attrs(load_result)
-            self.last_loaded_source = self.source_file
+        load_result = self.loader.load_signal(self.source_file, **kwargs)
+        self.save_attrs(load_result)
+        self.last_loaded_source = self.source_file
 
     def from_numpy(self, np_array, sampling_rate):
         """
         Set data from a numpy array, assumed in mV and srate in Hz.
-        
+
         Parameters
         ----------
         np_array : numpy array
@@ -115,7 +114,7 @@ class BaseSignal(BaseSimuran):
     def in_range(self, start, stop, step=None):
         """
         Splice samples from second based times.
-        
+
         Parameters
         ----------
         start : int

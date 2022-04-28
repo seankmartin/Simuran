@@ -1,12 +1,19 @@
 from allensdk.brain_observatory.behavior.behavior_project_cache import (
     VisualBehaviorOphysProjectCache,
 )
-
 from simuran.loaders.base_loader import BaseLoader
+
 
 class AllenOphysLoader(BaseLoader):
     def __init__(self, cache):
         self.cache = cache
+
+    ## TODO experimenting with a new idea here
+    def load_recording(self, recording) -> None:
+        ophys_experiment_id = recording.metadata.ophys_experiment_id
+        experiment = self.cache.get_behavior_ophys_experiment(ophys_experiment_id)
+        recording.signals.data = experiment
+        recording.spatial.data = experiment.spatial
 
     def load_signal(self, recording):
         return self.cache.get_behavior_ophys_experiment(

@@ -54,7 +54,7 @@ class BaseSimuran(ABC):
         self.metadata = {}
         self.datetime = datetime.datetime.now()
         self.tag = None
-        self.loader = None
+        self.loader = ParamLoader()
         self.source_file = None
         self.last_loaded_source = None
         self.data = None
@@ -88,12 +88,12 @@ class BaseSimuran(ABC):
                     self.__class__.__name__
                 )
             )
-        if self.loaded():
+        if self.is_loaded():
             return
 
     # TODO flesh out the properties
     @property
-    def loader(self) -> None:
+    def loader(self) -> "BaseLoader":
         return self._loader
 
     @loader.setter
@@ -162,7 +162,7 @@ class BaseSimuran(ABC):
 
         """
         if hasattr(self, key):
-            return self.key
+            return self.key  # type: ignore
         else:
             return default
 
@@ -195,7 +195,7 @@ class BaseSimuran(ABC):
                 raise TypeError("Input is not a dictionary")
 
     def data_dict_from_attr_list(
-        self, attr_list: list, friendly_names: "list[str]" = None
+        self, attr_list: list, friendly_names: Union["list[str]", None] = None
     ):
         """
         From a list of attributes, return a dictionary.
@@ -269,7 +269,7 @@ class BaseSimuran(ABC):
     def get_attrs(self) -> "dict[str, Any]":
         return self.__dict__
 
-    def get_attrs_and_methods(self) -> "dict[str, Any]":
+    def get_attrs_and_methods(self) -> "list[str]":
         class_dir = dir(self)
         attrs_and_methods = [r for r in class_dir if not r.startswith("_")]
         return attrs_and_methods
@@ -284,9 +284,12 @@ class BaseSimuran(ABC):
         rich.inspect(obj, methods=methods, **kwargs)
 
     @staticmethod
-    def show_interactive_table(table) -> None:
+    def show_interactive_table(table, notebook=False) -> None:
         ## TODO maybe should have a config for notebook version
-        dtale.show(table).open_browser()
+        if notebook:
+            dtale.show(table)
+        else:
+            dtale.show(table).open_browser()
 
     def __str__(self) -> str:
         """Call on print."""

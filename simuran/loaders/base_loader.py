@@ -1,6 +1,10 @@
 """The base loading class in SIMURAN."""
 
 from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from simuran.recording import Recording
 
 
 class BaseLoader(ABC):
@@ -34,6 +38,24 @@ class BaseLoader(ABC):
         self.source_filenames = {}
         self.load_params = load_params
         super().__init__()
+
+    @abstractmethod
+    def load_recording(self, recording: "Recording") -> None:
+        """
+        Load the information into the recording object.
+
+        It has metadata or source files to help loading
+
+        Parameters
+        ----------
+        recording : simuran.recording.Recording
+            The recording to load.
+
+        Returns
+        -------
+        None
+
+        """
 
     @abstractmethod
     def load_signal(self, *args, **kwargs):
@@ -123,8 +145,10 @@ class BaseLoader(ABC):
     def __str__(self):
         return "{} with attributes {}".format(self.__class__.__name__, self.__dict__)
 
+
 class ParamLoader(BaseLoader):
     """Only load parameters"""
+
     def __init__(self, load_params={}):
         """Call super class initialize."""
         super().__init__(load_params=load_params)

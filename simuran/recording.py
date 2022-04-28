@@ -1,22 +1,21 @@
 """This module holds single experiment related information."""
-import os
 import logging
+import os
 from typing import Union
 
-import numpy as np
 import astropy.units as u
+import numpy as np
+from skm_pyutils.py_config import split_dict
 
 from simuran.base_class import BaseSimuran
-from simuran.param_handler import ParamHandler
 from simuran.base_container import GenericContainer
 from simuran.base_signal import BaseSignal
-from simuran.eeg import EegArray, Eeg
+from simuran.eeg import Eeg, EegArray
+from simuran.loaders.base_loader import BaseLoader
+from simuran.loaders.loader_list import loaders_dict
+from simuran.param_handler import ParamHandler
 from simuran.single_unit import SingleUnit
 from simuran.spatial import Spatial
-from simuran.loaders.loader_list import loaders_dict
-from simuran.loaders.base_loader import BaseLoader
-
-from skm_pyutils.py_config import split_dict
 
 
 class Recording(BaseSimuran):
@@ -92,9 +91,7 @@ class Recording(BaseSimuran):
     ## TODO compare with new_load method
     def load(self, *args, **kwargs):
         """Load each available attribute."""
-        for item in self.get_available():
-            print(item)
-            item.load(self)
+        self.loader.load_recording(self)
 
     ## Perhaps consolidate the two?
     def new_load(self):
