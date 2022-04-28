@@ -88,22 +88,9 @@ class Recording(BaseSimuran):
         elif params is not None:
             self.setup_from_dict(params, load=load)
 
-    ## TODO compare with new_load method
     def load(self, *args, **kwargs):
         """Load each available attribute."""
         self.loader.load_recording(self)
-
-    ## Perhaps consolidate the two?
-    def new_load(self):
-        for val in self.available:
-            if val == "signals":
-                res = self.loader.load_signal(self)
-            elif val == "units":
-                res = self.loader.load_single_unit(self)
-            else:
-                raise ValueError(f"Not supported load {val}")
-        ## TODO I used to set the .underlying attr of val
-        setattr(self, val, res)
 
     def get_available(self):
         """Get the available attributes."""

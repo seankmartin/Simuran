@@ -9,7 +9,6 @@ import dtale
 import rich
 
 from simuran.loaders.base_loader import BaseLoader, ParamLoader
-from simuran.loaders.loader_list import loader_from_str
 
 
 @dataclass
@@ -53,11 +52,11 @@ class BaseSimuran(ABC):
         super().__init__()
         self.metadata = {}
         self.datetime = datetime.datetime.now()
-        self.tag = None
+        self.tag = "untagged"
         self.loader = ParamLoader()
-        self.source_file = None
-        self.last_loaded_source = None
-        self.data = None
+        self.source_file = ""
+        self.last_loaded_source = ""
+        self.data = ""
         self.results = {}
 
     @abstractmethod
@@ -97,7 +96,7 @@ class BaseSimuran(ABC):
         return self._loader
 
     @loader.setter
-    def loader(self, value: Union[str, "BaseLoader"]) -> None:
+    def loader(self, value: "BaseLoader") -> None:
         """
         Set the loader object.
 
@@ -114,8 +113,6 @@ class BaseSimuran(ABC):
             The passed loader (str) is not a valid option.
 
         """
-        if isinstance(value, str):
-            value = loader_from_str(value)
         if not isinstance(value, BaseLoader) and value is not None:
             raise TypeError(
                 "Loader set in set_loader should be derived from BaseLoader"

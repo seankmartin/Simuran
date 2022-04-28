@@ -153,6 +153,9 @@ class ParamLoader(BaseLoader):
         """Call super class initialize."""
         super().__init__(load_params=load_params)
 
+    def load_recording(self, recording):
+        return
+
     def load_signal(self, *args, **kwargs):
         return
 
