@@ -27,16 +27,16 @@ def setup_functions():
 
         This can be used to run the same function many times
         with different parameters, by providing an argument. E.g.
-        
+
         .. code-block:: python
             def add(recording, num1, num2):
                 return num1 + num2
-            
+
             functions = [add]
-            
+
             arguments = {}
             arguments["add"] = {"0": ([1, 2], {}) "1": ([2, 3], {})}
-        
+
         would add 1 and 2, and then separately add 2 and 3
 
         You can also provide a function to be run at the end on the whole container, as opposed to on each recording in the container, like so

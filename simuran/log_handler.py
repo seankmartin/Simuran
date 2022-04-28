@@ -12,6 +12,7 @@ log = FileLogger("simuran_cli")
 out = FileStdoutLogger()
 print = out.print
 
+
 def log_exception(ex, more_info="", location=None):
     """
     Log an expection to file and additional info.

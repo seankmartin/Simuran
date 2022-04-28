@@ -17,7 +17,7 @@ class Spatial(BaseSimuran):
     speed : array style object
         The speed in cm / s for each time point
     direction : array style object
-        The head direction in degrees. 
+        The head direction in degrees.
     sampling_rate : int
         The sampling rate of the signal in Hz
     source_file : str

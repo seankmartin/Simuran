@@ -209,9 +209,7 @@ def batch_control_setup(batch_setup, only_check, do_interactive=True, verbose=Fa
             + "Change only_check to False in {} to run".format(batch_setup.file_loc)
         )
     elif only_check:
-        print(
-            "Done checking batch setup. " + "Pass only_check as False in main to run"
-        )
+        print("Done checking batch setup. " + "Pass only_check as False in main to run")
 
     return not (batch_setup.ph["only_check"] or only_check)
 
@@ -692,7 +690,9 @@ def setup_default_params(
 
     if os.path.isfile(param_names["batch"]):
         batch_handler = simuran.param_handler.ParamHandler(
-            in_loc=param_names["batch"], name="params", dirname_replacement=dirname,
+            in_loc=param_names["batch"],
+            name="params",
+            dirname_replacement=dirname,
         )
         param_names["base"] = batch_handler.get("mapping_file", param_names["base"])
         in_dir = batch_handler.get("start_dir", in_dir)
@@ -868,7 +868,9 @@ def analyse_files(
     in_dir = location if os.path.isdir(location) else os.path.dirname(location)
     batch_setup = check_input_params(location, batch_name, dirname_replacement=dirname)
     batch_params = batch_setup.ph
-    out_dir, out_name = set_output_locations(batch_name, function_config_path, out_fn_dirname)
+    out_dir, out_name = set_output_locations(
+        batch_name, function_config_path, out_fn_dirname
+    )
     out_loc = os.path.join(out_dir, out_name)
 
     if should_modify_path:
@@ -941,12 +943,12 @@ def analyse_files(
 
     if len(recording_container.get_invalid_locations()) > 0:
         msg = pformat(
-                "Loaded {} recordings and skipped loading from {} locations:\n {}".format(
-                    len(recording_container),
-                    len(recording_container.get_invalid_locations()),
-                    recording_container.get_invalid_locations(),
-                )
+            "Loaded {} recordings and skipped loading from {} locations:\n {}".format(
+                len(recording_container),
+                len(recording_container.get_invalid_locations()),
+                recording_container.get_invalid_locations(),
             )
+        )
         log.warning(msg)
         print("WARNING: " + msg)
 
@@ -1063,7 +1065,9 @@ def run(
             modify_path(site_dir, verbose=verbose)
             should_modify_path = False
         setup_ph = simuran.param_handler.ParamHandler(
-            in_loc=param_names["fn"], name="fn_params", dirname_replacement=dirname,
+            in_loc=param_names["fn"],
+            name="fn_params",
+            dirname_replacement=dirname,
         )
         list_of_functions = setup_ph["run"]
         save_list = setup_ph["save"]
@@ -1083,7 +1087,9 @@ def run(
 
     if os.path.isfile(param_names["batch"]):
         batch_handler = simuran.param_handler.ParamHandler(
-            in_loc=param_names["batch"], name="params", dirname_replacement=dirname,
+            in_loc=param_names["batch"],
+            name="params",
+            dirname_replacement=dirname,
         )
         in_dir = batch_handler.get("start_dir", in_dir)
 

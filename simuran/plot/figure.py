@@ -40,11 +40,11 @@ class SimuranFigure(object):
         """On deletion, closes the underlying figure."""
         self.close()
 
-    @ property
+    @property
     def output_filenames(self):
         """Get the filenames that will be saved to."""
         self._output_filenames = {}
-        
+
         # raster image
         out_format = self.kwargs.get("format", "png")
         if out_format is not None:

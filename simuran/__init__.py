@@ -33,4 +33,5 @@ from .config_handler import parse_config, set_config_path
 from .log_handler import log, print, log_exception
 
 from .loaders.loader_list import loaders_dict, loader_from_str
+
 loader = loader_from_str

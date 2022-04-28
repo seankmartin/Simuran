@@ -68,7 +68,6 @@ class RecordingNode(BaseNode):
         self.param_file = self.get_value_of_label(label="File: Recording mapping")
         self.source_file = self.get_value_of_label(label="File: Recording source")
 
-
         if self.param_file == "":
             print("ERROR: No file selected")
             return False

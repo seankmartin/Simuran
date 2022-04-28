@@ -70,6 +70,7 @@ def setup_sorting():
     # return sort_fn
     return None
 
+
 sort_fn = setup_sorting()
 params = {
     "start_dir": start_dir,

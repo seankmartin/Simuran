@@ -66,6 +66,7 @@ def set_fixed_params(in_dict):
 
 
 import os
+
 # Setup the actual parameters
 params = {"run_list": [], "to_merge": []}
 params = set_fixed_params(params)

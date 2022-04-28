@@ -20,7 +20,7 @@ def copy_param_files(in_dir, out_dir, ext, test=True):
     test : bool, optional
         Whether to actually copy or just print what would be copied.
         By default, True, so only prints.
-    
+
     Returns
     -------
     None

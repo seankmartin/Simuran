@@ -13,6 +13,7 @@ try:
     from sumatra.core import STATUS_FORMAT
     from sumatra.parameters import SimpleParameterSet
     from sumatra.versioncontrol import UncommittedModificationsError
+
     has_sumatra = True
 except ImportError:
     print("Sumatra is not installed, continuing without saving project log")
@@ -40,6 +41,7 @@ os.makedirs(os.path.dirname(default_loc), exist_ok=True)
 this_logger = logging.getLogger("main_logger")
 handler = logging.FileHandler(default_loc)
 this_logger.addHandler(handler)
+
 
 def excepthook(exc_type, exc_value, exc_traceback):
     """
@@ -71,7 +73,7 @@ def excepthook(exc_type, exc_value, exc_traceback):
 def establish_logger(loglevel, params):
     """
     Establish a logging file
-    
+
     Parameters
     ----------
     loglevel: string or int

@@ -25,7 +25,7 @@ class BatchSetup(object):
         A param handler that holds the configuration.
     dirname_replacement : str
         What to replace "__dirname__" by in config files
-    
+
     Attributes
     ----------
     in_dir : str

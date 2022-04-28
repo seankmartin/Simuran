@@ -73,7 +73,7 @@ class RecordingContainer(AbstractContainer):
         ----------
         df : pandas.DataFrame
             The dataframe to load from.
-        loader : 
+        loader :
         param_dir : str
             A path to the directory containing parameter files
         load : bool, optional

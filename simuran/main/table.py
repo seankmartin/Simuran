@@ -207,7 +207,7 @@ def data_convert(filename, start_dir, optional_func=None):
 def populate_table_directories(filename, dir_to_start, ext=None, re_filter=None):
     """
     Find the directories that match given filenames in filename.
-    
+
     Parameters
     ----------
     filename : str
@@ -243,7 +243,10 @@ def populate_table_directories(filename, dir_to_start, ext=None, re_filter=None)
         new_df["Filename"] = new_df["Filename"].apply(mod_col)
 
     file_dict, no_match, multi_match = get_base_dir_to_files(
-        new_df["Filename"].values, dir_to_start, ext=ext, re_filter=re_filter,
+        new_df["Filename"].values,
+        dir_to_start,
+        ext=ext,
+        re_filter=re_filter,
     )
 
     def new_col_maker(item):
@@ -344,7 +347,9 @@ def analyse_cell_list(
         cfg_name = None
     cfg_fin = "--" + cfg_name if cfg_name is not None else ""
     pickle_name = os.path.abspath(
-        os.path.join(out_dir, "..", "pickles", base + res_name + cfg_fin + "_dump.pickle")
+        os.path.join(
+            out_dir, "..", "pickles", base + res_name + cfg_fin + "_dump.pickle"
+        )
     )
     if os.path.exists(pickle_name) and not overwrite:
         print(
@@ -376,7 +381,9 @@ def analyse_cell_list(
         except BaseException as ex:
             n_not_loaded += 1
             log_exception(
-                ex, "Unable to load recording {}".format(fname), location=log_loc,
+                ex,
+                "Unable to load recording {}".format(fname),
+                location=log_loc,
             )
             bad_idx.append(i)
             recording = Recording()
@@ -435,7 +442,12 @@ def analyse_cell_list(
             result_list.append(first)
 
     if len(headers) != len(result_list[0]):
-        headers = ["Directory", "Filename", "Group", "Unit",] + headers
+        headers = [
+            "Directory",
+            "Filename",
+            "Group",
+            "Unit",
+        ] + headers
     df = list_to_df(in_list=result_list, headers=headers)
     nrows_new = len(df)
 
@@ -572,7 +584,7 @@ def recording_container_from_file(filename, base_dir, load=False):
 def recording_container_from_df(df, base_dir, param_dir, load=False):
     """
     Create a Recording container from a pandas dataframe.
-    
+
     Parameters
     ----------
     df : pandas.DataFrame
@@ -620,7 +632,9 @@ def recording_container_from_df(df, base_dir, param_dir, load=False):
 
 def main_analyse_cell_list(params, dirname_replacement, overwrite=False):
     if isinstance(params, dict):
-        ph = ParamHandler(params=params,)
+        ph = ParamHandler(
+            params=params,
+        )
         default = "sim_results__"
     else:
         ph = ParamHandler(

@@ -25,9 +25,11 @@ try:
         VisualBehaviorOphysProjectCache,
     )
     from simuran.loaders.allen_loader import AllenOphysLoader
+
     loaders_dict["allen_ophys"] = AllenOphysLoader
 except ModuleNotFoundError:
     print("INFO: The allensdk package is not installed.")
+
 
 def loader_from_str(value: str) -> "BaseLoader":
     data_loader_cls = loaders_dict.get(value, None)

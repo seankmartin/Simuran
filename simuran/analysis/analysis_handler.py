@@ -68,7 +68,7 @@ class AnalysisHandler(object):
     def run_all_fns(self, pbar=False):
         """
         Run all of the established functions.
-        
+
         Parameters
         ----------
         pbar : string or bool, optional
@@ -88,7 +88,7 @@ class AnalysisHandler(object):
             pbar_ = tqdm(range(len(self.fns_to_run)))
         elif pbar == "notebook":
             pbar_ = tqdm_notebook(range(len(self.fns_to_run)))
-        
+
         if pbar_ is not None:
             for i in pbar_:
                 fn = self.fns_to_run[i]
@@ -144,12 +144,12 @@ class AnalysisHandler(object):
     def save_results(self, output_location):
         """
         Save the results of analysis to the given output location.
-        
+
         Parameters
         ----------
         output_location : string
             Path to a csv to save results to.
-    
+
         Returns
         -------
         None

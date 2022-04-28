@@ -230,7 +230,14 @@ def summarise_single_session(allen_dataset):
             "`Time (s)` >= @initial_time and `Time (s)` <= @final_time", inplace=False
         )
 
-        sns.lineplot(ax=ax, data=cell_df, x="Time (s)", y="Normalised magnitude", style="Signal", hue="Signal")
+        sns.lineplot(
+            ax=ax,
+            data=cell_df,
+            x="Time (s)",
+            y="Normalised magnitude",
+            style="Signal",
+            hue="Signal",
+        )
         plot_stimuli(ax, allen_dataset, initial_time, final_time)
         sns.despine()
 
