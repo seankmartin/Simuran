@@ -1,8 +1,8 @@
 """The base class sets up information and methods held in most SIMURAN classes."""
 
-import datetime
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from datetime import datetime
 from typing import Any, Union
 
 import dtale
@@ -47,17 +47,14 @@ class BaseSimuran(ABC):
 
     """
 
-    def __init__(self):
-        """See help(BaseSimuran) for more info."""
-        super().__init__()
-        self.metadata = {}
-        self.datetime = datetime.datetime.now()
-        self.tag = "untagged"
-        self.loader = ParamLoader()
-        self.source_file = ""
-        self.last_loaded_source = ""
-        self.data = ""
-        self.results = {}
+    metadata: dict = field(default_factory=dict)
+    datetime: "datetime" = field(default_factory=datetime.now)
+    tag: str = "untagged"
+    loader: "BaseLoader" = field(default_factory=ParamLoader)
+    source_file: str = "not_set"
+    last_loaded_source: str = "no_source_loaded"
+    data: Any = None  # type: ignore
+    results: dict = field(default_factory=dict)
 
     @abstractmethod
     def load(self, *args, **kwargs):
@@ -89,36 +86,6 @@ class BaseSimuran(ABC):
             )
         if self.is_loaded():
             return
-
-    # TODO flesh out the properties
-    @property
-    def loader(self) -> "BaseLoader":
-        return self._loader
-
-    @loader.setter
-    def loader(self, value: "BaseLoader") -> None:
-        """
-        Set the loader object.
-
-        Parameters
-        ----------
-        value : simuran.loader.Loader or str
-            Loader object to set.
-
-        Raises
-        ------
-        TypeError
-            The passed loader is not a simuran.loader.Loader.
-        ValueError
-            The passed loader (str) is not a valid option.
-
-        """
-        if not isinstance(value, BaseLoader) and value is not None:
-            raise TypeError(
-                "Loader set in set_loader should be derived from BaseLoader"
-                + " actual class is {}".format(value.__class__.__name__)
-            )
-        self._loader = value
 
     def is_loaded(self) -> bool:
         """
