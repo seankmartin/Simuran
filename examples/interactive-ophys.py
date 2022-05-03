@@ -6,8 +6,9 @@ import numpy as np
 import objexplore
 import pandas as pd
 import simuran as smr
-from allensdk.brain_observatory.behavior.behavior_project_cache import \
-    VisualBehaviorOphysProjectCache
+from allensdk.brain_observatory.behavior.behavior_project_cache import (
+    VisualBehaviorOphysProjectCache,
+)
 
 
 # %%
@@ -64,7 +65,8 @@ experiment = cache.get_behavior_ophys_experiment(int(row.name))
 print(smr.inspect(experiment))
 
 # %%
-recording.loader = smr.loader("allen_ophys")(cache)
+loader = smr.loader("allen_ophys")(cache)
+recording.loader = loader
 recording.metadata = row_as_dict
 recording.available = ["signals"]  # This line is silly
 recording.load()  # Set back to old load
@@ -72,3 +74,12 @@ recording.load()  # Set back to old load
 # %%
 recording.inspect()
 # recording.show_table(recording.signals.cell_specimen_table)
+
+# %% full container
+
+rc = smr.RecordingContainer.from_table(filtered_table, loader)
+
+# %% working with the container
+container_ids = rc.table["ophys_container_id"]
+
+# %%

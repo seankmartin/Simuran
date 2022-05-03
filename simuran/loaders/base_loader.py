@@ -142,6 +142,10 @@ class BaseLoader(ABC):
         """
         pass
 
+    @abstractmethod
+    def parse_row(self, row, recording):
+        pass
+
     def __str__(self):
         return "{} with attributes {}".format(self.__class__.__name__, self.__dict__)
 
@@ -169,4 +173,7 @@ class ParamLoader(BaseLoader):
         return
 
     def index_files(self, folder, **kwargs):
+        return
+
+    def parse_row(self, row, recording):
         return

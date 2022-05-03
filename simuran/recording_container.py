@@ -1,28 +1,29 @@
 """This module provides a container for multiple recording objects."""
 from __future__ import annotations
-import os
-from copy import deepcopy
+
 import csv
+import os
 import pathlib
-from typing import Union, TYPE_CHECKING, Type
+from collections.abc import Iterable as abcIterable
+from copy import deepcopy
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Iterable, Type, Union
+
+import pandas as pd
+from skm_pyutils.py_log import FileLogger, FileStdoutLogger
+from skm_pyutils.py_path import get_all_files_in_dir, get_dirs_matching_regex
 
 from simuran.base_container import AbstractContainer
+from simuran.loaders.base_loader import BaseLoader, ParamLoader
+from simuran.loaders.loader_list import loader_from_str
 from simuran.recording import Recording
-from simuran.loaders.loader_list import loaders_dict
-
-from skm_pyutils.py_log import FileStdoutLogger, FileLogger
-from skm_pyutils.py_path import get_all_files_in_dir
-from skm_pyutils.py_path import get_dirs_matching_regex
-
-if TYPE_CHECKING:
-    import pandas as pd
-    import simuran.loaders.base_loader
 
 # TODO make this easier
 log = FileStdoutLogger()
 file_log = FileLogger("simuran_cli")
 
 
+@dataclass
 class RecordingContainer(AbstractContainer):
     """
     A class to hold recording objects.
@@ -49,22 +50,23 @@ class RecordingContainer(AbstractContainer):
 
     """
 
+    load_on_fly: bool = True
+    last_loaded: "Recording" = field(default_factory=Recording)
+    loader: "BaseLoader" = field(default_factory=ParamLoader)
+    metadata: dict = field(default_factory=dict)
+    table: "pd.DataFrame" = field(default_factory=pd.DataFrame)
+
     def __init__(self, load_on_fly=True, **kwargs):
         """See help(RecordingContainer)."""
         super().__init__()
         self.load_on_fly = load_on_fly
         self.last_loaded = Recording()
-        self.last_loaded_idx = None
-        self.base_dir = None
-        self.invalid_recording_locations = []
 
     @classmethod
     def from_table(
         cls,
-        table: pd.DataFrame,
-        loader: Union[str, Type[simuran.loaders.base_loader.BaseLoader]],
-        param_dir: Union[str, pathlib.Path],
-        load: bool = False,
+        table: "pd.DataFrame",
+        loader: Union["BaseLoader", Iterable["BaseLoader"]],
     ) -> RecordingContainer:
         """
         Create a Recording container from a pandas dataframe.
@@ -85,65 +87,18 @@ class RecordingContainer(AbstractContainer):
         simuran.RecordingContainer
 
         """
-        if isinstance(loader, "str"):
-            loader_str = loader
-            loader = loaders_dict.get(loader, None)
-            if loader is None:
-                print(f"ERROR: {loader_str} is not a valid loader")
-                print(f"valid loaders are {list(loaders_dict.keys())}")
-
         rc = cls(load_on_fly=True)
+        rc.loader = loader
+        rc.table = table
 
-        for row in table.iterrows():
-            print(row)
-            exit(-1)
-            # TODO FIX
-            recording = Recording(row, loader)
-            # pseudo
-            recording.source_file = "nwb"
-            recording.metadata = ".."
-            recording.experiment_id = ".."
-
-            # recording = Recording(param_file=mapping_f, base_file=fname, load=load)
+        for i in range(len(table)):
+            if isinstance(rc.loader, abcIterable):
+                loader = rc.loader[i]
+            recording = Recording()
+            loader.parse_row(table.iloc[i], recording)
             rc.append(recording)
 
-        rc.base_dir = "f"
-
         return rc
-        ## TODO review old
-        # needed = ["Filename", "Mapping"]
-        # for need in needed:
-        #     if need not in table.columns:
-        #         raise ValueError(f"{need} is a required column")
-
-        # has_folder = "Directory" in table.columns
-
-        # if isinstance(loader, "str"):
-        #     loader = loaders_dict[loader]
-
-        # # TODO use loader here to get the data
-
-        # rc = cls(load_on_fly=True)
-
-        # for row in table.itertuples():
-        #     fname = row.Filename
-        #     if has_folder:
-        #         dirname = row.Directory
-        #         fname = os.path.join(dirname, fname)
-        #     base_dir = os.path.abspath(
-        #         os.path.join(param_dir, "..", "recording_mappings")
-        #     )
-        #     if row.Mapping != "NOT_EXIST":
-        #         mapping_f = os.path.join(base_dir, row.Mapping)
-        #         if not os.path.exists(mapping_f):
-        #             mapping_f = os.path.join(param_dir, row.Mapping)
-        #         if not os.path.exists(mapping_f):
-        #             raise ValueError(f"{mapping_f} could not be found in {param_dir}")
-        #         recording = Recording(param_file=mapping_f, base_file=fname, load=load)
-        #         rc.append(recording)
-
-        # rc.base_dir = base_dir
-        # return rc
 
     # TODO perhaps these are move to their own place
     def auto_setup(

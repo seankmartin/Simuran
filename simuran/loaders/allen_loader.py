@@ -1,3 +1,5 @@
+import re
+
 from allensdk.brain_observatory.behavior.behavior_project_cache import (
     VisualBehaviorOphysProjectCache,
 )
@@ -8,6 +10,14 @@ from simuran.spatial import Spatial
 class AllenOphysLoader(BaseLoader):
     def __init__(self, cache):
         self.cache = cache
+
+    def parse_row(self, row, recording) -> None:
+        """Move information from row into recording."""
+        row_as_dict = row.to_dict()
+        row_as_dict[row.index.name] = row.name
+        recording.loader = self
+        recording.metadata = row_as_dict
+        recording.available = ["signals"]
 
     ## TODO experimenting with a new idea here
     def load_recording(self, recording) -> None:
