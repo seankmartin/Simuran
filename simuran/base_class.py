@@ -212,11 +212,11 @@ class BaseSimuran(ABC):
                     if hasattr(item, a):
                         item = getattr(item, a)
                     else:
-                        item = item[a]
+                        item = item[a]  # type: ignore
                 else:
-                    item = item[a]
+                    item = item[a]  # type: ignore
                 if callable(item):
-                    item = item()
+                    item = item()  # type: ignore
             if isinstance(item, dict):
                 for key, value in item.items():
                     data_out[key] = value
@@ -238,7 +238,7 @@ class BaseSimuran(ABC):
         attrs_and_methods = [r for r in class_dir if not r.startswith("_")]
         return attrs_and_methods
 
-    def explore(self, methods: bool = False, **kwargs) -> None:
+    def inspect(self, methods: bool = False, **kwargs) -> None:
         """Note: could also try objexplore"""
         rich.inspect(self, methods=methods, **kwargs)
         # objexplore.explore(self)

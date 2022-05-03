@@ -1,8 +1,10 @@
 """This module hands holding spatial information."""
+from dataclasses import dataclass
 
 from simuran.base_class import BaseSimuran
 
 
+@dataclass
 class Spatial(BaseSimuran):
     """
     Hold spatial information.

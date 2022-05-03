@@ -4,9 +4,12 @@ import pandas as pd
 import numpy as np
 import dtale
 import objexplore
-from allensdk.brain_observatory.behavior.behavior_project_cache import VisualBehaviorOphysProjectCache
+from allensdk.brain_observatory.behavior.behavior_project_cache import (
+    VisualBehaviorOphysProjectCache,
+)
 
 import simuran as smr
+
 
 def filter_table(table: pd.DataFrame) -> pd.DataFrame:
     """
@@ -37,6 +40,7 @@ def filter_table(table: pd.DataFrame) -> pd.DataFrame:
     filtered_table = table[full_mask]
     return filtered_table
 
+
 data_storage_directory = Path(r"D:\AllenBrainObservatory\ophys_data")
 cache = VisualBehaviorOphysProjectCache.from_s3_cache(cache_dir=data_storage_directory)
 behavior_sessions = cache.get_behavior_session_table()
@@ -51,8 +55,8 @@ row_as_dict[filtered_table.index.name] = row.name
 recording = smr.Recording()
 recording.loader = smr.loader("allen_ophys")(cache)
 recording.set_metadata(row_as_dict)
-recording.available = ["signals"] # This line is silly
-recording.new_load() # Set back to old load
+recording.available = ["signals"]  # This line is silly
+recording.new_load()  # Set back to old load
 
-recording.explore()
+recording.inspect()
 # recording.show_table(recording.signals.cell_specimen_table)

@@ -1,6 +1,7 @@
 """This module holds single experiment related information."""
 import logging
 import os
+from dataclasses import dataclass
 from typing import Union
 
 import astropy.units as u
@@ -18,6 +19,7 @@ from simuran.single_unit import SingleUnit
 from simuran.spatial import Spatial
 
 
+@dataclass
 class Recording(BaseSimuran):
     """
     Describe a full recording session and holds data.

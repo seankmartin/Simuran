@@ -6,9 +6,8 @@ import numpy as np
 import objexplore
 import pandas as pd
 import simuran as smr
-from allensdk.brain_observatory.behavior.behavior_project_cache import (
-    VisualBehaviorOphysProjectCache,
-)
+from allensdk.brain_observatory.behavior.behavior_project_cache import \
+    VisualBehaviorOphysProjectCache
 
 
 # %%
@@ -47,7 +46,7 @@ data_storage_directory = Path(r"D:\AllenBrainObservatory\ophys_data")
 cache = VisualBehaviorOphysProjectCache.from_s3_cache(cache_dir=data_storage_directory)
 behavior_sessions = cache.get_behavior_session_table()
 behavior_ophys_sessions = cache.get_ophys_session_table()
-behavior_ophys_experiments = cache.get_ophys_experiment_table()
+behavior_ophys_experiments = cache.get_ophys_experiment_table(as_df=True)
 
 filtered_table = filter_table(behavior_ophys_experiments)
 row = filtered_table.iloc[0]
@@ -56,11 +55,20 @@ row_as_dict[filtered_table.index.name] = row.name
 
 # %%
 recording = smr.Recording()
-recording.loader = smr.loader("allen_ophys")(cache)
-recording.set_metadata(row_as_dict)
-recording.available = ["signals"]  # This line is silly
-recording.new_load()  # Set back to old load
+recording.inspect(methods=True)
+all_attrs_and_methods = recording.get_attrs_and_methods()
+print(all_attrs_and_methods)
+
+# %% Experiment checking
+experiment = cache.get_behavior_ophys_experiment(int(row.name))
+print(smr.inspect(experiment))
 
 # %%
-recording.explore()
+recording.loader = smr.loader("allen_ophys")(cache)
+recording.metadata = row_as_dict
+recording.available = ["signals"]  # This line is silly
+recording.load()  # Set back to old load
+
+# %%
+recording.inspect()
 # recording.show_table(recording.signals.cell_specimen_table)
