@@ -95,7 +95,7 @@ class RecordingContainer(AbstractContainer):
             if isinstance(rc.loader, abcIterable):
                 loader = rc.loader[i]
             recording = Recording()
-            loader.parse_row(table.iloc[i], recording)
+            loader.parse_table_row(table, i, recording)
             rc.append(recording)
 
         return rc

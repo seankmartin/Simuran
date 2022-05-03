@@ -11,10 +11,11 @@ class AllenOphysLoader(BaseLoader):
     def __init__(self, cache):
         self.cache = cache
 
-    def parse_row(self, row, recording) -> None:
+    def parse_table_row(self, table, index, recording) -> None:
         """Move information from row into recording."""
+        row = table.iloc[index]
         row_as_dict = row.to_dict()
-        row_as_dict[row.index.name] = row.name
+        row_as_dict[table.index.name] = row.name
         recording.loader = self
         recording.metadata = row_as_dict
         recording.available = ["signals"]
