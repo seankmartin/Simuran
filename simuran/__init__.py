@@ -1,4 +1,6 @@
 """Package for multi-region analysis."""
+from rich import inspect
+
 from . import analysis, loaders, params, plot
 from .analysis.analysis_handler import AnalysisHandler
 from .base_container import GenericContainer
