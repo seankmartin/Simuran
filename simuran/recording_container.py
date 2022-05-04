@@ -41,13 +41,13 @@ class RecordingContainer(AbstractContainer):
     Parameters
     ----------
     load_on_fly : bool, optional
-        Sets the load_on_fly attribute, by default True
+        Sets the load_on_fly attribute, by default False
     **kwargs : keyword arguments
         Currently these are not used.
 
     """
 
-    load_on_fly: bool = True
+    load_on_fly: bool = False
     last_loaded: "Recording" = field(default_factory=Recording)
     loader: "BaseLoader" = field(default_factory=ParamLoader)
     metadata: dict = field(default_factory=dict)
@@ -59,6 +59,7 @@ class RecordingContainer(AbstractContainer):
         cls,
         table: "pd.DataFrame",
         loader: Union["BaseLoader", Iterable["BaseLoader"]],
+        load_on_fly : bool = False
     ) -> RecordingContainer:
         """
         Create a Recording container from a pandas dataframe.
@@ -79,7 +80,7 @@ class RecordingContainer(AbstractContainer):
         simuran.RecordingContainer
 
         """
-        rc = cls(load_on_fly=True)
+        rc = cls(load_on_fly=load_on_fly)
         rc.loader = loader
         rc.table = table
 
@@ -194,7 +195,7 @@ class RecordingContainer(AbstractContainer):
 
         return good_param_files
 
-    def load(self, idx):
+    def load(self, idx=None):
         """
         Get the item at the specified index, and load it if not already loaded.
 
@@ -209,6 +210,12 @@ class RecordingContainer(AbstractContainer):
             The recording at the specified index.
 
         """
+        if idx is None:
+            if self.load_on_fly:
+                raise RuntimeError("Can't bulk load when load_on_fly=True")
+            for r in self:
+                r.load()
+
         if self.load_on_fly:
             if self._last_loaded_idx != idx:
                 # TODO define recording.shallow_copy()
@@ -220,6 +227,7 @@ class RecordingContainer(AbstractContainer):
                 self._last_loaded_idx = idx
             return self.last_loaded
         else:
+            self[idx].load()
             return self[idx]
 
     def get_results(self, idx=None):

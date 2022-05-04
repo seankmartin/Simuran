@@ -5,14 +5,14 @@
 # %%
 from pathlib import Path
 
-import dtale
 import matplotlib.pyplot as plt
 import numpy as np
-import objexplore
 import pandas as pd
+import seaborn as sns
 import simuran as smr
-from allensdk.brain_observatory.behavior.behavior_project_cache import \
-    VisualBehaviorOphysProjectCache
+from allensdk.brain_observatory.behavior.behavior_project_cache import (
+    VisualBehaviorOphysProjectCache,
+)
 from skm_pyutils.py_plot import GridFig
 
 # %%
@@ -67,6 +67,198 @@ def plot_mpis(recording_container):
     gf.fig.savefig(out_path, dpi=400)
     plt.close(gf.fig)
 
+
+# function to plot running speed
+def plot_running(ax, dataset, initial_time, final_time):
+    running_sample = dataset.running_speed.query(
+        "timestamps >= @initial_time and timestamps <= @final_time"
+    )
+    ax.plot(
+        running_sample["timestamps"],
+        running_sample["speed"] / running_sample["speed"].max(),
+        "--",
+        color="gray",
+        linewidth=1,
+    )
+
+
+# function to plot pupil diameter
+def plot_pupil(ax, dataset, initial_time, final_time):
+    pupil_sample = dataset.eye_tracking.query(
+        "timestamps >= @initial_time and timestamps <= @final_time"
+    )
+    ax.plot(
+        pupil_sample["timestamps"],
+        pupil_sample["pupil_width"] / pupil_sample["pupil_width"].max(),
+        color="gray",
+        linewidth=1,
+    )
+
+
+# function to plot licks
+def plot_licks(ax, dataset, initial_time, final_time):
+    licking_sample = dataset.licks.query(
+        "timestamps >= @initial_time and timestamps <= @final_time"
+    )
+    ax.plot(
+        licking_sample["timestamps"],
+        np.zeros_like(licking_sample["timestamps"]),
+        marker="o",
+        markersize=3,
+        color="black",
+        linestyle="none",
+    )
+
+
+# function to plot rewards
+def plot_rewards(ax, dataset, initial_time, final_time):
+    rewards_sample = dataset.rewards.query(
+        "timestamps >= @initial_time and timestamps <= @final_time"
+    )
+    ax.plot(
+        rewards_sample["timestamps"],
+        np.zeros_like(rewards_sample["timestamps"]),
+        marker="d",
+        color="blue",
+        linestyle="none",
+        markersize=12,
+        alpha=0.5,
+    )
+
+
+def plot_stimuli(ax, dataset, initial_time, final_time):
+    stimulus_presentations_sample = dataset.stimulus_presentations.query(
+        "stop_time >= @initial_time and start_time <= @final_time"
+    )
+    for idx, stimulus in stimulus_presentations_sample.iterrows():
+        ax.axvspan(
+            stimulus["start_time"],
+            stimulus["stop_time"],
+            color=stimulus["color"],
+            alpha=0.25,
+        )
+
+
+def summarise_single_session(allen_dataset):
+
+    ## Summary in print
+    print(
+        f"\n-----------Working on image plane {allen_dataset.ophys_experiment_id} "
+        f"session {allen_dataset.ophys_session_id}------------"
+    )
+    print(f"This experiment has metadata {allen_dataset.metadata}")
+    cell_specimen_table = allen_dataset.cell_specimen_table
+    print(cell_specimen_table)
+    print(
+        f"There are {len(cell_specimen_table)} cells "
+        f"in this session with IDS {cell_specimen_table.index.array}"
+    )
+    methods = allen_dataset.list_data_attributes_and_methods()
+    print(f"The available information is {methods}")
+
+    ## Stimulus and trial information
+    # stimulus_table = allen_dataset.stimulus_presentations
+    # trials_table = allen_dataset.trials
+
+    ## Plotting per cell information
+    timestamps = allen_dataset.ophys_timestamps
+
+    # create a list of all unique stimuli presented in this experiment
+    unique_stimuli = [
+        stimulus
+        for stimulus in allen_dataset.stimulus_presentations["image_name"].unique()
+    ]
+
+    # create a colormap with each unique image having its own color
+    colormap = {
+        image_name: sns.color_palette()[image_number]
+        for image_number, image_name in enumerate(np.sort(unique_stimuli))
+    }
+    colormap["omitted"] = (1, 1, 1)  # set omitted stimulus to white color
+
+    # add the colors for each image to the stimulus presentations table in the dataset
+    allen_dataset.stimulus_presentations[
+        "color"
+    ] = allen_dataset.stimulus_presentations["image_name"].map(
+        lambda image_name: colormap[image_name]
+    )
+
+    initial_time = 820  # start time in seconds
+    final_time = 860  # stop time in seconds
+
+    exp_id = allen_dataset.ophys_experiment_id
+    sess_id = allen_dataset.ophys_session_id
+    for cell_id, row in cell_specimen_table.iterrows():
+        gf = GridFig(2, 2, traverse_rows=False, size_multiplier_x=10)
+
+        ax = gf.get_next()
+        ax.imshow(allen_dataset.max_projection, cmap="gray")
+        ax.set_title("Max projection")
+
+        ax = gf.get_next()
+        ax.imshow(row["roi_mask"])
+        ax.set_title(f"ROI for {cell_id}")
+
+        ax = gf.get_next()
+
+        dff = np.array(allen_dataset.dff_traces.loc[cell_id, "dff"])
+        events = np.array(allen_dataset.events.loc[cell_id, "events"])
+        filtered_events = np.array(allen_dataset.events.loc[cell_id, "filtered_events"])
+
+        y = np.concatenate(
+            [
+                dff / dff.max(),
+                events / events.max(),
+                filtered_events / filtered_events.max(),
+            ]
+        )
+        x = np.concatenate([timestamps, timestamps, timestamps])
+        z = np.concatenate(
+            [
+                ["DFF"] * len(timestamps),
+                ["Events"] * len(timestamps),
+                ["Filtered Events"] * len(timestamps),
+            ]
+        )
+
+        cell_df = pd.DataFrame([x, y, z]).T
+        cell_df.columns = ["Time (s)", "Normalised magnitude", "Signal"]
+        cell_df = cell_df.query(
+            "`Time (s)` >= @initial_time and `Time (s)` <= @final_time", inplace=False
+        )
+
+        sns.lineplot(
+            ax=ax,
+            data=cell_df,
+            x="Time (s)",
+            y="Normalised magnitude",
+            style="Signal",
+            hue="Signal",
+        )
+        plot_stimuli(ax, allen_dataset, initial_time, final_time)
+        sns.despine()
+
+        ax = gf.get_next()
+        plot_running(ax, allen_dataset, initial_time, final_time)
+        plot_pupil(ax, allen_dataset, initial_time, final_time)
+        plot_licks(ax, allen_dataset, initial_time, final_time)
+        plot_rewards(ax, allen_dataset, initial_time, final_time)
+        plot_stimuli(ax, allen_dataset, initial_time, final_time)
+
+        ax.set_yticks([])
+        ax.legend(["running speed", "pupil", "licks", "rewards"])
+        ax.set_ylabel("Normalised magnitude")
+        ax.set_xlabel("Time (s)")
+
+        fig = gf.fig
+        output_path = OUTPUT_DIR / "CI_plots" / f"E{exp_id}_S{sess_id}_C{cell_id}.png"
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(output_path, dpi=300)
+        plt.close(fig)
+
+    return {"methods": methods}
+
+
 # %%
 data_storage_directory = Path(r"D:\AllenBrainObservatory\ophys_data")
 cache = VisualBehaviorOphysProjectCache.from_s3_cache(cache_dir=data_storage_directory)
@@ -85,7 +277,9 @@ for g in group_obj:
     rc = smr.RecordingContainer.from_table(df, loader)
     ## RC needs genericcontainer to be dataclass - look tomorrow
     rc.metadata["container_id"] = name
+    rc.load()
     plot_mpis(rc)
+    break
 
 # %% Explore the RC
 rc.inspect()
@@ -97,6 +291,9 @@ print(cache.current_manifest())
 # smr.inspect(cache.fetch_api.cache, methods="True")
 print(cache.fetch_api.cache.file_id_column)
 print(filtered_table["file_id"].iloc[0])
-print(cache.fetch_api.cache.data_path(filtered_table["file_id"].iloc[0]))
+# print(cache.fetch_api.cache.data_path(filtered_table["file_id"].iloc[0]))
 
 # %%
+
+local_cache = VisualBehaviorOphysProjectCache.from_local_cache(data_storage_directory)
+smr.inspect(local_cache)
