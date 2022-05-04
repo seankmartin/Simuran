@@ -3,9 +3,7 @@ from __future__ import annotations
 
 import csv
 import os
-import pathlib
 from collections.abc import Iterable as abcIterable
-from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Iterable, Type, Union
 
@@ -15,7 +13,6 @@ from skm_pyutils.py_path import get_all_files_in_dir, get_dirs_matching_regex
 
 from simuran.base_container import AbstractContainer
 from simuran.loaders.base_loader import BaseLoader, ParamLoader
-from simuran.loaders.loader_list import loader_from_str
 from simuran.recording import Recording
 
 # TODO make this easier
@@ -55,6 +52,7 @@ class RecordingContainer(AbstractContainer):
     loader: "BaseLoader" = field(default_factory=ParamLoader)
     metadata: dict = field(default_factory=dict)
     table: "pd.DataFrame" = field(default_factory=pd.DataFrame)
+    _last_loaded_idx: int = field(repr=False, init=False, default=-1)
 
     @classmethod
     def from_table(
@@ -196,7 +194,7 @@ class RecordingContainer(AbstractContainer):
 
         return good_param_files
 
-    def get(self, idx):
+    def load(self, idx):
         """
         Get the item at the specified index, and load it if not already loaded.
 
@@ -212,10 +210,14 @@ class RecordingContainer(AbstractContainer):
 
         """
         if self.load_on_fly:
-            if self.last_loaded_idx != idx:
-                self.last_loaded = deepcopy(self[idx])
+            if self._last_loaded_idx != idx:
+                # TODO define recording.shallow_copy()
+                self.last_loaded = Recording()
+                self.last_loaded.metadata = self[idx].metadata
+                self.last_loaded.available = self[idx].available
+                self.last_loaded.loader = self[idx].loader
                 self.last_loaded.load()
-                self.last_loaded_idx = idx
+                self._last_loaded_idx = idx
             return self.last_loaded
         else:
             return self[idx]
@@ -585,7 +587,7 @@ class RecordingContainer(AbstractContainer):
         for i in range(len(self)):
             was_available = self[i].available
             self[i].available = ["units"]
-            recording = self.get(i)
+            recording = self.load(i)
             available_units = recording.get_available_units()
             ## TODO many files could have same name, use join on --
             out_str = "--------{}: {}--------\n".format(
@@ -629,7 +631,7 @@ class RecordingContainer(AbstractContainer):
         for i in range(len(self)):
             was_available = self[i].available
             self[i].available = ["units"]
-            recording = self.get(i)
+            recording = self.load(i)
             available_units = recording.get_available_units()
             self[i].available = was_available
             for j in range(len(recording.units)):
