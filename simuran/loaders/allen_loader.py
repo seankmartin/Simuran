@@ -18,7 +18,7 @@ class AllenOphysLoader(BaseLoader):
         row_as_dict[table.index.name] = row.name
         recording.loader = self
         recording.metadata = row_as_dict
-        recording.available = ["signals"]
+        recording.available = ["data", "spatial"]
 
     ## TODO experimenting with a new idea here
     def load_recording(self, recording) -> None:

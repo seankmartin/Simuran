@@ -1,15 +1,18 @@
 """This module holds containers to allow for batch processing."""
-from abc import ABC, abstractmethod
-import os
 import copy
+import os
+from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
+from typing import Any, Optional, Type
 
 import numpy as np
+import rich
+from skm_pyutils.py_save import save_dicts_to_csv, save_mixed_dict_to_csv
 
 from simuran.base_class import BaseSimuran
-from skm_pyutils.py_save import save_mixed_dict_to_csv
-from skm_pyutils.py_save import save_dicts_to_csv
 
 
+@dataclass
 class AbstractContainer(ABC):
     """
     A abstract class container in SIMURAN, really a wrapper of a list.
@@ -29,10 +32,7 @@ class AbstractContainer(ABC):
 
     """
 
-    def __init__(self):
-        """See help(AbstractContainer)."""
-        self.container = []
-        super().__init__()
+    container: list = field(default_factory=list)
 
     @abstractmethod
     def _create_new(self, params):
@@ -431,12 +431,17 @@ class AbstractContainer(ABC):
             new_instance.container = [self.container[i] for i in idx_list]
             return new_instance
 
-    def set_container(self, container):
-        """Set the value of self.container."""
-        if isinstance(container, AbstractContainer):
-            self.container = container.container
-        else:
-            self.container = container
+    def get_attrs(self) -> "dict[str, Any]":
+        return self.__dict__
+
+    def get_attrs_and_methods(self) -> "list[str]":
+        class_dir = dir(self)
+        attrs_and_methods = [r for r in class_dir if not r.startswith("_")]
+        return attrs_and_methods
+
+    def inspect(self, methods: bool = False, **kwargs) -> None:
+        """Note: could also try objexplore"""
+        rich.inspect(self, methods=methods, **kwargs)
 
     def __getitem__(self, idx):
         """Retrive the object at the specified index from the container."""
@@ -454,13 +459,8 @@ class AbstractContainer(ABC):
         """Iterate over the items in the container."""
         return iter(self.container)
 
-    def __str__(self):
-        """Call on print."""
-        return "{} with {} elements:\n{}".format(
-            self.__class__.__name__, len(self), self.container
-        )
 
-
+@dataclass
 class GenericContainer(AbstractContainer):
     """
     A subclass of AbstractContainer where each item in the container has the same type.
@@ -472,10 +472,7 @@ class GenericContainer(AbstractContainer):
 
     """
 
-    def __init__(self, cls):
-        """See help(GenericContainer)."""
-        self.cls = cls
-        super().__init__()
+    cls: Optional[Type[object]] = None
 
     def _create_new(self, params):
         """

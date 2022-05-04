@@ -56,12 +56,6 @@ class RecordingContainer(AbstractContainer):
     metadata: dict = field(default_factory=dict)
     table: "pd.DataFrame" = field(default_factory=pd.DataFrame)
 
-    def __init__(self, load_on_fly=True, **kwargs):
-        """See help(RecordingContainer)."""
-        super().__init__()
-        self.load_on_fly = load_on_fly
-        self.last_loaded = Recording()
-
     @classmethod
     def from_table(
         cls,
@@ -661,13 +655,3 @@ class RecordingContainer(AbstractContainer):
         else:
             recording = Recording(params=params)
         return recording
-
-    def __str__(self):
-        """Call on print."""
-        picked_location = (
-            self.base_dir if self.base_dir is not None else "custom locations"
-        )
-        s_files = "\n".join([r.source_file for r in self])
-        return "{} with {} elements picked from {}:\n{}".format(
-            self.__class__.__name__, len(self), picked_location, s_files
-        )

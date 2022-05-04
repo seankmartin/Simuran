@@ -212,11 +212,11 @@ class BaseSimuran(ABC):
                     if hasattr(item, a):
                         item = getattr(item, a)
                     else:
-                        item = item[a]  # type: ignore
+                        item = item[a]
                 else:
-                    item = item[a]  # type: ignore
+                    item = item[a]
                 if callable(item):
-                    item = item()  # type: ignore
+                    item = item()
             if isinstance(item, dict):
                 for key, value in item.items():
                     data_out[key] = value
@@ -241,20 +241,3 @@ class BaseSimuran(ABC):
     def inspect(self, methods: bool = False, **kwargs) -> None:
         """Note: could also try objexplore"""
         rich.inspect(self, methods=methods, **kwargs)
-        # objexplore.explore(self)
-
-    @staticmethod
-    def rich_explore(obj, methods: bool = False, **kwargs) -> None:
-        rich.inspect(obj, methods=methods, **kwargs)
-
-    @staticmethod
-    def show_interactive_table(table, notebook=False) -> None:
-        ## TODO maybe should have a config for notebook version
-        if notebook:
-            dtale.show(table)
-        else:
-            dtale.show(table).open_browser()
-
-    def __str__(self) -> str:
-        """Call on print."""
-        return "{} with attributes {}".format(self.__class__.__name__, self.__dict__)
