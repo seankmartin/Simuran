@@ -12,8 +12,6 @@ from simuran.base_class import BaseSimuran
 from simuran.base_container import GenericContainer
 from simuran.base_signal import BaseSignal
 from simuran.eeg import Eeg, EegArray
-from simuran.loaders.base_loader import BaseLoader
-from simuran.loaders.loader_list import loaders_dict
 from simuran.param_handler import ParamHandler
 from simuran.single_unit import SingleUnit
 from simuran.spatial import Spatial
@@ -435,14 +433,3 @@ class Recording(BaseSimuran):
             self.load()
 
         self.valid = True
-
-    def __str__(self):
-        """Call on print."""
-        if self.param_handler is not None:
-            return "{} with params {} and source files {}".format(
-                self.__class__.__name__, self.param_handler.params, self.source_files
-            )
-        else:
-            return "{} with no params and source files {}".format(
-                self.__class__.__name__, self.source_files
-            )
