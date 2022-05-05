@@ -50,12 +50,14 @@ def filter_table(table: pd.DataFrame) -> pd.DataFrame:
     return filtered_table
 
 
-def plot_mpis(recording_container):
+def plot_mpis(recording_container: "smr.RecordingContainer"):
     name = recording_container.metadata["container_id"]
     gf = GridFig(len(recording_container))
     for i in range(len(recording_container)):
         recording = recording_container.load(i)
         dataset = recording.data
+        if dataset is None:
+            return
         ax = gf.get_next()
         ax.imshow(dataset.max_projection.data, cmap="gray")
         id_ = recording.metadata["ophys_experiment_id"]
@@ -140,6 +142,8 @@ def plot_stimuli(ax, dataset, initial_time, final_time):
 
 
 def summarise_single_session(allen_dataset):
+    if allen_dataset is None:
+        return
 
     ## Summary in print
     print(
@@ -251,7 +255,7 @@ def summarise_single_session(allen_dataset):
         ax.set_xlabel("Time (s)")
 
         fig = gf.fig
-        output_path = OUTPUT_DIR / "CI_plots" / f"E{exp_id}_S{sess_id}_C{cell_id}.png"
+        output_path = OUTPUT_DIR / "CI_plots" / f"E{exp_id}"/ f"S{sess_id}_C{cell_id}.png"
         output_path.parent.mkdir(parents=True, exist_ok=True)
         fig.savefig(output_path, dpi=300)
         plt.close(fig)
@@ -277,9 +281,10 @@ for g in group_obj:
     rc = smr.RecordingContainer.from_table(df, loader)
     ## RC needs genericcontainer to be dataclass - look tomorrow
     rc.metadata["container_id"] = name
-    rc.load()
     plot_mpis(rc)
-    break
+    # for r in rc:
+    #     summarise_single_session(r.data)
+    # break
 
 # %% Explore the RC
 rc.inspect()
@@ -297,3 +302,21 @@ print(filtered_table["file_id"].iloc[0])
 
 local_cache = VisualBehaviorOphysProjectCache.from_local_cache(data_storage_directory)
 smr.inspect(local_cache)
+print(behavior_sessions.iloc[5].name)
+print(local_cache.fetch_api.cache._cache_dir)
+# local_cache.get_behavior_session(behavior_sessions.iloc[5].name)
+local_cache.get_behavior_ophys_experiment(behavior_ophys_experiments.iloc[-1].name)
+
+# %%
+
+loader = smr.loader("allen_ophys")(local_cache)
+r = loader.parse_table_row(behavior_ophys_experiments, -1)
+print(r.metadata)
+r.load()
+print(r.data)
+r = loader.parse_table_row(behavior_ophys_experiments, 1)
+print(r.metadata)
+r.load()
+print(r.data)
+
+# %%
