@@ -58,7 +58,7 @@ class AllenOphysLoader(BaseLoader):
             experiment = self.cache.get_behavior_ophys_experiment(ophys_experiment_id)
         except FileNotFoundError:
             fpath = self.path_to_nwb(recording)
-            f"Please download {fpath} before trying to load it."
+            print(f"Please download {fpath} before trying to load it.")
             return recording
         recording.data = experiment
         recording.spatial = Spatial()
