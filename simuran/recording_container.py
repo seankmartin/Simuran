@@ -5,7 +5,7 @@ import csv
 import os
 from collections.abc import Iterable as abcIterable
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Iterable, Type, Union
+from typing import Iterable, Optional, Union, overload
 
 import pandas as pd
 from skm_pyutils.py_log import FileLogger, FileStdoutLogger
@@ -59,7 +59,7 @@ class RecordingContainer(AbstractContainer):
         cls,
         table: "pd.DataFrame",
         loader: Union["BaseLoader", Iterable["BaseLoader"]],
-        load_on_fly : bool = False
+        load_on_fly: bool = False,
     ) -> RecordingContainer:
         """
         Create a Recording container from a pandas dataframe.
@@ -195,7 +195,17 @@ class RecordingContainer(AbstractContainer):
 
         return good_param_files
 
-    def load(self, idx=None):
+    @overload
+    def load(self) -> None:
+        ...
+        """Load all recordings."""
+
+    @overload
+    def load(self, idx: int) -> "Recording":
+        ...
+        """Load recording at index idx and return it."""
+
+    def load(self, idx: Optional[int] = None) -> "Recording":
         """
         Get the item at the specified index, and load it if not already loaded.
 
@@ -215,7 +225,7 @@ class RecordingContainer(AbstractContainer):
                 raise RuntimeError("Can't bulk load when load_on_fly=True")
             for r in self:
                 r.load()
-
+            return
         if self.load_on_fly:
             if self._last_loaded_idx != idx:
                 # TODO define recording.shallow_copy()
