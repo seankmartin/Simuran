@@ -93,30 +93,7 @@ class BaseSimuran(ABC):
         )
         return loaded
 
-    def get(self, key: str, default: Any = None) -> Any:
-        """
-        Retrieve the value of key from the attributes.
-
-        This mimics regular dictionary get, but on attributes.
-
-        Parameters
-        ----------
-        key : str
-            The attribute to retrieve
-        default : Any, optional
-            What to return if the key is not found, default is None
-
-        Returns
-        -------
-        Any
-            The value of the key
-
-        """
-        if hasattr(self, key):
-            return getattr(self, key)
-        else:
-            return default
-
+    # TODO this may not be needed not sensible
     def save_attributes(self, attr_dict: dict) -> None:
         """
         Store all the keys in attr_dict as attributes.
@@ -145,6 +122,7 @@ class BaseSimuran(ABC):
             else:
                 raise TypeError("Input is not a dictionary")
 
+    # TODO this might be better in pyutils
     def data_dict_from_attr_list(
         self, attr_list: list, friendly_names: Union["list[str]", None] = None
     ):

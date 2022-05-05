@@ -48,10 +48,3 @@ def test_parameter_load():
     assert not base_obj.is_loaded()
     base_obj.load()
     assert new_dict == base_obj.metadata
-
-
-def test_get():
-    now = datetime.datetime.now()
-    base_obj = BaseClassToTest(datetime=now)
-    assert base_obj.get("datetime") == now
-    assert base_obj.get("banana", "test_val") == "test_val"
