@@ -9,9 +9,9 @@ import sys
 import traceback
 from typing import Type
 
-from simuran.loaders.base_loader import BaseLoader, ParamLoader
+from simuran.loaders.base_loader import BaseLoader, MetadataLoader
 
-loaders_dict: "dict[str, Type[BaseLoader]]" = {"params_only": ParamLoader}
+loaders_dict: "dict[str, Type[BaseLoader]]" = {"params_only": MetadataLoader}
 try:
     from simuran.loaders.nc_loader import NCLoader
 

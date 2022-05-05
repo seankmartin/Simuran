@@ -3,12 +3,11 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Union
+from typing import Any, Optional, Union
 
-import dtale
 import rich
 
-from simuran.loaders.base_loader import BaseLoader, ParamLoader
+from simuran.loaders.base_loader import BaseLoader, MetadataLoader
 
 
 @dataclass
@@ -16,32 +15,33 @@ class BaseSimuran(ABC):
     """
     An abstract class which is the base class for most SIMURAN classes.
 
-    This class describes a general framework for any object
+    This dataclass describes a general framework for any object
     which loads information from a source file.
-
     The abstract method load must be implemented by subclasses.
 
     Attributes
     ----------
-    kwargs : dict
-        Any extra keyword arguments to store on this object.
-    info : dict
-        Store any extra information on this object.
+    metadata : dict
+        Fixed information about this object, e.g. model or session type.
     datetime : datetime.datetime
-        The datetime stored on the object.
-        Can be used for filtering purposes.
-        For example, to get recordings performed on a specific day.
+        The date associated with this object, e.g. recording date.
     tag : str
         An optional tag to describe the object.
-    loader : simuran.loader.Loader
-        A loader object that is used to load the object.
+        Default "untagged"
+    loader : simuran.loader.BaseLoader
+        A loader object that is used to load this object.
+        The relationship between the loader and this object
+        is established in self.load()
     source_file : str
         The path to the source file for this object.
+        For instance, an NWB file or an online URL.
     last_loaded_source : str
         The path to the last file this object was loaded from.
-    underlying : object
-        When self.loader is called, the underlying object
-        can be stored in this object under this name.
+    data : Any
+        When this object is loaded, complex variables can be stored in data.
+        For instance, an xarray object could be set as the data.
+        Generally speaking it is where the large (in terms of memory) objects
+        are stored after loading.
     results : dict
         A dictionary of results.
 
@@ -50,27 +50,18 @@ class BaseSimuran(ABC):
     metadata: dict = field(default_factory=dict)
     datetime: "datetime" = field(default_factory=datetime.now)
     tag: str = "untagged"
-    loader: "BaseLoader" = field(default_factory=ParamLoader)
+    loader: Optional["BaseLoader"] = field(default=None)
     source_file: str = "not_set"
     last_loaded_source: str = "no_source_loaded"
-    data: Any = None  # type: ignore
+    data: Any = None
     results: dict = field(default_factory=dict)
 
     @abstractmethod
-    def load(self, *args, **kwargs):
+    def load(self) -> None:
         """
         Load the data using the set loader object.
 
-        Parameters
-        ----------
-        *args : list
-            Positional arguments
-        **kwargs : dict
-            Keyword arguments
-
-        Returns
-        -------
-        None
+        Skips loading if self.is_loaded().
 
         Raises
         ------
@@ -90,10 +81,6 @@ class BaseSimuran(ABC):
     def is_loaded(self) -> bool:
         """
         Return True if the file has been loaded.
-
-        Parameters
-        ----------
-        None
 
         Returns
         -------
@@ -116,17 +103,17 @@ class BaseSimuran(ABC):
         ----------
         key : str
             The attribute to retrieve
-        default : object, optional
+        default : Any, optional
             What to return if the key is not found, default is None
 
         Returns
         -------
-        object
+        Any
             The value of the key
 
         """
         if hasattr(self, key):
-            return self.key  # type: ignore
+            return getattr(self, key)
         else:
             return default
 
@@ -179,6 +166,14 @@ class BaseSimuran(ABC):
         Dictionaries have key value pairs, that are stored in the output dictionary.
         Both of these can be avoided by passing the last element of the tuple as None.
 
+        As an example:
+        self.results = {"addition": {"1 + 1": 2}}
+        self.data.running_speed = [0.5, 1.4, 1.5]
+        attr_list = [("results", "addition", None)]
+        this_fn(attr_list) = {"results_addition": {"1 + 1" = 2}}
+        attr_list = [("results", "addition"), ("data", "running_speed")]
+        this_fn(attr_list) = {"1 + 1": 2, "data_running_speed": [0.5, 1.4, 1.5]}
+
         Parameters
         ----------
         attr_list : list
@@ -200,7 +195,7 @@ class BaseSimuran(ABC):
         """
         if friendly_names is not None:
             if len(friendly_names) != len(attr_list):
-                raise ValueError("friendly_names and attr_list must be the same")
+                raise ValueError("friendly_names and attr_list must be the same length")
 
         data_out = {}
         for i, attr_tuple in enumerate(attr_list):
@@ -221,23 +216,43 @@ class BaseSimuran(ABC):
                 for key, value in item.items():
                     data_out[key] = value
             else:
+                non_none_attrs = [x for x in attr_tuple if x is not None]
                 if friendly_names is None:
-                    key = "_".join(attr_tuple)
+                    key = "_".join(non_none_attrs)
                 else:
                     key = friendly_names[i]
                     if key is None:
-                        key = "_".join(attr_tuple)
+                        key = "_".join(non_none_attrs)
                 data_out[key] = item
         return data_out
 
     def get_attrs(self) -> "dict[str, Any]":
+        """Return all attributes of this object"""
         return self.__dict__
 
     def get_attrs_and_methods(self) -> "list[str]":
+        """Return all attributes and methods of this object"""
         class_dir = dir(self)
         attrs_and_methods = [r for r in class_dir if not r.startswith("_")]
         return attrs_and_methods
 
     def inspect(self, methods: bool = False, **kwargs) -> None:
-        """Note: could also try objexplore"""
+        """
+        Inspect this object (see attributes and methods).
+
+        Really just passes this object into rich.inspect.
+        Note: You could also try objexplore for this purpose.
+
+        Parameters
+        ----------
+        methods : bool, optional
+            Show the methods, by default False
+        **kwargs:
+            Keyword arguments to pass into rich.inspect
+
+        Returns
+        -------
+        None
+
+        """
         rich.inspect(self, methods=methods, **kwargs)

@@ -12,7 +12,7 @@ from skm_pyutils.py_log import FileLogger, FileStdoutLogger
 from skm_pyutils.py_path import get_all_files_in_dir, get_dirs_matching_regex
 
 from simuran.base_container import AbstractContainer
-from simuran.loaders.base_loader import BaseLoader, ParamLoader
+from simuran.loaders.base_loader import BaseLoader, MetadataLoader
 from simuran.recording import Recording
 
 # TODO make this easier
@@ -47,9 +47,9 @@ class RecordingContainer(AbstractContainer):
 
     """
 
-    load_on_fly: bool = False
+    load_on_fly: bool = True
     last_loaded: "Recording" = field(default_factory=Recording)
-    loader: "BaseLoader" = field(default_factory=ParamLoader)
+    loader: "BaseLoader" = field(default_factory=MetadataLoader)
     metadata: dict = field(default_factory=dict)
     table: "pd.DataFrame" = field(default_factory=pd.DataFrame)
     _last_loaded_idx: int = field(repr=False, init=False, default=-1)
@@ -59,7 +59,7 @@ class RecordingContainer(AbstractContainer):
         cls,
         table: "pd.DataFrame",
         loader: Union["BaseLoader", Iterable["BaseLoader"]],
-        load_on_fly: bool = False,
+        load_on_fly: bool = True,
     ) -> RecordingContainer:
         """
         Create a Recording container from a pandas dataframe.
@@ -71,9 +71,9 @@ class RecordingContainer(AbstractContainer):
         loader :
         param_dir : str
             A path to the directory containing parameter files
-        load : bool, optional
-            Whether to load the data for the recording container.
-            Defaults to False.
+        load_on_fly : bool, optional
+            Whether to load the data for the recording container on the fly.
+            Defaults to True (best for memory usage).
 
         Returns
         -------
@@ -233,6 +233,7 @@ class RecordingContainer(AbstractContainer):
                 self.last_loaded.metadata = self[idx].metadata
                 self.last_loaded.available = self[idx].available
                 self.last_loaded.loader = self[idx].loader
+                self.last_loaded.source_file = self[idx].source_file
                 self.last_loaded.load()
                 self._last_loaded_idx = idx
             return self.last_loaded

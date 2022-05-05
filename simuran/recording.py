@@ -88,8 +88,9 @@ class Recording(BaseSimuran):
         elif params is not None:
             self.setup_from_dict(params, load=load)
 
-    def load(self, *args, **kwargs):
+    def load(self):
         """Load each available attribute."""
+        super().load()
         self.loader.load_recording(self)
 
     def get_available(self):

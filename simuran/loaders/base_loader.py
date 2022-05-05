@@ -150,15 +150,16 @@ class BaseLoader(ABC):
         return "{} with attributes {}".format(self.__class__.__name__, self.__dict__)
 
 
-class ParamLoader(BaseLoader):
+class MetadataLoader(BaseLoader):
     """Only load parameters"""
 
     def __init__(self, load_params={}):
         """Call super class initialize."""
         super().__init__(load_params=load_params)
 
-    def load_recording(self, recording):
-        return
+    def load_recording(self, recording) -> "Recording":
+        recording.metadata = self.load_params
+        return recording
 
     def load_signal(self, *args, **kwargs):
         return
