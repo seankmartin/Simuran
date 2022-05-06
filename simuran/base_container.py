@@ -12,6 +12,8 @@ from skm_pyutils.py_save import save_dicts_to_csv, save_mixed_dict_to_csv
 from simuran.base_class import BaseSimuran
 
 
+# TODO consider making this something that you can pass list like into
+# The current implementation is probably too coupled
 @dataclass
 class AbstractContainer(ABC):
     """

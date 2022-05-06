@@ -3,7 +3,7 @@ from simuran.base_container import GenericContainer
 
 
 def test_numpy_container():
-    container = GenericContainer(np.ndarray)
+    container = GenericContainer(cls=np.ndarray)
     for i in range(10):
         container.append(np.ones(100) * i)
     for i in range(5):
