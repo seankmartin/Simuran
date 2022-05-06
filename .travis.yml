@@ -1,18 +1,18 @@
 language: python
 python:
-    - 3.8
+  - 3.8
 before_intall:
-    - python --version
-    - pip install -U pip
-    - pip install -U pytest
-    - pip install codecov
-    - pip install pytest-cov
+  - python --version
+  - pip install -U pip
+  - pip install -U pytest
+  - pip install codecov
+  - pip install pytest-cov
 install:
-    - python -m pip install --upgrade pip
-    - python -m pip install --upgrade setuptools
-    - python -m pip install -r requirements.txt
-    - python -m pip install .
+  - python -m pip install --upgrade setuptools
+  - python -m pip install -r requirements.txt
+  - python -m pip install .
+  - python -m pip install neurochat
 script:
-    - python -m pytest
+  - python -m pytest
 after_success:
-    - codecov
+  - codecov
