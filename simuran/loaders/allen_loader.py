@@ -8,13 +8,13 @@ if TYPE_CHECKING:
         VisualBehaviorOphysProjectCache,
     )
 
-from simuran.loaders.base_loader import BaseLoader
+from simuran.loaders.base_loader import MetadataLoader
 from simuran.recording import Recording
 from simuran.spatial import Spatial
 
 
 @dataclass
-class AllenOphysLoader(BaseLoader):
+class AllenOphysLoader(MetadataLoader):
     """
     Load AIS ophys data from a cache.
 
@@ -39,18 +39,27 @@ class AllenOphysLoader(BaseLoader):
         )
         return fname
 
-    def parse_table_row(self, table, index, recording=None) -> "Recording":
-        """Move information from row into recording."""
-        recording = Recording() if recording is None else recording
-        row = table.iloc[index]
-        row_as_dict = row.to_dict()
-        row_as_dict[table.index.name] = row.name
-        recording.loader = self
-        recording.metadata = row_as_dict
-        recording.available = ["data", "spatial"]
+    def parse_metadata(self, recording: "Recording") -> None:
+        """
+        Parse the information into the recording object.
+
+        In this case, pulls out some information from the
+        session table about this recording.
+
+        Parameters
+        ----------
+        recording: simuran.Recording
+            The recording object to parse into.
+
+        Returns
+        -------
+        None
+
+        """
+        # TODO expand this
+        recording.available_data = ["ophys", "spatial", "licks"]
         recording.source_file = self.path_to_nwb(recording)
         recording.metadata["downloaded"] = isfile(recording.source_file)
-        return recording
 
     def load_recording(self, recording) -> "Recording":
         ophys_experiment_id = recording.metadata["ophys_experiment_id"]
@@ -61,6 +70,7 @@ class AllenOphysLoader(BaseLoader):
             print(f"Please download {fpath} before trying to load it.")
             return recording
         recording.data = experiment
+        # TODO is this needed?
         recording.spatial = Spatial()
         recording.spatial.data = experiment.running_speed
         return recording

@@ -1,12 +1,10 @@
 """This module holds single experiment related information."""
 import logging
 import os
-from dataclasses import dataclass
-from typing import Union
+from dataclasses import dataclass, field
 
 import astropy.units as u
 import numpy as np
-from skm_pyutils.py_config import split_dict
 
 from simuran.base_class import BaseSimuran
 from simuran.base_container import GenericContainer
@@ -32,44 +30,42 @@ class Recording(BaseSimuran):
 
     Attributes
     ----------
-    signals : list of simuran.base_signal.BaseSignal
-        The signals in the recording.
-    units : list of simuran.single_unit.SingleUnit
-        The single units in the recording.
-    spatial : list of simuran.spatial.Spatial
-        The spatial information in the recording.
-    stimulation : list of TODO
-        The stimulation, events, and stimuli in the recording.
-    available : list of strings
-        Each value in the list should be present if the information is available.
-        E.g. available = ["signals", "spatial"] would indicate
-        that this recording has EEG information and spatial information only.
-    param_handler : simuran.param_handler.ParamHandler
-        Parameters which describe the information in the recording.
+    metadata : dict or ParamHandler
+        Fixed information about this object, e.g. model or session type.
+    datetime : datetime.datetime
+        The date associated with this object, e.g. recording date.
+    tag : str
+        An optional tag to describe the object.
+        Default "untagged"
+    loader : simuran.loader.BaseLoader
+        A loader object that is used to load this object.
+        The relationship between the loader and this object
+        is established in self.load()
     source_file : str
-        The path to the underlying source file describing the recording.
-        When recordings have many source files, this should be either
-        the directory where they are all located, or a file listing them.
-    source_files : dict
-        A dictionary describing the source files for each attribute.
-
-    Parameters
-    ----------
-    params : dict, optional
-        Direct parameters which describe the recording, default is None
-        See simuran.params.simuran_base_params for what can be passed.
-    param_file : str, optional
-        The path to a file which contains parameters, default is None
-    base_file : str, optional
-        Sets the value of self.source_file, default is None
-    load : bool, optional
-        Whether to load the recording on initialisation, default is True
+        The path to the source file for this object.
+        For instance, an NWB file or an online URL.
+    last_loaded_source : str
+        The path to the last file this object was loaded from.
+    data : Any
+        When this object is loaded, complex variables can be stored in data.
+        For instance, an xarray object could be set as the data.
+        Generally speaking it is where the large (in terms of memory) objects
+        are stored after loading.
+    results : dict
+        A dictionary of results.
+    available_data : list[str]
+        A list of the available data on this recording as a string description.
+        E.g. ["spatial:running_speed", "ophys:deltaf/f", "behaviour:lick_times"]
+        This can be used in functions explicitly by following types, such
+        as those in pynwb, or simply as a helpful flag when debugging/analysing etc.
 
     See also
     --------
     simuran.base_class.BaseSimuran
 
     """
+
+    available_data: list = field(default_factory=list)
 
     def load(self):
         """Load each available attribute."""
@@ -258,56 +254,3 @@ class Recording(BaseSimuran):
     def get_unit_signals(self):
         """Return a 2D array of signals with units."""
         return np.array([s.samples.to(u.mV) for s in self.signals], float) * u.mV
-
-    def _parse_source_files(self):
-        """
-        Set the value of self.source_files based on the parameters.
-
-        This only functions for things that have been set as available.
-
-        """
-        source_files = {}
-        for item, name in zip(self.get_available(), self.available):
-            if isinstance(item, GenericContainer):
-                source_files[name] = [s.source_file for s in item]
-            else:
-                source_files[name] = item.source_file
-        self.source_files = source_files
-
-    def setup_from_file(self, param_file, load=True):
-        """
-        Set up this recording from a source parameter file.
-
-        Parameters
-        ----------
-        param_file : str
-            The parameter file to setup from.
-        load : bool, optional
-            Whether the information should be loaded, by default True
-
-        Returns
-        -------
-        None
-
-        """
-        self.param_handler = ParamHandler(source_file=param_file)
-        self._setup(load=load)
-
-    def setup_from_dict(self, params, load=True):
-        """
-        Set up this recording from a dictionary of parameters.
-
-        Parameters
-        ----------
-        params : dict
-            The parameters to setup from.
-        load : bool, optional
-            Whether the information should be loaded, by default True
-
-        Returns
-        -------
-        None
-
-        """
-        self.param_handler = ParamHandler(params=params)
-        self._setup(load=load)

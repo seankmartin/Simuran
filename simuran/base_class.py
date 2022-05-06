@@ -50,10 +50,10 @@ class BaseSimuran(ABC):
 
     metadata: Union[dict, "ParamHandler"] = field(default_factory=dict)
     datetime: "datetime" = field(default_factory=datetime.now)
-    tag: str = "untagged"
+    tag: Optional[str] = None
     loader: Optional["BaseLoader"] = field(default=None)
-    source_file: str = "not_set"
-    last_loaded_source: str = "no_source_loaded"
+    source_file: Optional[str] = None
+    last_loaded_source: Optional[str] = None
     data: Any = None
     results: dict = field(default_factory=dict)
 
@@ -79,6 +79,7 @@ class BaseSimuran(ABC):
         if self.is_loaded():
             return
 
+    # TODO test with raw data (not from file)
     def is_loaded(self) -> bool:
         """
         Return True if the file has been loaded.

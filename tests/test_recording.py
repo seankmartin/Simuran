@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from pprint import pformat
 
+from simuran.loaders.base_loader import MetadataLoader
 from simuran.param_handler import ParamHandler
 from simuran.recording import Recording
 
@@ -26,9 +27,13 @@ def test_recording_setup():
             main_dir, "simuran", "params", "simuran_base_params.py"
         )
     )
-    ex = Recording(metadata=metadata)
+    loader = MetadataLoader()
+    ex = Recording(metadata=metadata, loader=loader)
+    loader.parse_metadata(ex)
     assert ex.metadata["signals"]["region"][0] == "ACC"
-    assert ex.signals.group_by_property("region", "BLA")[1] == [30, 31]
+    assert set(ex.available_data) == set(
+        ("signals", "units", "spatial", "loader", "loader_kwargs")
+    )
 
 
 if __name__ == "__main__":
