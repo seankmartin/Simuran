@@ -50,7 +50,7 @@ def parse_config(fname="config_path.txt"):
     if cfg_path is None:
         log.error("Please set a config path before calling parse_cfg")
         return {}
-    ph = ParamHandler(in_loc=cfg_path, name="params")
+    ph = ParamHandler(source_file=cfg_path, name="params")
     return ph.params
 
 

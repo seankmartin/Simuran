@@ -83,7 +83,7 @@ class BatchSetup(object):
     def setup(self):
         """Call on initialisation."""
         self.ph = ParamHandler(
-            in_loc=self.file_loc,
+            source_file=self.file_loc,
             name="params",
             dirname_replacement=self.dirname_replacement,
         )
@@ -111,7 +111,7 @@ class BatchSetup(object):
         if self._bad_file:
             new_ph = ParamHandler(params=self.ph["mapping"])
         else:
-            new_ph = ParamHandler(in_loc=self.ph["mapping_file"])
+            new_ph = ParamHandler(source_file=self.ph["mapping_file"])
         regex_filts, _ = new_ph.interactive_refilt(
             self.in_dir, self.ph["regex_filters"]
         )
@@ -175,12 +175,12 @@ class BatchSetup(object):
             if self._bad_file:
                 new_ph = ParamHandler(params=self.ph["mapping"])
             else:
-                new_ph = ParamHandler(in_loc=self.ph["mapping_file"])
-            dirs = new_ph.batch_write(
+                new_ph = ParamHandler(source_file=self.ph["mapping_file"])
+            dirs = new_ph.write_to_directories(
                 self.in_dir,
                 re_filters=re_filts,
                 fname=self.ph["out_basename"],
-                check_only=check_only,
+                dummy=check_only,
                 overwrite=overwrite,
                 verbose=verbose,
             )
@@ -188,11 +188,11 @@ class BatchSetup(object):
             fname = self.ph["mapping_file"]
             if self._bad_file:
                 raise ValueError("Can't copy non-existant file {}".format(fname))
-            dirs = self.ph.batch_write(
+            dirs = self.ph.write_to_directories(
                 self.in_dir,
                 re_filters=re_filts,
                 fname=self.ph["out_basename"],
-                check_only=check_only,
+                dummy=check_only,
                 overwrite=overwrite,
                 exact_file=fname,
                 verbose=verbose,

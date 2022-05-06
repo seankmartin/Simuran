@@ -81,20 +81,9 @@ def setup_loader():
     simuran.loaders.loader_list.py
 
     """
-    # The type of loader to use, see simuran.loaders.loader_list.py for options
-    # For now nc_loader is the most common option
     loader = "params_only"
-    # loader = "nc_loader"
 
-    # Keyword arguments to pass to the loader.
-    loader_kwargs = {
-        "system": "Axona",
-    }
-
-    output_dict = {
-        "loader": loader,
-        "loader_kwargs": loader_kwargs,
-    }
+    output_dict = {"loader": loader, "loader_kwargs": {}}
 
     return output_dict
 

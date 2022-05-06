@@ -16,7 +16,7 @@ def test_batch_setup():
     assert sorted(["test_this1", "test_this_ok_thanks"]) == sorted(names)
 
     ph = simuran.param_handler.ParamHandler(
-        in_loc=os.path.join(in_dir, "simuran_b_params.py"), name="params"
+        source_file=os.path.join(in_dir, "simuran_b_params.py"), name="params"
     )
     out_name = ph["out_basename"]
     write_files = [os.path.join(d, out_name) for d in dirs]

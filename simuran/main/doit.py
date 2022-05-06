@@ -53,7 +53,7 @@ def create_task(
         verbose=False,
     )
     run_dict = ParamHandler(
-        in_loc=batch_file, name="params", dirname_replacement=dirname
+        source_file=batch_file, name="params", dirname_replacement=dirname
     )
     dependencies = []
 
@@ -62,7 +62,7 @@ def create_task(
         if batch_param_loc not in dependencies:
             in_dir = os.path.dirname(batch_param_loc)
             dependencies.append(batch_param_loc)
-            new_params = ParamHandler(in_loc=batch_param_loc, name="params")
+            new_params = ParamHandler(source_file=batch_param_loc, name="params")
             if new_params["mapping_file"] not in dependencies:
                 dependencies.append(new_params["mapping_file"])
         function_loc = os.path.abspath(run_dict["fn_param_loc"])
@@ -104,7 +104,7 @@ def create_task(
     action += f" {batch_file}"
 
     def clean():
-        run_dict_ = ParamHandler(in_loc=batch_file, name="params")
+        run_dict_ = ParamHandler(source_file=batch_file, name="params")
         for run_dict_i in run_dict_["run_list"]:
             function_loc_ = os.path.abspath(run_dict_i["fn_param_loc"])
             to_remove = os.path.join(
@@ -176,7 +176,7 @@ def create_list_task(
         verbose=False,
     )
     run_dict = ParamHandler(
-        in_loc=batch_file, name="params", dirname_replacement=dirname
+        source_file=batch_file, name="params", dirname_replacement=dirname
     )
     dependencies = [batch_file, run_dict["cell_list_path"]]
 

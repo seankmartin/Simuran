@@ -638,7 +638,7 @@ def main_analyse_cell_list(params, dirname_replacement, overwrite=False):
         default = "sim_results__"
     else:
         ph = ParamHandler(
-            in_loc=params, name="params", dirname_replacement=dirname_replacement
+            source_file=params, name="params", dirname_replacement=dirname_replacement
         )
         default = os.path.join(
             os.path.dirname(params),

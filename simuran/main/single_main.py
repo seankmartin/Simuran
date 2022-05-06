@@ -120,7 +120,7 @@ def check_input_params(location, batch_name, dirname_replacement=""):
         full_param_loc = batch_setup.ph.get("mapping_file", "")
 
         record_params = simuran.param_handler.ParamHandler(
-            in_loc=full_param_loc,
+            source_file=full_param_loc,
             name="mapping",
             dirname_replacement=dirname_replacement,
         )
@@ -131,7 +131,9 @@ def check_input_params(location, batch_name, dirname_replacement=""):
         return batch_setup
     elif os.path.isfile(location):
         record_params = simuran.param_handler.ParamHandler(
-            in_loc=location, name="mapping", dirname_replacement=dirname_replacement
+            source_file=location,
+            name="mapping",
+            dirname_replacement=dirname_replacement,
         )
         if record_params["loader"] == "params_only":
             raise ValueError(
@@ -690,7 +692,7 @@ def setup_default_params(
 
     if os.path.isfile(param_names["batch"]):
         batch_handler = simuran.param_handler.ParamHandler(
-            in_loc=param_names["batch"],
+            source_file=param_names["batch"],
             name="params",
             dirname_replacement=dirname,
         )
@@ -1065,7 +1067,7 @@ def run(
             modify_path(site_dir, verbose=verbose)
             should_modify_path = False
         setup_ph = simuran.param_handler.ParamHandler(
-            in_loc=param_names["fn"],
+            source_file=param_names["fn"],
             name="fn_params",
             dirname_replacement=dirname,
         )
@@ -1087,7 +1089,7 @@ def run(
 
     if os.path.isfile(param_names["batch"]):
         batch_handler = simuran.param_handler.ParamHandler(
-            in_loc=param_names["batch"],
+            source_file=param_names["batch"],
             name="params",
             dirname_replacement=dirname,
         )

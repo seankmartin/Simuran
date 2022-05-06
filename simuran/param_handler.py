@@ -1,12 +1,16 @@
 """This module handles automatic creation of parameter files."""
 import os
 import shutil
+from dataclasses import dataclass, field
+from pathlib import Path
 from pprint import pformat
+from typing import Optional, Union
 
 from skm_pyutils.py_config import read_python
 from skm_pyutils.py_path import get_dirs_matching_regex
 
 
+@dataclass
 class ParamHandler(object):
     """
     A wrapper around a dictionary describing parameters.
@@ -15,74 +19,79 @@ class ParamHandler(object):
 
     Attributes
     ----------
-    params : dict
+    dictionary : dict
         The dictionary of underlying parameters
-    location : str
+    source_file : str or Path
         The path to the file containing the parameters.
-    _param_name : str
-        If reading a Python file, the name of the variable
-        in that file which describes all the parameters.
-
-    Parameters
-    ----------
-    params : dict, optional
-        If passed, directly defines a dictionary of parameters.
-    in_loc : str, optional
-        If passed, a path to a file describing the parameters.
-    name : str, optional
+    name : str
         The name of the variable describing the parameters, default is "mapping".
         This is only used if in_loc is not None.
-    dirname_replacement : str, optional
+    dirname_replacement : str
         The directory name to replace __dirname__ by.
         By default, replaces it by dirname(param_file)
 
     """
 
-    def __init__(
-        self, params=None, in_loc=None, name="mapping", dirname_replacement=""
-    ):
-        """See help(ParamHandler)."""
-        super().__init__()
-        self.set_param_dict(params)
-        self.location = ""
-        self._param_name = name
-        if in_loc is not None:
-            self.read(in_loc, dirname_replacement=dirname_replacement)
-            self.location = in_loc
+    dictionary: dict = field(default_factory=dict)
+    source_file: Optional[Union[str, "Path"]] = None
+    name: str = "mapping"
+    dirname_replacement: str = ""
 
-    def set_param_dict(self, params):
+    def __post_init__(self):
+        if self.source_file is not None:
+            self.read()
+
+    def write(self, out_loc):
         """
-        Set the parameter dictionary.
+        Write the parameters out to a python file.
 
         Parameters
         ----------
-        params : dict
-            The parameters to set
+        out_loc : str
+            The path to write to
 
         Returns
         -------
         None
 
         """
-        self.params = params
+        with open(out_loc, "w") as f:
+            out_str = self.to_str()
+            f.write(out_str)
 
-    def params_to_str(self):
+    def read(self):
+        """
+        Read the parameters.
+
+        TODO
+        ----
+        Support more than just .py params.
+
+        Returns
+        -------
+        None
+
+        """
+        self.dictionary = read_python(
+            self.source_file, dirname_replacement=self.dirname_replacement
+        )[self.name]
+
+    def to_str(self):
         """
         Convert the underlying parameters dictionary to string.
 
         Can be useful for printing or writing to a file.
+        Does not overwrite default __str__ as the output is quite verbose.
 
         Returns
         -------
         str
-            The string representation of the string.
+            The string representation of the dict.
 
         """
-        if self.params is None:
-            raise ValueError()
         out_str = ""
-        out_str += "mapping = {\n"
-        for k, v in self.params.items():
+        out_str += f"{self.name}" + " = {\n"
+        for k, v in self.dictionary.items():
             out_str += "\t{}:".format(self._val_to_str(str(k)))
             if isinstance(v, dict):
                 out_str += "\n\t\t{\n"
@@ -96,90 +105,24 @@ class ParamHandler(object):
         out_str += "\t}"
         return out_str
 
-    def write(self, out_loc, out_str=None):
-        """
-        Write the parameters out to a file.
-
-        Parameters
-        ----------
-        out_loc : str
-            The path to write to
-        out_str : str, optional
-            A custom string to write, by default None,
-            which calls self.params_to_str()
-
-        Returns
-        -------
-        None
-
-        """
-        with open(out_loc, "w") as f:
-            if out_str is None:
-                out_str = self.params_to_str()
-            f.write(out_str)
-
-    def read(self, in_loc, dirname_replacement=""):
-        """
-        Read the parameters from in_loc.
-
-        Parameters
-        ----------
-        in_loc : str
-            Path to a file to read parameters from.
-        dirname_replacement : str, optional
-            What to replace __dirname__ by in files, by default "".
-
-        Returns
-        -------
-        None
-
-        """
-        param_dict = read_python(in_loc, dirname_replacement=dirname_replacement)[
-            self._param_name
-        ]
-        self.set_param_dict(param_dict)
-
-    def get(self, key, default=None):
-        """
-        Retrieve the value of key from the parameters.
-
-        This mimics regular dictionary get.
-
-        Parameters
-        ----------
-        key : str
-            The key to retrieve
-        default : object, optional
-            What to return if the key is not found, default is None
-
-        Returns
-        -------
-        object
-            The value of the key
-
-        """
-        if key in self.keys():
-            return self[key]
-        else:
-            return default
-
     def set_default_params(self):
         """Set the default parameters in SIMURAN."""
-        self.location = os.path.join(
+        self.source_file = os.path.join(
             os.path.dirname(__file__), "params", "default_params.py"
         )
-        self.read(self.location)
+        self.read()
 
-    def batch_write(
+    def write_to_directories(
         self,
         start_dir,
         re_filters=None,
         fname="simuran_params.py",
         overwrite=True,
-        check_only=False,
+        dummy=False,
         return_absolute=True,
         exact_file=None,
         verbose=False,
+        format_output=False,
     ):
         """
         Write the parameters out to a set of files.
@@ -190,23 +133,25 @@ class ParamHandler(object):
             Where to start the write operation from.
         re_filters : list, optional
             A list of regular expressions to match, by default None
+            Picks up directories from this regex.
         fname : str, optional
             The filename to write to, by default "simuran_params.py"
         overwrite : bool, optional
             Should existing files be overwritten, by default True
-        check_only : bool, optional
+        dummy : bool, optional
             If true, don't do any writing, by default False
         return_absolute : bool, optional
             Should absolute or relative filenames be returned, by default True
-        exact_file : str, optional
-            Path to a file to copy, by default None
         verbose : bool, optional
             Whether to print more information, by default False
+        format_output : bool, optional
+            Print the formatted version of the source file instead of copying,
+            by default False
 
         Returns
         -------
         list of str
-            The directories written to
+            The paths written to
 
         Raises
         ------
@@ -214,52 +159,50 @@ class ParamHandler(object):
             If exact_file is passed but does not exist.
 
         """
-        dirs = get_dirs_matching_regex(
+
+        def remove_empty_dirs_and_caches(dir_list: "list[str]") -> "list[str]":
+            possible_dirs = [
+                d for d in dir_list if ("__pycache__" not in d) and (d != "")
+            ]
+
+            # Exclude empty directories
+            dirs = []
+            for d in possible_dirs:
+                filenames = next(os.walk(d), (None, None, []))[2]
+                if len(filenames) > 0:
+                    dirs.append(d)
+
+            return dirs
+
+        matched_dirs = get_dirs_matching_regex(
             start_dir, re_filters=re_filters, return_absolute=return_absolute
         )
-        possible_dirs = [d for d in dirs if ("__pycache__" not in d) and (d != "")]
+        filtered_dirs = remove_empty_dirs_and_caches(matched_dirs)
+        write_locs = [os.path.join(d, fname) for d in filtered_dirs]
 
-        dirs = []
-        for d in possible_dirs:
-            filenames = next(os.walk(d), (None, None, []))[2]
-            if len(filenames) > 0:
-                dirs.append(d)
-
-        if check_only:
-            if exact_file is None:
-                print("Would write parameters:")
-                print(pformat(self.params, width=200))
-                print("to:")
-                for d in dirs:
-                    print(d)
-                return dirs
+        if dummy:
+            locations = pformat(self.write_locs, width=200)
+            if self.source_file is None:
+                params = pformat(self.params, width=200)
+                print(f"Would write metadata:\n{params}\nto:\n{locations}")
             else:
-                print("Would copy {} to {} folders:".format(exact_file, len(dirs)))
-                for d in dirs:
-                    print(d)
-                return dirs
+                print(f"Would copy {self.source_file} to locations:\n{locations}")
+        else:
+            for write_loc in write_locs:
+                if (self.source_file is None) or format_output:
+                    if verbose:
+                        print("Writing params to {}".format(write_loc))
+                    if overwrite or not os.path.isfile(write_loc):
+                        self.write(write_loc)
+                else:
+                    if verbose:
+                        print(f"Copying from {self.source_file} to {write_loc}")
+                    if not os.path.isfile(self.source_file):
+                        raise ValueError(f"{self.source_file} does not exist")
+                    if overwrite or not os.path.isfile(write_loc):
+                        shutil.copy(exact_file, write_loc)
 
-        if exact_file is None:
-            out_str = self.params_to_str()
-        for d in dirs:
-            write_loc = os.path.join(d, fname)
-
-            if exact_file is None:
-                if verbose:
-                    print("Writing params to {}".format(write_loc))
-                if overwrite or not os.path.isfile(write_loc):
-                    self.write(write_loc, out_str=out_str)
-            else:
-                if not os.path.isfile(exact_file):
-                    raise ValueError(
-                        "{} is not a valid file location".format(exact_file)
-                    )
-                if verbose:
-                    print("Copying from {} to {}".format(exact_file, write_loc))
-                if overwrite or not os.path.isfile(write_loc):
-                    shutil.copy(exact_file, write_loc)
-
-        return dirs
+        return write_locs
 
     def interactive_refilt(self, start_dir, starting_filt=None):
         """
@@ -281,8 +224,8 @@ class ParamHandler(object):
         re_filt = ""
         if starting_filt == []:
             starting_filt = None
-        dirs = self.batch_write(
-            start_dir, re_filters=starting_filt, check_only=True, return_absolute=False
+        dirs = self.write_to_directories(
+            start_dir, re_filters=starting_filt, dummy=True, return_absolute=False
         )
         while True:
             this_re_filt = input(
@@ -299,8 +242,8 @@ class ParamHandler(object):
                 re_filt = None
             else:
                 re_filt = this_re_filt.split(" SIM_SEP ")
-            dirs = self.batch_write(
-                start_dir, re_filters=re_filt, check_only=True, return_absolute=False
+            dirs = self.write_to_directories(
+                start_dir, re_filters=re_filt, dummy=True, return_absolute=False
             )
 
         if re_filt == "":
@@ -310,44 +253,6 @@ class ParamHandler(object):
 
         print("The final regex was: {}".format(re_filt))
         return re_filt, dirs
-
-    def keys(self):
-        """Return all keys in the parameters."""
-        return self.params.keys()
-
-    def vals(self):
-        """Return all values in the parameters."""
-        return self.params.vals()
-
-    def items(self):
-        """Return key, value pairs in the parameters."""
-        return self.params.items()
-
-    def set_param_name(self, name):
-        """
-        Set the value of _param_name.
-
-        Parameters
-        ----------
-        name : str
-            The name to set.
-
-        Returns
-        -------
-        None
-
-        """
-        self._param_name = name
-
-    def __getitem__(self, key):
-        """Return the value of key."""
-        return self.params[key]
-
-    def __str__(self):
-        """Call on print."""
-        return "{} from {} with params:\n{}".format(
-            self.__class__.__name__, self.location, pformat(self.params, width=200)
-        )
 
     @staticmethod
     def _val_to_str(val):
@@ -372,3 +277,43 @@ class ParamHandler(object):
             return "'{}'".format(val)
         else:
             return val
+
+    ## Below this point mimics regular dictionary operations
+    ## Equivalent to self.dictionary.blah() = self.blah()
+
+    def keys(self):
+        """Return all keys in the parameters."""
+        return self.dictionary.keys()
+
+    def vals(self):
+        """Return all values in the parameters."""
+        return self.dictionary.vals()
+
+    def items(self):
+        """Return key, value pairs in the parameters."""
+        return self.dictionary.items()
+
+    def get(self, key, default=None):
+        """
+        Retrieve the value of key from the parameters.
+
+        This mimics regular dictionary get.
+
+        Parameters
+        ----------
+        key : str
+            The key to retrieve
+        default : object, optional
+            What to return if the key is not found, default is None
+
+        Returns
+        -------
+        object
+            The value of the key
+
+        """
+        return self.dictionary.get(key, default)
+
+    def __getitem__(self, key):
+        """Return the value of key."""
+        return self.dictionary[key]

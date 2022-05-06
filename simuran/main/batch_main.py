@@ -227,7 +227,7 @@ def batch_run(
         verbose=kwargs.get("verbose", False),
     )
     run_dict = ParamHandler(
-        in_loc=run_dict_loc, name="params", dirname_replacement=dirname
+        source_file=run_dict_loc, name="params", dirname_replacement=dirname
     )
     after_batch_function = run_dict.get("after_batch_fn", None)
     keep_container = run_dict.get("keep_all_data", False)
