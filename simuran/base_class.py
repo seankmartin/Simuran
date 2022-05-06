@@ -8,6 +8,7 @@ from typing import Any, Optional, Union
 import rich
 
 from simuran.loaders.base_loader import BaseLoader, MetadataLoader
+from simuran.param_handler import ParamHandler
 
 
 @dataclass
@@ -21,7 +22,7 @@ class BaseSimuran(ABC):
 
     Attributes
     ----------
-    metadata : dict
+    metadata : dict or ParamHandler
         Fixed information about this object, e.g. model or session type.
     datetime : datetime.datetime
         The date associated with this object, e.g. recording date.
@@ -47,7 +48,7 @@ class BaseSimuran(ABC):
 
     """
 
-    metadata: dict = field(default_factory=dict)
+    metadata: Union[dict, "ParamHandler"] = field(default_factory=dict)
     datetime: "datetime" = field(default_factory=datetime.now)
     tag: str = "untagged"
     loader: Optional["BaseLoader"] = field(default=None)
