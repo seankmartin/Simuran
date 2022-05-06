@@ -317,3 +317,6 @@ class ParamHandler(object):
     def __getitem__(self, key):
         """Return the value of key."""
         return self.dictionary[key]
+
+    def __setitem__(self, key, value):
+        self.dictionary[key] = value

@@ -72,6 +72,14 @@ class Recording(BaseSimuran):
         super().load()
         self.loader.load_recording(self)
 
+    def parse_metadata(self):
+        """Parse the metadata."""
+        self.loader.parse_metadata(self)
+
+    def parse_table_row(self, table, index):
+        """Parse the table row."""
+        self.loader.parse_table_row(table, index, self)
+
     def get_available(self):
         """Get the available attributes."""
         return [getattr(self, item) for item in self.available]

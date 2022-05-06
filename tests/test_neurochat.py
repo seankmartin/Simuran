@@ -6,6 +6,7 @@ from neurochat.nc_lfp import NLfp
 from neurochat.nc_spatial import NSpatial
 from neurochat.nc_spike import NSpike
 from simuran.loaders.nc_loader import NCLoader
+from simuran.param_handler import ParamHandler
 from simuran.recording import Recording
 
 main_dir = os.path.dirname(__file__)[: -len(os.sep + "tests")]
@@ -42,18 +43,20 @@ def test_nc_recording_loading(delete=False):
     axona_files = fetch_axona_data()
 
     # Load using SIMURAN auto detection.
-    ex = Recording(
-        param_file=os.path.join(
+    metadata = ParamHandler(
+        source_file=os.path.join(
             main_dir, "tests", "resources", "params", "axona_test.py"
-        ),
-        base_file=main_test_dir,
-        load=False,
+        )
     )
-    ex.signals[0].load()
-    ex.units[0].load()
-    ex.units[0].underlying.set_unit_no(1)
-    ex.spatial.load()
+    metadata["source_file"] = axona_files[-1]
 
+    loader = NCLoader(system="Axona", loader_kwargs={"pos_extension": ".txt"})
+    ex = Recording(metadata=metadata, loader=loader)
+    ex.parse_metadata()
+
+    ex.load()
+
+    ex.units[0]["underlying"].set_unit_no(1)
     # Load using NeuroChaT
     lfp = NLfp()
     lfp.set_filename(os.path.join(main_test_dir, "010416b-LS3-50Hz10.V5.ms.eeg"))
@@ -68,13 +71,13 @@ def test_nc_recording_loading(delete=False):
     spatial.set_filename(os.path.join(main_test_dir, "010416b-LS3-50Hz10.V5.ms_2.txt"))
     spatial.load(system="Axona")
 
-    assert np.all(ex.signals[0].underlying.get_samples() == lfp.get_samples())
-    assert np.all(ex.units[0].underlying.get_unit_stamp() == unit.get_unit_stamp())
-    assert np.all(ex.units[0].underlying.get_unit_tags() == unit.get_unit_tags())
-    assert np.all(ex.spatial.data.get_pos_x() == spatial.get_pos_x())
+    assert np.all(ex.signals[0]["underlying"].get_samples() == lfp.get_samples())
+    assert np.all(ex.units[0]["underlying"].get_unit_stamp() == unit.get_unit_stamp())
+    assert np.all(ex.units[0]["underlying"].get_unit_tags() == unit.get_unit_tags())
+    assert np.all(ex.spatial["underlying"].get_pos_x() == spatial.get_pos_x())
 
     ncl = NCLoader()
-    ncl.load_params["system"] = "Axona"
+    ncl.system = "Axona"
     loc = os.path.join(main_dir, "tests", "resources", "temp", "axona")
     file_locs, _ = ncl.auto_fname_extraction(
         loc,

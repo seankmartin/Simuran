@@ -14,6 +14,7 @@ addsitedir(lib_folder)
 
 from index_axona_files import clean_data
 
+
 def analyse_container(rc, out_dir):
     # More simple
     for recording in rc:
@@ -23,7 +24,7 @@ def analyse_container(rc, out_dir):
         signals = recording.signals
         for i in range(len(signals)):
             signals[i].load()
-        
+
         # spatial
         recording.spatial.load()
 
@@ -32,7 +33,6 @@ def analyse_container(rc, out_dir):
 
         for i in range(len(signals)):
             neurochat_lfp = signals[i].underlying
-
 
     # This could also be performed without SIMURAN functions
     # Just by looping over the container and grabbing what you need
@@ -50,7 +50,8 @@ def analyse_container(rc, out_dir):
             recording = rc.get(i)
         except BaseException as e:
             simuran.log_exception(
-                e, "Loading recording {} at {}".format(i, rc[i].source_file),
+                e,
+                "Loading recording {} at {}".format(i, rc[i].source_file),
             )
             rc.invalid_recording_locations.append(rc[i].source_file)
             bad_idx.append(i)

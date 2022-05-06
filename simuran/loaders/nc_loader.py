@@ -1,26 +1,52 @@
 """This module handles interfacing with NeuroChaT."""
-import os
 import logging
+import os
 from copy import deepcopy
+from typing import TYPE_CHECKING
 
+import numpy as np
+from astropy import units as u
 from neurochat.nc_lfp import NLfp
 from neurochat.nc_spatial import NSpatial
 from neurochat.nc_spike import NSpike
+from simuran.loaders.base_loader import BaseLoader
 from skm_pyutils.py_path import get_all_files_in_dir
 from skm_pyutils.py_table import list_to_df
-from astropy import units as u
 from tqdm import tqdm
-import numpy as np
 
-from simuran.loaders.base_loader import BaseLoader
+if TYPE_CHECKING:
+    from simuran.recording import Recording
 
 # TODO support non-sequential eeg numbers
+# TODO clean up a little
 class NCLoader(BaseLoader):
     """Load data compatible with the NeuroChaT package."""
 
-    def __init__(self, load_params={}):
-        """Call super class initialize."""
-        super().__init__(load_params=load_params)
+    def __init__(self, system="Axona", loader_kwargs={}):
+        self.system = system
+        self.loader_kwargs = loader_kwargs
+
+    def load_recording(self, recording):
+        if recording.source_files.get("Signal", None) is not None:
+            recording.signals = [
+                self.load_signal(fname) for fname in recording.source_files["Signal"]
+            ]
+        if recording.source_files.get("Spike", None) is not None:
+            if recording.source_files["Spike"] is not None:
+                recording.units = [
+                    self.load_single_unit(fname)
+                    for fname in recording.source_files["Spike"]
+                ]
+        if recording.source_files.get("Spatial", None) is not None:
+            recording.spatial = self.load_spatial(recording.source_files["Spatial"])
+
+    def parse_metadata(self, recording: "Recording") -> None:
+        recording.available_data = list(recording.metadata.keys())
+        initial = object()
+        source_file = recording.metadata.get("source_file", initial)
+        if source_file is not initial:
+            recording.source_file = source_file
+        recording.source_files = self.auto_fname_extraction(recording.source_file)[0]
 
     def load_signal(self, *args, **kwargs):
         """
@@ -33,7 +59,7 @@ class NCLoader(BaseLoader):
             in simuran.signal.BaseSignal.load()
         """
         self.signal = NLfp()
-        self.signal.load(*args, self.load_params["system"])
+        self.signal.load(*args, self.system)
         return {
             "underlying": self.signal,
             "timestamps": self.signal.get_timestamp() * u.s,
@@ -54,7 +80,7 @@ class NCLoader(BaseLoader):
             in simuran.single_unit.SingleUnit.load()
         """
         self.spatial = NSpatial()
-        self.spatial.load(*args, self.load_params["system"])
+        self.spatial.load(*args, self.system)
         return {
             "underlying": self.spatial,
             "date": self.spatial.get_date(),
@@ -78,25 +104,21 @@ class NCLoader(BaseLoader):
             in simuran.spatial.Spatial.load()
 
         """
-        fname, clust_name = args
-        if clust_name is not None:
-            self.single_unit = NSpike()
-            self.single_unit.load(fname, self.load_params["system"])
-            waveforms = deepcopy(self.single_unit.get_waveform())
-            for chan, val in waveforms.items():
-                waveforms[chan] = val * u.uV
-            return {
-                "underlying": self.single_unit,
-                "timestamps": self.single_unit.get_timestamp() * u.s,
-                "unit_tags": self.single_unit.get_unit_tags(),
-                "waveforms": waveforms,
-                "date": self.single_unit.get_date(),
-                "time": self.single_unit.get_time(),
-                "available_units": self.single_unit.get_unit_list(),
-                # "units_to_use": self.single_unit.get_unit_list(),
-            }
-        else:
-            return None
+        self.single_unit = NSpike()
+        self.single_unit.load(*args, self.system)
+        waveforms = deepcopy(self.single_unit.get_waveform())
+        for chan, val in waveforms.items():
+            waveforms[chan] = val * u.uV
+        return {
+            "underlying": self.single_unit,
+            "timestamps": self.single_unit.get_timestamp() * u.s,
+            "unit_tags": self.single_unit.get_unit_tags(),
+            "waveforms": waveforms,
+            "date": self.single_unit.get_date(),
+            "time": self.single_unit.get_time(),
+            "available_units": self.single_unit.get_unit_list(),
+            # "units_to_use": self.single_unit.get_unit_list(),
+        }
 
     def auto_fname_extraction(self, base, **kwargs):
         """
@@ -122,9 +144,9 @@ class NCLoader(BaseLoader):
 
         """
         # Currently only implemented for Axona systems
-        error_on_missing = self.load_params.get("enforce_data", True)
+        error_on_missing = kwargs.get("enforce_data", True)
 
-        if self.load_params["system"] == "Axona":
+        if self.system == "Axona":
 
             # Find the set file if a directory is passed
             if os.path.isdir(base):
@@ -140,7 +162,12 @@ class NCLoader(BaseLoader):
             elif not os.path.isfile(base):
                 raise ValueError("{} is not a file or directory".format(base))
 
-            joined_params = {**self.load_params, **kwargs}
+            # TODO this behaviour is confusing
+            joined_params = {
+                "system": self.system,
+            }
+            joined_params.update(self.loader_kwargs)
+            joined_params.update(**kwargs)
             cluster_extension = joined_params.get("cluster_extension", ".cut")
             clu_extension = joined_params.get("clu_extension", ".clu.X")
             pos_extension = joined_params.get("pos_extension", ".pos")
@@ -286,3 +313,6 @@ class NCLoader(BaseLoader):
             return results_df
         else:
             raise ValueError("auto_fname_extraction only implemented for Axona")
+
+    def parse_table_row(self, table, index, recording=None):
+        pass
