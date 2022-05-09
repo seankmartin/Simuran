@@ -231,7 +231,7 @@ class RecordingContainer(AbstractContainer):
                 # TODO define recording.shallow_copy()
                 self.last_loaded = Recording()
                 self.last_loaded.metadata = self[idx].metadata
-                self.last_loaded.available = self[idx].available
+                self.last_loaded.available_data = self[idx].available_data
                 self.last_loaded.loader = self[idx].loader
                 self.last_loaded.source_file = self[idx].source_file
                 self.last_loaded.load()
