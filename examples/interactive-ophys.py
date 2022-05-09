@@ -305,6 +305,16 @@ behavior_ophys_sessions = cache.get_ophys_session_table()
 behavior_ophys_experiments = cache.get_ophys_experiment_table(as_df=True)
 filtered_table = filter_table(behavior_ophys_experiments)
 
+#%% Checking behavior sessions
+behavior_id = behavior_ophys_experiments["behavior_session_id"].loc[filtered_table.iloc[2].name]
+behaviour_session = cache.get_behavior_session(behavior_id)
+print(behaviour_session)
+
+# %% Clearing the cache
+cache.fetch_api.cache.cache_clear()
+experiment = cache.get_behavior_ophys_experiment(filtered_table.iloc[0].name)
+experiment.cache_clear()
+
 # %% Manual allen loading
 nwb_loader = smr.loader("nwb")()
 recording = smr.Recording(
