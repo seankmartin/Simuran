@@ -18,8 +18,9 @@ class NWBLoader(MetadataLoader):
     """
 
     def parse_metadata(self, recording: "Recording") -> None:
-        recording.source_file = recording.metadata.source_file
+        recording.source_file = recording.metadata["source_file"]
 
     def load_recording(self, recording) -> "Recording":
         nwb_io = pynwb.NWBHDF5IO(recording.source_file, "r")
-        recording.data = nwb_io.read().copy()
+        recording.data = nwb_io.read()
+        recording.nwb_io = nwb_io

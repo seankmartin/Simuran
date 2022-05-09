@@ -149,7 +149,7 @@ class MetadataLoader(BaseLoader):
         """
         if recording is None:
             recording = Recording()
-            recording.loader = self
+        recording.loader = self
         row = table.iloc[index]
         row_as_dict = row.to_dict()
         row_as_dict[table.index.name] = row.name
