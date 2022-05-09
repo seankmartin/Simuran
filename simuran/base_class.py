@@ -3,12 +3,14 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Optional, Union
+from typing import TYPE_CHECKING, Any, Optional, Union
 
 import rich
 
-from simuran.loaders.base_loader import BaseLoader, MetadataLoader
 from simuran.param_handler import ParamHandler
+
+if TYPE_CHECKING:
+    from simuran.loaders.base_loader import BaseLoader
 
 
 @dataclass

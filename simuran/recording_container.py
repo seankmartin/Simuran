@@ -5,15 +5,17 @@ import csv
 import os
 from collections.abc import Iterable as abcIterable
 from dataclasses import dataclass, field
-from typing import Iterable, Optional, Union, overload
+from typing import TYPE_CHECKING, Iterable, Optional, Union, overload
 
 import pandas as pd
 from skm_pyutils.py_log import FileLogger, FileStdoutLogger
 from skm_pyutils.py_path import get_all_files_in_dir, get_dirs_matching_regex
 
 from simuran.base_container import AbstractContainer
-from simuran.loaders.base_loader import BaseLoader, MetadataLoader
 from simuran.recording import Recording
+
+if TYPE_CHECKING:
+    from simuran.loaders.base_loader import BaseLoader
 
 # TODO make this easier
 log = FileStdoutLogger()
@@ -49,7 +51,7 @@ class RecordingContainer(AbstractContainer):
 
     load_on_fly: bool = True
     last_loaded: "Recording" = field(default_factory=Recording)
-    loader: "BaseLoader" = field(default_factory=MetadataLoader)
+    loader: Optional["BaseLoader"] = field(default=None)
     metadata: dict = field(default_factory=dict)
     table: "pd.DataFrame" = field(default_factory=pd.DataFrame)
     _last_loaded_idx: int = field(repr=False, init=False, default=-1)

@@ -3,9 +3,10 @@
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Optional, Union
 
+from simuran.recording import Recording
+
 if TYPE_CHECKING:
     from pandas import DataFrame
-    from simuran.recording import Recording
 
 
 class BaseLoader(ABC):
