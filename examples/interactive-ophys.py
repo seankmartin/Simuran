@@ -1,22 +1,53 @@
 # %%
-# %load_ext autoreload
-# %autoreload 2
+%load_ext autoreload
+%autoreload 2
 
 # %%
 from pathlib import Path
+from urllib.parse import urljoin
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import requests
 import seaborn as sns
 import simuran as smr
-from allensdk.brain_observatory.behavior.behavior_project_cache import (
-    VisualBehaviorOphysProjectCache,
-)
+from allensdk.brain_observatory.behavior.behavior_project_cache import \
+    VisualBehaviorOphysProjectCache
 from skm_pyutils.py_plot import GridFig
+from tqdm import tqdm
 
 # %%
 OUTPUT_DIR = Path(r"D:\AllenBrainObservatory\ophys_data\results")
+HERE = Path(__file__).parent.absolute()
+MANIFEST_VERSION = "1.0.1"
+DATA_STORAGE_DIRECTORY = Path(r"D:\AllenBrainObservatory\ophys_data")
+
+# %% File path functions
+def get_behavior_ophys_experiment_url(ophys_experiment_id: int) -> str:
+    hostname = "https://visual-behavior-ophys-data.s3-us-west-2.amazonaws.com/"
+    object_key = f"visual-behavior-ophys/behavior_ophys_experiments/behavior_ophys_experiment_{ophys_experiment_id}.nwb"
+    return urljoin(hostname, object_key)
+
+
+def get_path_to_nwb(experiment_id):
+    fname = (
+        DATA_STORAGE_DIRECTORY
+        / f"visual-behavior-ophys-{MANIFEST_VERSION}"
+        / "behavior_ophys_experiments"
+        / f"behavior_ophys_experiment_{experiment_id}.nwb"
+    )
+    return fname
+
+
+def manual_download(experiment_id):
+    url = get_behavior_ophys_experiment_url(experiment_id)
+    response = requests.get(url, stream=True)
+    fname = get_path_to_nwb(experiment_id)
+
+    with open(fname, "wb") as handle:
+        for data in tqdm(response.iter_content()):
+            handle.write(data)
 
 
 # %%
@@ -255,7 +286,9 @@ def summarise_single_session(allen_dataset):
         ax.set_xlabel("Time (s)")
 
         fig = gf.fig
-        output_path = OUTPUT_DIR / "CI_plots" / f"E{exp_id}"/ f"S{sess_id}_C{cell_id}.png"
+        output_path = (
+            OUTPUT_DIR / "CI_plots" / f"E{exp_id}" / f"S{sess_id}_C{cell_id}.png"
+        )
         output_path.parent.mkdir(parents=True, exist_ok=True)
         fig.savefig(output_path, dpi=300)
         plt.close(fig)
@@ -265,13 +298,20 @@ def summarise_single_session(allen_dataset):
 
 # %%
 data_storage_directory = Path(r"D:\AllenBrainObservatory\ophys_data")
-cache = VisualBehaviorOphysProjectCache.from_s3_cache(cache_dir=data_storage_directory)
+loader = smr.loader("allen_ophys").from_s3_cache(data_storage_directory)
+cache = loader.cache
 behavior_sessions = cache.get_behavior_session_table()
 behavior_ophys_sessions = cache.get_ophys_session_table()
 behavior_ophys_experiments = cache.get_ophys_experiment_table(as_df=True)
 filtered_table = filter_table(behavior_ophys_experiments)
 
-loader = smr.loader("allen_ophys")(cache)
+# %% Manual allen loading
+nwb_loader = smr.loader("nwb")()
+recording = smr.Recording(
+    source_file=get_path_to_nwb(filtered_table.iloc[0].name), loader=nwb_loader
+)
+recording.load()
+print(recording.data)
 
 # %% Let us test tables etc.
 group_obj = filtered_table.groupby("ophys_container_id")

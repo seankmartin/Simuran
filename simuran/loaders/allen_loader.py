@@ -1,13 +1,9 @@
 from dataclasses import dataclass
 from os.path import isfile, splitext
 from pathlib import Path
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from allensdk.brain_observatory.behavior.behavior_project_cache import (
-        VisualBehaviorOphysProjectCache,
-    )
-
+from allensdk.brain_observatory.behavior.behavior_project_cache import \
+    VisualBehaviorOphysProjectCache
 from simuran.loaders.base_loader import MetadataLoader
 from simuran.recording import Recording
 from simuran.spatial import Spatial
@@ -26,6 +22,16 @@ class AllenOphysLoader(MetadataLoader):
     """
 
     cache: "VisualBehaviorOphysProjectCache"
+
+    @classmethod
+    def from_s3_cache(cls, cache_directory):
+        s3_cache = VisualBehaviorOphysProjectCache.from_s3_cache(cache_dir=cache_directory)
+        return cls(cache=s3_cache)
+
+    @classmethod
+    def from_local_cache(cls, cache_directory):
+        local_cache = VisualBehaviorOphysProjectCache.from_local_cache(cache_directory)
+        return cls(cache=local_cache)
 
     def path_to_nwb(self, recording) -> str:
         manifest_file = self.cache.current_manifest()
@@ -79,15 +85,3 @@ class AllenOphysLoader(MetadataLoader):
         return self.cache.get_behavior_ophys_experiment(
             ophys_experiment_id=recording.ophys_experiment_id
         )
-
-    def load_single_unit(self, *args, **kwargs):
-        return
-
-    def load_spatial(self, *args, **kwargs):
-        return
-
-    def auto_fname_extraction(self, *args, **kwargs):
-        return
-
-    def index_files(self, folder, **kwargs):
-        return
