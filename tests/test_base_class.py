@@ -26,9 +26,8 @@ def test_parameter_load():
     new_dict = dict((["test / test", 551], ["test_again", [1, 1, "b"]]))
 
     # Make sure not load on creation
-    loader = MetadataLoader(meta_dict)
-    base_obj = BaseClassToTest(loader=loader)
-    assert meta_dict != base_obj.metadata
+    loader = MetadataLoader()
+    base_obj = BaseClassToTest(metadata=meta_dict, loader=loader)
     assert not base_obj.is_loaded()
 
     # Loading first time
@@ -42,9 +41,8 @@ def test_parameter_load():
 
     # And a new loading
     base_obj.source_file = "new_dict"
-    loader = MetadataLoader(new_dict)
-    base_obj.loader = loader
-
     assert not base_obj.is_loaded()
+    base_obj.metadata = new_dict
+
     base_obj.load()
     assert new_dict == base_obj.metadata
