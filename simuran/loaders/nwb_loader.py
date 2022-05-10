@@ -21,6 +21,15 @@ class NWBLoader(MetadataLoader):
         recording.source_file = recording.metadata["source_file"]
 
     def load_recording(self, recording) -> "Recording":
-        nwb_io = pynwb.NWBHDF5IO(recording.source_file, "r")
+        try:
+            nwb_io = pynwb.NWBHDF5IO(recording.source_file, "r")
+        except OSError as e:
+            print("{} is not a valid NWB file".format(recording.source_file))
+            raise(e)
         recording.data = nwb_io.read()
-        recording.nwb_io = nwb_io
+        recording._nwb_io = nwb_io
+
+    def unload(self, recording: "Recording") -> None:
+        if hasattr(recording, "_nwb_io"):
+            recording._nwb_io.close()
+            delattr(recording, "_nwb_io")

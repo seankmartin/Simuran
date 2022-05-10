@@ -262,3 +262,8 @@ class Recording(BaseSimuran):
     def get_unit_signals(self):
         """Return a 2D array of signals with units."""
         return np.array([s.samples.to(u.mV) for s in self.signals], float) * u.mV
+
+    def __del__(self):
+        if self.loader is not None:
+            if hasattr(self.loader, "unload"):
+                self.loader.unload(self)
