@@ -310,31 +310,55 @@ behavior_id = behavior_ophys_experiments["behavior_session_id"].loc[filtered_tab
 behaviour_session = cache.get_behavior_session(behavior_id)
 print(behaviour_session)
 
-# %% Clearing the cache
-cache.fetch_api.cache.cache_clear()
-experiment = cache.get_behavior_ophys_experiment(filtered_table.iloc[0].name)
-experiment.cache_clear()
-
 # %% Manual allen loading
 nwb_loader = smr.loader("nwb")()
-recording = smr.Recording(
-    source_file=get_path_to_nwb(filtered_table.iloc[0].name), loader=nwb_loader
-)
+nwb_fpath = get_path_to_nwb(filtered_table.iloc[0].name)
+recording = smr.Recording(source_file=nwb_fpath, loader=nwb_loader)
 recording.load()
 print(recording.data)
+
+# %% Explore data
+processing = recording.data.processing
+smr.inspect(processing["ophys"]["event_detection"].data)
+
+# %% array test
+def array_of_ci_events(recording_container: "smr.RecordingContainer") -> "list[np.ndarray]":
+    np_arrays = []
+    for recording in recording_container:
+        recording.load()
+        print(recording.data.processing["ophys"]["event_detection"].data.shape)
+        ci_events = recording.data.processing["ophys"]["event_detection"].data[()]
+        np_arrays.append(ci_events)
+    # Might be able to get this to work with padding? Lets see if worth
+    # xray = xr.DataArray()
+    return np_arrays
+
+def process_source_file(row):
+    id_ = row.name
+    return get_path_to_allen_ophys_nwb(id_)
+
+def get_path_to_allen_ophys_nwb(experiment_id):
+    fname = (
+        DATA_STORAGE_DIRECTORY
+        / f"visual-behavior-ophys-{MANIFEST_VERSION}"
+        / "behavior_ophys_experiments"
+        / f"behavior_ophys_experiment_{experiment_id}.nwb"
+    )
+    return fname
 
 # %% Let us test tables etc.
 group_obj = filtered_table.groupby("ophys_container_id")
 
 for g in group_obj:
     name, df = g
-    rc = smr.RecordingContainer.from_table(df, loader)
+    df["source_file"] = df.apply(lambda row: process_source_file(row), axis=1)
+    rc = smr.RecordingContainer.from_table(df, nwb_loader)
     ## RC needs genericcontainer to be dataclass - look tomorrow
     rc.metadata["container_id"] = name
-    plot_mpis(rc)
-    # for r in rc:
-    #     summarise_single_session(r.data)
-    # break
+    arr_list = array_of_ci_events(rc)
+    for l in arr_list:
+        print(l.shape)
+    break
 
 # %% Explore the RC
 rc.inspect()
