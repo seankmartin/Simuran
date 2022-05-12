@@ -1,9 +1,9 @@
-"""Handles a global level configuration"""
+"""Handles a global level configuration TODO clean up"""
 
 import os
 
-from simuran.param_handler import ParamHandler
 from simuran.log_handler import log
+from simuran.param_handler import ParamHandler
 
 
 def get_default_path(fname="config_path.txt"):
