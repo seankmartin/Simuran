@@ -18,6 +18,7 @@ try:
     loaders_dict["neurochat"] = NCLoader
 except ModuleNotFoundError:
     print("INFO: The NeuroChaT package is not installed.")
+    # TODO clean this up - it is annoying
 
 # TODO not quite the right way to check
 try:

@@ -16,6 +16,7 @@ def get_default_path(fname="config_path.txt"):
 def set_config_path(cfg_path, fname="config_path.txt"):
     old_cfg_path = get_config_path(fname)
     if (old_cfg_path != cfg_path) and (old_cfg_path is not None):
+        # TODO fix this, it is a bad idea
         log.warning(
             "A new configuration has been selected -- "
             + "If another instance of SIMURAN is running "
@@ -51,7 +52,7 @@ def parse_config(fname="config_path.txt"):
         log.error("Please set a config path before calling parse_cfg")
         return {}
     ph = ParamHandler(source_file=cfg_path, name="params")
-    return ph.params
+    return ph.attrs
 
 
 def clear_config(fname="config_path.txt"):

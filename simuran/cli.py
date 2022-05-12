@@ -1,17 +1,17 @@
 """A command line interface into SIMURAN."""
 import argparse
-import os
-import time
-import sys
-import logging
 import datetime
+import logging
+import os
+import sys
+import time
 import traceback
 
 try:
-    from sumatra.projects import load_project
-    from sumatra.programs import Executable
     from sumatra.core import STATUS_FORMAT
     from sumatra.parameters import SimpleParameterSet
+    from sumatra.programs import Executable
+    from sumatra.projects import load_project
     from sumatra.versioncontrol import UncommittedModificationsError
 
     has_sumatra = True
@@ -20,16 +20,13 @@ except ImportError:
     print("See github.com/seankmartin/sumatra to install")
     has_sumatra = False
 
-from skm_pyutils.py_log import (
-    setup_text_logging,
-    get_default_log_loc,
-)
+from skm_pyutils.py_log import get_default_log_loc, setup_text_logging
 
-import simuran.main
 import simuran.batch_setup
-import simuran.param_handler
 import simuran.config_handler
-from simuran.log_handler import log, print, out
+import simuran.main
+import simuran.param_handler
+from simuran.log_handler import log, out, print
 
 VERSION = "0.0.1"
 
@@ -49,7 +46,7 @@ def excepthook(exc_type, exc_value, exc_traceback):
 
     """
     # Don't catch CTRL+C exceptions
-    if issubclass(exc_type, KeyboardInterrupt):
+    if issubclass(exc_type, KeyboardInterrupt) or issubclass(exc_type, SystemExit):
         sys.__excepthook__(exc_type, exc_value, exc_traceback)
         return
 
@@ -207,7 +204,7 @@ def main():
         "--out_dirname",
         type=str,
         default="",
-        help="Directory to replace __dirname__ by in parameter files.",
+        help="Directory to replace __out_dirname__ by in parameter files.",
     )
     parser.add_argument(
         "--log",

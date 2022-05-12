@@ -28,7 +28,5 @@ from .plot.base_plot import despine, save_simuran_plot, set_plot_style, setup_ax
 from .plot.figure import SimuranFigure
 from .recording import Recording
 from .recording_container import RecordingContainer
-from .single_unit import SingleUnit
-from .spatial import Spatial
 
 loader = loader_from_str

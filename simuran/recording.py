@@ -1,5 +1,4 @@
 """This module holds single experiment related information."""
-import logging
 import os
 from dataclasses import dataclass, field
 
@@ -7,12 +6,7 @@ import astropy.units as u
 import numpy as np
 
 from simuran.base_class import BaseSimuran
-from simuran.base_container import GenericContainer
-from simuran.base_signal import BaseSignal
 from simuran.eeg import Eeg, EegArray
-from simuran.param_handler import ParamHandler
-from simuran.single_unit import SingleUnit
-from simuran.spatial import Spatial
 
 
 @dataclass

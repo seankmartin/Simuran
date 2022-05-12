@@ -32,7 +32,7 @@ class ParamHandler(object):
 
     """
 
-    dictionary: dict = field(default_factory=dict)
+    attrs: dict = field(default_factory=dict)
     source_file: Optional[Union[str, "Path"]] = None
     name: str = "mapping"
     dirname_replacement: str = ""
@@ -72,7 +72,7 @@ class ParamHandler(object):
         None
 
         """
-        self.dictionary = read_python(
+        self.attrs = read_python(
             self.source_file, dirname_replacement=self.dirname_replacement
         )[self.name]
 
@@ -91,7 +91,7 @@ class ParamHandler(object):
         """
         out_str = ""
         out_str += f"{self.name}" + " = {\n"
-        for k, v in self.dictionary.items():
+        for k, v in self.attrs.items():
             out_str += "\t{}:".format(self._val_to_str(str(k)))
             if isinstance(v, dict):
                 out_str += "\n\t\t{\n"
@@ -283,15 +283,15 @@ class ParamHandler(object):
 
     def keys(self):
         """Return all keys in the parameters."""
-        return self.dictionary.keys()
+        return self.attrs.keys()
 
     def vals(self):
         """Return all values in the parameters."""
-        return self.dictionary.vals()
+        return self.attrs.vals()
 
     def items(self):
         """Return key, value pairs in the parameters."""
-        return self.dictionary.items()
+        return self.attrs.items()
 
     def get(self, key, default=None):
         """
@@ -312,11 +312,11 @@ class ParamHandler(object):
             The value of the key
 
         """
-        return self.dictionary.get(key, default)
+        return self.attrs.get(key, default)
 
     def __getitem__(self, key):
         """Return the value of key."""
-        return self.dictionary[key]
+        return self.attrs[key]
 
     def __setitem__(self, key, value):
-        self.dictionary[key] = value
+        self.attrs[key] = value
