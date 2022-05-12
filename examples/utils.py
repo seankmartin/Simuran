@@ -35,3 +35,7 @@ def manual_download(experiment_id):
     with open(fname, "wb") as handle:
         for data in tqdm(response.iter_content()):
             handle.write(data)
+
+
+if __name__ == "__main__":
+    manual_download("974362760")
