@@ -119,7 +119,7 @@ def main(folder, data_out_path, param_dir, out_dir):
     df = simuran.index_ephys_files(
         folder,
         loader_name="neurochat",
-        out_loc=data_out_path,
+        output_path=data_out_path,
         post_process_fn=clean_data,
         overwrite=False,
         loader_kwargs={"system": "Axona"},

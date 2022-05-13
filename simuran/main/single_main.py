@@ -1,27 +1,26 @@
 """This module is the main control for the simuran package."""
 
+import multiprocessing
 import os
 import shutil
-import subprocess
 import site
+import subprocess
 import sys
 import time
-import multiprocessing
 from copy import copy
 from datetime import datetime
 from pprint import pformat
 
-from tqdm import tqdm
 import matplotlib.pyplot as plt
-
-from simuran.log_handler import log_exception, print, log
-import simuran.batch_setup
-import simuran.recording_container
-import simuran.recording
 import simuran.analysis.analysis_handler
+import simuran.batch_setup
 import simuran.param_handler
 import simuran.plot.figure
+import simuran.recording
+import simuran.recording_container
 from simuran.config_handler import parse_config
+from simuran.log_handler import log, log_exception, print
+from tqdm import tqdm
 
 main_was_error = False
 
@@ -202,18 +201,6 @@ def batch_control_setup(batch_setup, only_check, do_interactive=True, verbose=Fa
             )
         )
         batch_setup.interactive_refilt()
-
-    print("Running batch setup from {}".format(batch_setup.file_loc))
-    batch_setup.write_batch_params(verbose_params=True, verbose=verbose)
-    if batch_setup.ph["only_check"]:
-        print(
-            "Done checking batch setup. "
-            + "Change only_check to False in {} to run".format(batch_setup.file_loc)
-        )
-    elif only_check:
-        print("Done checking batch setup. " + "Pass only_check as False in main to run")
-
-    return not (batch_setup.ph["only_check"] or only_check)
 
 
 def container_setup(
@@ -867,6 +854,11 @@ def analyse_files(
         Non-existant cells are tried to be selected.
 
     """
+    ## open parameter file describing the recording(s)
+    ## load the data
+    ## run analysis
+    ## save output
+
     in_dir = location if os.path.isdir(location) else os.path.dirname(location)
     batch_setup = check_input_params(location, batch_name, dirname_replacement=dirname)
     batch_params = batch_setup.ph

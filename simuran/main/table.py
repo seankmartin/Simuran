@@ -1,29 +1,31 @@
 """This module can convert directory structures into pandas and vice versa."""
 
+import logging
 import os
 import pickle
+from pathlib import Path
 from pprint import pprint
+from typing import Any, Callable, Optional, Union
+
 import pandas as pd
-
-from skm_pyutils.py_path import (
-    get_base_dir_to_files,
-    get_all_files_in_dir,
-)
-from skm_pyutils.py_table import (
-    list_to_df,
-    df_from_file,
-    df_to_file,
-    df_subset_from_rows,
-)
-from skm_pyutils.py_log import get_default_log_loc
-
-from simuran.log_handler import log_exception, print
+from simuran.analysis.analysis_handler import AnalysisHandler
+from simuran.config_handler import get_config_path, parse_config
+from simuran.loaders.base_loader import BaseLoader
 from simuran.loaders.loader_list import loaders_dict
+from simuran.log_handler import log_exception, print
+from simuran.param_handler import ParamHandler
 from simuran.recording import Recording
 from simuran.recording_container import RecordingContainer
-from simuran.analysis.analysis_handler import AnalysisHandler
-from simuran.param_handler import ParamHandler
-from simuran.config_handler import parse_config, get_config_path
+from skm_pyutils.py_log import get_default_log_loc
+from skm_pyutils.py_path import get_all_files_in_dir, get_base_dir_to_files
+from skm_pyutils.py_table import (
+    df_from_file,
+    df_subset_from_rows,
+    df_to_file,
+    list_to_df,
+)
+
+module_logger = logging.getLogger("simuran.table")
 
 
 def dir_to_table(directory, cell_id="cell_list", file_id="file_list", ext=".txt"):
@@ -473,43 +475,37 @@ def analyse_cell_list(
 
 
 def index_ephys_files(
-    start_dir,
-    loader_name,
-    out_loc=None,
-    overwrite=True,
-    post_process_fn=None,
-    post_process_kwargs=None,
-    loader_kwargs=None,
-    **kwargs,
+    start_dir: Union[str, Path],
+    loader: "BaseLoader",
+    output_path: str = "",
+    overwrite: bool = True,
+    post_process_fn: Optional[Callable[[str, Any], "pd.DataFrame"]] = None,
+    post_process_kwargs: Optional[dict] = None,
+    loader_index_kwargs: Optional[dict] = None,
 ):
     """
     Create a dataframe from ephys files found in folder.
 
-    This function recursively scan folder for Axona .set files and return
-    a pandas dataframe with ['filename', 'folder', 'time', 'duration']
-    columns
-
-    TODO
-    ----
-    expand this to use loaders for different formats
+    The loader passed defines how to populate the table with information.
 
     Parameters
     ----------
-    start_dir : str
+    start_dir : str or Path
         Path to folder containing the files to index.
-    loader_name : str
+    loader : BaseLoader
         The loader to use for the file population.
-    out_loc : str, optional
+    output_path : str, optional
         path to file to save results to if provided.
     overwrite : bool, optional
         Whether to overwrite an existing output, by default True.
     post_process_fn : function, optional
         An optional function to apply to the indexed data files.
         Should take (dataframe, **kwargs as parameters)
+        If preferred, can manually post process and save the dataframe.
     post_process_kwargs : dict, optional
         Keyword arguments passed to post_process_fn.
-    loader_kwargs : dict, optional
-        Keyword arguments passed to post_process_fn.
+    loader_index_kwargs : dict, optional
+        Keyword arguments passed to loader.index_files()
 
     Returns
     -------
@@ -517,36 +513,22 @@ def index_ephys_files(
         Pandas dataframe with all discovered files.
 
     """
-    if out_loc is None:
-        out_loc = ""
-
-    if (overwrite is False) and os.path.exists(out_loc):
-        print(
-            f"{out_loc} exists, so loading this - "
+    post_process_kwargs = {} if post_process_kwargs is None else post_process_kwargs
+    loader_index_kwargs = {} if loader_index_kwargs is None else loader_index_kwargs
+    if (overwrite is False) and os.path.exists(output_path):
+        module_logger.warning(
+            f"{output_path} exists, so loading this table - "
             + "please delete to reindex or pass overwrite as True."
         )
-        return df_from_file(out_loc)
+        return df_from_file(output_path)
 
-    if post_process_kwargs is None:
-        post_process_kwargs = {}
-    if loader_kwargs is None:
-        loader_kwargs = {}
-
-    data_loader_cls = loaders_dict.get(loader_name)
-    if data_loader_cls is None:
-        raise ValueError(
-            "Unrecognised loader {}, options are {}".format(
-                loader_name, list(loaders_dict.keys())
-            )
-        )
-    data_loader = data_loader_cls(loader_kwargs)
-    results_df = data_loader.index_files(start_dir, **kwargs)
+    results_df = loader.index_files(start_dir, **loader_index_kwargs)
 
     if post_process_fn is not None:
         results_df = post_process_fn(results_df, **post_process_kwargs)
 
-    if out_loc != "":
-        df_to_file(results_df, out_loc)
+    if output_path != "":
+        df_to_file(results_df, output_path)
 
     return results_df
 

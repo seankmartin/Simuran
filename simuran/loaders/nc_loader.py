@@ -274,7 +274,7 @@ class NCLoader(BaseLoader):
 
     def index_files(self, folder, **kwargs):
         """Find all available neurochat files in the given folder"""
-        if self.load_params["system"] == "Axona":
+        if self.system == "Axona":
             set_files = []
             root_folders = []
             times = []

@@ -227,6 +227,7 @@ def main():
     parser.add_argument(
         "--nosave", "-ns", action="store_true", help="Skip sumatra saving"
     )
+    # TODO add option to ignore pickle instead of deleting it
     parsed, unparsed = parser.parse_known_args()
 
     if len(parsed.config) > 0:

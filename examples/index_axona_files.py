@@ -12,7 +12,7 @@ def main(folder, overwrite=False):
     df = simuran.index_ephys_files(
         folder,
         loader_name="neurochat",
-        out_loc=os.path.join(HERE, "index.csv"),
+        output_path=os.path.join(HERE, "index.csv"),
         post_process_fn=clean_data,
         overwrite=overwrite,
         loader_kwargs={"system": "Axona"},
