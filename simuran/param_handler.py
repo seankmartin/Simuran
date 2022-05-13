@@ -6,7 +6,7 @@ from pathlib import Path
 from pprint import pformat
 from typing import Optional, Union
 
-from skm_pyutils.py_config import read_python
+from skm_pyutils.py_config import read_json, read_python, read_yaml
 from skm_pyutils.py_path import get_dirs_matching_regex
 
 
@@ -21,7 +21,7 @@ class ParamHandler(object):
     ----------
     dictionary : dict
         The dictionary of underlying parameters
-    source_file : str or Path
+    source_file : Path
         The path to the file containing the parameters.
     name : str
         The name of the variable describing the parameters, default is "mapping".
@@ -39,6 +39,7 @@ class ParamHandler(object):
 
     def __post_init__(self):
         if self.source_file is not None:
+            self.source_file = Path(self.source_file)
             self.read()
 
     def write(self, out_loc):
@@ -72,9 +73,14 @@ class ParamHandler(object):
         None
 
         """
-        self.attrs = read_python(
-            self.source_file, dirname_replacement=self.dirname_replacement
-        )[self.name]
+        if self.source_file.suffix == ".py":
+            self.attrs = read_python(
+                self.source_file, dirname_replacement=self.dirname_replacement
+            )[self.name]
+        elif self.source_file.suffix == ".yaml":
+            self.attrs = read_yaml(self.source_file)
+        elif self.source_file.suffix == ".json":
+            self.attrs = read_json(self.source_file)
 
     def to_str(self):
         """
