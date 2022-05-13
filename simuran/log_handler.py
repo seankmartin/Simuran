@@ -2,15 +2,44 @@
 import datetime
 import logging
 import traceback
+from pathlib import Path
 
+from skm_pyutils.py_log import FileLogger, FileStdoutLogger, get_default_log_loc
 from skm_pyutils.py_path import make_path_if_not_exists
-from skm_pyutils.py_log import get_default_log_loc, FileLogger
-
-from skm_pyutils.py_log import FileLogger, FileStdoutLogger
 
 log = FileLogger("simuran_cli")
 out = FileStdoutLogger()
 print = out.print
+
+
+def default_log_location():
+    log_location = Path.home() / ".simuran" / "app.log"
+    log_location.parent.mkdir(parents=False, exist_ok=True)
+    return log_location
+
+
+def establish_main_logger(logger: "logging.Logger") -> None:
+    """
+    Set the handlers on the simuran logger and simuran.module loggers.
+
+    TODO check can remove logging
+    """
+    logger.setLevel(logging.DEBUG)
+    formatter = logging.Formatter(
+        fmt="%(levelname)s: %(asctime)s %(message)s",
+        datefmt="%d/%m/%Y %I:%M:%S %p",
+    )
+
+    fh = logging.handlers.RotatingFileHandler(
+        default_log_location(), backupCount=5, maxBytes=100000
+    )
+    fh.setLevel(logging.DEBUG)
+    fh.setFormatter(formatter)
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.WARN)
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
+    logger.addHandler(fh)
 
 
 def log_exception(ex, more_info="", location=None):
