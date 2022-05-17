@@ -97,35 +97,6 @@ class BaseSimuran(ABC):
         )
         return loaded
 
-    # TODO this may not be needed not sensible
-    def save_attributes(self, attr_dict: dict) -> None:
-        """
-        Store all the keys in attr_dict as attributes.
-
-        If attr_dict is passed as None, nothing happens.
-
-        Parameters
-        ----------
-        attr_dict : dict
-            A dictionary of key/value pairs to be stored as attributes.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        TypeError
-            Input is not a dictionary.
-
-        """
-        if attr_dict is not None:
-            if hasattr(attr_dict, "items"):
-                for key, value in attr_dict.items():
-                    setattr(self, key, value)
-            else:
-                raise TypeError("Input is not a dictionary")
-
     # TODO this might be better in pyutils
     def data_dict_from_attr_list(
         self, attr_list: list, friendly_names: Union["list[str]", None] = None
@@ -238,3 +209,8 @@ class BaseSimuran(ABC):
 
         """
         rich.inspect(self, methods=methods, **kwargs)
+
+
+class NoLoader(BaseSimuran):
+    def load(self):
+        pass

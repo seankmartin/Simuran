@@ -2,6 +2,7 @@
 import logging
 import os
 from copy import deepcopy
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -9,7 +10,8 @@ from astropy import units as u
 from neurochat.nc_lfp import NLfp
 from neurochat.nc_spatial import NSpatial
 from neurochat.nc_spike import NSpike
-from simuran.loaders.base_loader import BaseLoader
+from simuran.base_class import NoLoader
+from simuran.loaders.base_loader import MetadataLoader
 from skm_pyutils.py_path import get_all_files_in_dir
 from skm_pyutils.py_table import list_to_df
 from tqdm import tqdm
@@ -19,7 +21,7 @@ if TYPE_CHECKING:
 
 # TODO support non-sequential eeg numbers
 # TODO clean up a little
-class NCLoader(BaseLoader):
+class NCLoader(MetadataLoader):
     """Load data compatible with the NeuroChaT package."""
 
     def __init__(self, system="Axona", **kwargs):
@@ -27,26 +29,42 @@ class NCLoader(BaseLoader):
         self.loader_kwargs = kwargs
 
     def load_recording(self, recording):
-        if recording.source_files.get("Signal", None) is not None:
+        source_files = recording.attrs["source_files"]
+        if (
+            source_files.get("Signal", None) is not None
+            and "Signal" in recording.available_data
+        ):
             recording.signals = [
-                self.load_signal(fname) for fname in recording.source_files["Signal"]
+                self.load_signal(fname) for fname in source_files["Signal"]
             ]
-        if recording.source_files.get("Spike", None) is not None:
-            if recording.source_files["Spike"] is not None:
+        if (
+            source_files.get("Spike", None) is not None
+            and "Spike" in recording.available_data
+        ):
+            if source_files["Spike"] is not None:
                 recording.units = [
-                    self.load_single_unit(fname)
-                    for fname in recording.source_files["Spike"]
+                    self.load_single_unit(fname) for fname in source_files["Spike"]
                 ]
-        if recording.source_files.get("Spatial", None) is not None:
-            recording.spatial = self.load_spatial(recording.source_files["Spatial"])
+        if (
+            source_files.get("Spatial", None) is not None
+            and "Spatial" in recording.available_data
+        ):
+            recording.spatial = self.load_spatial(source_files["Spatial"])
 
     def parse_metadata(self, recording: "Recording") -> None:
-        recording.available_data = list(recording.attrs.keys())
-        initial = object()
-        source_file = recording.attrs.get("source_file", initial)
-        if source_file is not initial:
-            recording.source_file = source_file
-        recording.source_files = self.auto_fname_extraction(recording.source_file)[0]
+        if "source_file" in recording.attrs:
+            source_file = recording.attrs.get("source_file")
+        elif "directory" in recording.attrs:
+            source_file = (
+                Path(recording.attrs["directory"]) / recording.attrs["filename"]
+            )
+        else:
+            source_file = None
+        recording.source_file = source_file
+        recording.attrs["source_files"] = self.auto_fname_extraction(
+            recording.source_file
+        )[0]
+        recording.available_data = list(recording.attrs["source_files"].keys())
 
     def load_signal(self, *args, **kwargs):
         """
@@ -60,14 +78,13 @@ class NCLoader(BaseLoader):
         """
         self.signal = NLfp()
         self.signal.load(*args, self.system)
-        return {
-            "underlying": self.signal,
-            "timestamps": self.signal.get_timestamp() * u.s,
-            "samples": self.signal.get_samples() * u.mV,
-            "date": self.signal.get_date(),
-            "time": self.signal.get_time(),
-            "channel": self.signal.get_channel_id(),
-        }
+        obj = NoLoader()
+        obj.underlying = self.signal
+        obj.timestamps = self.signal.get_timestamp() * u.s
+        obj.samples = self.signal.get_samples() * u.mV
+        obj.date = self.signal.get_date()
+        obj.time = self.signal.get_time()
+        obj.channel = self.signal.get_channel_id()
 
     def load_spatial(self, *args, **kwargs):
         """
@@ -81,17 +98,16 @@ class NCLoader(BaseLoader):
         """
         self.spatial = NSpatial()
         self.spatial.load(*args, self.system)
-        return {
-            "underlying": self.spatial,
-            "date": self.spatial.get_date(),
-            "time": self.spatial.get_time(),
-            "speed": self.spatial.get_speed() * (u.cm / u.s),
-            "position": (
-                self.spatial.get_pos_x() * u.cm,
-                self.spatial.get_pos_y() * u.cm,
-            ),
-            "direction": self.spatial.get_direction() * u.deg,
-        }
+        obj = NoLoader()
+        obj.underlying = self.spatial
+        obj.date = self.spatial.get_date()
+        obj.time = self.spatial.get_time()
+        obj.speed = self.spatial.get_speed() * (u.cm / u.s)
+        obj.position = (
+            self.spatial.get_pos_x() * u.cm,
+            self.spatial.get_pos_y() * u.cm,
+        )
+        obj.direction = self.spatial.get_direction() * u.deg
 
     def load_single_unit(self, *args, **kwargs):
         """
@@ -106,19 +122,17 @@ class NCLoader(BaseLoader):
         """
         self.single_unit = NSpike()
         self.single_unit.load(*args, self.system)
+        obj = NoLoader()
         waveforms = deepcopy(self.single_unit.get_waveform())
         for chan, val in waveforms.items():
             waveforms[chan] = val * u.uV
-        return {
-            "underlying": self.single_unit,
-            "timestamps": self.single_unit.get_timestamp() * u.s,
-            "unit_tags": self.single_unit.get_unit_tags(),
-            "waveforms": waveforms,
-            "date": self.single_unit.get_date(),
-            "time": self.single_unit.get_time(),
-            "available_units": self.single_unit.get_unit_list(),
-            # "units_to_use": self.single_unit.get_unit_list(),
-        }
+        obj.underlying = self.single_unit
+        obj.timestamps = self.single_unit.get_timestamp() * u.s
+        obj.unit_tags = self.single_unit.get_unit_tags()
+        obj.waveforms = waveforms
+        obj.date = self.single_unit.get_date()
+        obj.time = self.single_unit.get_time()
+        obj.available_units = self.single_unit.get_unit_list()
 
     def auto_fname_extraction(self, base, **kwargs):
         """
@@ -313,6 +327,3 @@ class NCLoader(BaseLoader):
             return results_df
         else:
             raise ValueError("auto_fname_extraction only implemented for Axona")
-
-    def parse_table_row(self, table, index, recording=None):
-        pass

@@ -93,10 +93,13 @@ def run_all_analysis(
         pool.join()
 
     else:
+        base_dir = recording_container.attrs.get("base_dir", None)
         for i in pbar:
-            disp_name = Path(recording_container[i].source_file).relative_to(
-                recording_container.attrs.get("base_dir", "")
-            )
+            spath = Path(recording_container[i].source_file)
+            if base_dir is not None:
+                disp_name = spath.relative_to(base_dir)
+            else:
+                disp_name = spath.stem
             pbar.set_description("Running on {}".format(disp_name))
             figures = _multiprocessing_func(
                 i,
@@ -164,11 +167,14 @@ def _multiprocessing_func(
     analysis_handler = AnalysisHandler(handle_errors=handle_errors)
     if args_fn is not None:
         function_args = args_fn(recording_container, i, figures)
+    else:
+        function_args = {}
     if load_all:
-        recording_container[i].available = to_load
+        if to_load is not None:
+            recording_container[i].available = to_load
         if handle_errors:
             try:
-                recording = recording_container.get(i)
+                recording = recording_container.load(i)
             except BaseException as e:
                 log_exception(
                     e,
@@ -180,7 +186,7 @@ def _multiprocessing_func(
                 main_was_error = True
                 return figures
         else:
-            recording = recording_container.get(i)
+            recording = recording_container.load(i)
     else:
         recording = recording_container[i]
 

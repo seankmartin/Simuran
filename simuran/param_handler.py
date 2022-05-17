@@ -172,3 +172,9 @@ class ParamHandler(object):
 
     def __contains__(self, key):
         return key in self.attrs
+
+    def __len__(self):
+        return len(self.attrs)
+
+    def update(self, dict_):
+        self.attrs.update(dict_)

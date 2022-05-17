@@ -1,5 +1,6 @@
 """main using old as templates"""
 import logging
+import re
 import site
 import time
 from pathlib import Path
@@ -8,9 +9,12 @@ from typing import TYPE_CHECKING, Optional, Union
 
 import typer
 from rich import print
-from simuran.analysis.run_analysis import (run_all_analysis, save_figures,
-                                           save_unclosed_figures,
-                                           set_output_locations)
+from simuran.analysis.run_analysis import (
+    run_all_analysis,
+    save_figures,
+    save_unclosed_figures,
+    set_output_locations,
+)
 from simuran.loaders.base_loader import BaseLoader
 from simuran.loaders.loader_list import loader_from_string
 from simuran.log_handler import establish_main_logger
@@ -60,11 +64,9 @@ def main(
     handle_errors: bool = False,
     num_cpus: int = 1,
 ):
-    print(param_config)
-    print(function_config)
-
     start_time = time.perf_counter()
     recording_container = RecordingContainer.from_table(datatable, loader)
+    recording_container.attrs["base_dir"] = param_config.get("cfg_base_dir", "")
 
     if dummy:
         print(
