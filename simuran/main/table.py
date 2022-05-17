@@ -11,7 +11,6 @@ import pandas as pd
 from simuran.analysis.analysis_handler import AnalysisHandler
 from simuran.config_handler import get_config_path, parse_config
 from simuran.loaders.base_loader import BaseLoader
-from simuran.loaders.loader_list import loaders_dict
 from simuran.log_handler import log_exception, print
 from simuran.param_handler import ParamHandler
 from simuran.recording import Recording

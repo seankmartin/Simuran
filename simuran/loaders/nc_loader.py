@@ -22,9 +22,9 @@ if TYPE_CHECKING:
 class NCLoader(BaseLoader):
     """Load data compatible with the NeuroChaT package."""
 
-    def __init__(self, system="Axona", loader_kwargs={}):
+    def __init__(self, system="Axona", **kwargs):
         self.system = system
-        self.loader_kwargs = loader_kwargs
+        self.loader_kwargs = kwargs
 
     def load_recording(self, recording):
         if recording.source_files.get("Signal", None) is not None:

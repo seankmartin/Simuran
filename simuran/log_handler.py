@@ -1,6 +1,7 @@
 """File logging configuration for SIMURAN"""
 import datetime
 import logging
+import logging.handlers
 import traceback
 from pathlib import Path
 

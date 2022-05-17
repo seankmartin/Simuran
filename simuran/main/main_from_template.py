@@ -8,12 +8,9 @@ from typing import TYPE_CHECKING, Optional, Union
 
 import typer
 from rich import print
-from simuran.analysis.run_analysis import (
-    run_all_analysis,
-    save_figures,
-    save_unclosed_figures,
-    set_output_locations,
-)
+from simuran.analysis.run_analysis import (run_all_analysis, save_figures,
+                                           save_unclosed_figures,
+                                           set_output_locations)
 from simuran.loaders.base_loader import BaseLoader
 from simuran.loaders.loader_list import loader_from_string
 from simuran.log_handler import establish_main_logger
@@ -133,7 +130,8 @@ def cli_entry(
     config_params = ParamHandler(source_file=config_filepath, name="params")
     function_params = ParamHandler(source_file=function_filepath, name="params")
 
-    if Path(data_filter).isfile():
+    data_filter = "" if data_filter is None else data_filter
+    if Path(data_filter).is_file():
         data_filter = ParamHandler(source_file=data_filter, name="params")
         if "data_filter_function" in data_filter:
             datatable = data_filter["data_filter_function"](datatable)
@@ -143,6 +141,8 @@ def cli_entry(
         datatable = filter_table(datatable, dict(data_filter))
 
     loader_kwargs = config_params.get("loader_kwargs", {})
+    if "loader" not in config_params:
+        raise ValueError("Please provide a loader value in the config")
     loader = loader_from_string(config_params["loader"])(**loader_kwargs)
 
     od, output_name = set_output_locations(
@@ -162,5 +162,9 @@ def cli_entry(
     )
 
 
-if __name__ == "__main__":
+def typer_entry():
     typer.run(cli_entry)
+
+
+if __name__ == "__main__":
+    typer_entry()

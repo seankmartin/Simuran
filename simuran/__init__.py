@@ -4,16 +4,12 @@ from rich import inspect
 from . import analysis, loaders, params, plot
 from .analysis.analysis_handler import AnalysisHandler
 from .base_container import GenericContainer
-from .batch_setup import BatchSetup
 from .config_handler import parse_config, set_config_path
 from .eeg import Eeg, EegArray
 from .loaders.loader_list import loader_from_string, loaders_dict
 from .log_handler import log, log_exception, print
 
 # For main import differently
-from .main.batch_main import batch_main, batch_run
-from .main.copy_params import copy_param_files
-from .main.single_main import analyse_files, run, save_figures
 from .main.table import (
     analyse_cell_list,
     dir_to_table,

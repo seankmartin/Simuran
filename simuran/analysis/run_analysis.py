@@ -299,7 +299,7 @@ def set_output_locations(batch_name, function_config_path, param_config_path):
     whole_time = now.strftime("%Y-%m-%d--%H-%M-%S")
     out_dirname = whole_time
 
-    if batch_dir is None:
+    if batch_name is None:
         return Path(out_dirname), out_name
 
     batch_dir = Path(batch_name)
@@ -312,7 +312,7 @@ def set_output_locations(batch_name, function_config_path, param_config_path):
             start_str = out_dirname1 + "--" + start_str
         else:
             out_dirname1 = whole_time
-        
+
         out_dirname3 = Path(param_config_path).stem
 
         out_dir = batch_dir.parent / "sim_results"

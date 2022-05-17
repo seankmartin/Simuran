@@ -34,7 +34,7 @@ class AbstractContainer(ABC):
 
     """
 
-    container: list = field(default_factory=list)
+    container: list = field(repr=False, default_factory=list)
 
     @abstractmethod
     def _create_new(self, params):
