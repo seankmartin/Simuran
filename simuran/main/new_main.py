@@ -1,23 +1,23 @@
 """This may be a temp, lets see"""
-from typing import Union, Literal, TYPE_CHECKING
 from pathlib import Path
+from typing import TYPE_CHECKING, Literal, Union
 
+import dtale
+import matplotlib.pyplot as plt
 import numpy as np
-import seaborn as sns
 import pandas as pd
-from skm_pyutils.py_table import df_from_file
+import seaborn as sns
 from allensdk.brain_observatory.behavior.behavior_project_cache import (
     VisualBehaviorOphysProjectCache,
 )
-import dtale
 from icecream import ic
-from skm_pyutils.py_plot import GridFig
-import matplotlib.pyplot as plt
+from simuran.analysis.analysis_handler import AnalysisHandler
+from simuran.recording import Recording
 
 # TODO should this be one level down
 from simuran.recording_container import RecordingContainer
-from simuran.analysis.analysis_handler import AnalysisHandler
-from simuran.recording import Recording
+from skm_pyutils.py_plot import GridFig
+from skm_pyutils.py_table import df_from_file
 
 # Pseudo of idea
 input_file_dir = Path(r"D:\AllenBrainObservatory\ophys_data")
@@ -151,7 +151,7 @@ def summarise_single_session(allen_dataset):
         f"\n-----------Working on image plane {allen_dataset.ophys_experiment_id} "
         f"session {allen_dataset.ophys_session_id}------------"
     )
-    print(f"This experiment has metadata {allen_dataset.metadata}")
+    print(f"This experiment has metadata {allen_dataset.attrs}")
     cell_specimen_table = allen_dataset.cell_specimen_table
     print(cell_specimen_table)
     print(

@@ -24,7 +24,7 @@ class Recording(BaseSimuran):
 
     Attributes
     ----------
-    metadata : dict or ParamHandler
+    attrs: dict or ParamHandler
         Fixed information about this object, e.g. model or session type.
     datetime : datetime.datetime
         The date associated with this object, e.g. recording date.

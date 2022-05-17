@@ -82,7 +82,7 @@ def filter_table(table: pd.DataFrame) -> pd.DataFrame:
 
 
 def plot_mpis(recording_container: "smr.RecordingContainer"):
-    name = recording_container.metadata["container_id"]
+    name = recording_container.attrs["container_id"]
     gf = GridFig(len(recording_container))
     for i in range(len(recording_container)):
         recording = recording_container.load(i)
@@ -91,8 +91,8 @@ def plot_mpis(recording_container: "smr.RecordingContainer"):
             return
         ax = gf.get_next()
         ax.imshow(dataset.max_projection.data, cmap="gray")
-        id_ = recording.metadata["ophys_experiment_id"]
-        s = recording.metadata["session_number"]
+        id_ = recording.attrs["ophys_experiment_id"]
+        s = recording.attrs["session_number"]
         ax_title = f"ID: {id_}, S: {s}"
         ax.set_title(ax_title)
     out_path = OUTPUT_DIR / "mpis" / f"{name}.png"
@@ -354,7 +354,7 @@ for g in group_obj:
     df["source_file"] = df.apply(lambda row: process_source_file(row), axis=1)
     rc = smr.RecordingContainer.from_table(df, nwb_loader)
     ## RC needs genericcontainer to be dataclass - look tomorrow
-    rc.metadata["container_id"] = name
+    rc.attrs["container_id"] = name
     arr_list = array_of_ci_events(rc)
     for l in arr_list:
         print(l.shape)

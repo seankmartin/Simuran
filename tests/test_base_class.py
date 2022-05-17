@@ -32,7 +32,7 @@ def test_parameter_load():
 
     # Loading first time
     base_obj.load()
-    assert meta_dict == base_obj.metadata
+    assert meta_dict == base_obj.attrs
 
     # Faking this for now, can test properly with a real source file
     base_obj.last_loaded_source = "meta_dict"
@@ -42,7 +42,7 @@ def test_parameter_load():
     # And a new loading
     base_obj.source_file = "new_dict"
     assert not base_obj.is_loaded()
-    base_obj.metadata = new_dict
+    base_obj.attrs = new_dict
 
     base_obj.load()
-    assert new_dict == base_obj.metadata
+    assert new_dict == base_obj.attrs

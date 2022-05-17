@@ -41,9 +41,9 @@ class NCLoader(BaseLoader):
             recording.spatial = self.load_spatial(recording.source_files["Spatial"])
 
     def parse_metadata(self, recording: "Recording") -> None:
-        recording.available_data = list(recording.metadata.keys())
+        recording.available_data = list(recording.attrs.keys())
         initial = object()
-        source_file = recording.metadata.get("source_file", initial)
+        source_file = recording.attrs.get("source_file", initial)
         if source_file is not initial:
             recording.source_file = source_file
         recording.source_files = self.auto_fname_extraction(recording.source_file)[0]

@@ -7,7 +7,7 @@ from .base_container import GenericContainer
 from .batch_setup import BatchSetup
 from .config_handler import parse_config, set_config_path
 from .eeg import Eeg, EegArray
-from .loaders.loader_list import loader_from_str, loaders_dict
+from .loaders.loader_list import loader_from_string, loaders_dict
 from .log_handler import log, log_exception, print
 
 # For main import differently
@@ -29,4 +29,4 @@ from .plot.figure import SimuranFigure
 from .recording import Recording
 from .recording_container import RecordingContainer
 
-loader = loader_from_str
+loader = loader_from_string

@@ -42,10 +42,10 @@ class BaseLoader(ABC):
         """
         Parse the information into the recording object.
 
-        Parses recording.metadata, for example:
+        Parses recording.attrs, for example:
         To set recording.source_file = (
-            "R_" + recording.metadata["rat_name"] +
-            "S_" + recording.metadata["session_id"] + ".nwb"
+            "R_" + recording.attrs["rat_name"] +
+            "S_" + recording.attrs["session_id"] + ".nwb"
 
         Parameters
         ----------
@@ -108,10 +108,10 @@ class MetadataLoader(BaseLoader):
         """
         Parse the information into the recording object.
 
-        Parses recording.metadata, for example:
+        Parses recording.attrs, for example:
         To set recording.source_file = (
-            "R_" + recording.metadata["rat_name"] +
-            "S_" + recording.metadata["session_id"] + ".nwb"
+            "R_" + recording.attrs["rat_name"] +
+            "S_" + recording.attrs["session_id"] + ".nwb"
 
         Parameters
         ----------
@@ -123,7 +123,7 @@ class MetadataLoader(BaseLoader):
         None
 
         """
-        recording.available_data = list(recording.metadata.keys())
+        recording.available_data = list(recording.attrs.keys())
 
     def parse_table_row(
         self, table: "DataFrame", index: int, recording: Optional["Recording"] = None
@@ -154,6 +154,6 @@ class MetadataLoader(BaseLoader):
         row = table.iloc[index]
         row_as_dict = row.to_dict()
         row_as_dict[table.index.name] = row.name
-        recording.metadata = row_as_dict
+        recording.attrs = row_as_dict
         self.parse_metadata(recording)
         return recording

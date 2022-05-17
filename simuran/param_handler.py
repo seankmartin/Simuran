@@ -326,3 +326,6 @@ class ParamHandler(object):
 
     def __setitem__(self, key, value):
         self.attrs[key] = value
+
+    def __contains__(self, key):
+        return key in self.attrs

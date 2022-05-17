@@ -8,6 +8,7 @@ import pandas as pd
 import simuran as smr
 import xarray as xr
 from icecream import ic
+
 # TODO can this be a member of smr directly? Should it be?
 from simuran.loaders.allen_loader import AllenOphysLoader
 from simuran.loaders.nwb_loader import NWBLoader
@@ -17,12 +18,13 @@ from skm_pyutils.py_plot import GridFig
 from utils import get_path_to_allen_ophys_nwb
 
 if TYPE_CHECKING:
-    from allensdk.brain_observatory.behavior.behavior_project_cache import \
-        VisualBehaviorOphysProjectCache
+    from allensdk.brain_observatory.behavior.behavior_project_cache import (
+        VisualBehaviorOphysProjectCache,
+    )
 
 
 def plot_mpis(recording_container: "smr.RecordingContainer", output_dir: "Path"):
-    name = recording_container.metadata["container_id"]
+    name = recording_container.attrs["container_id"]
     gf = GridFig(len(recording_container))
     for i in range(len(recording_container)):
         recording = recording_container.load(i)
@@ -38,8 +40,8 @@ def plot_mpis(recording_container: "smr.RecordingContainer", output_dir: "Path")
 
         ## For NWB
         ax.imshow(mpi, cmap="gray")
-        id_ = recording.metadata["ophys_experiment_id"]
-        s = recording.metadata["session_number"]
+        id_ = recording.attrs["ophys_experiment_id"]
+        s = recording.attrs["session_number"]
         ax_title = f"ID: {id_}, S: {s}"
         ax.set_title(ax_title)
     out_path = output_dir / "mpis" / f"{name}.png"
@@ -84,9 +86,11 @@ def main(
     print(f"Memory usage before loading: {print_memory_usage(as_string=True)}")
     for container_id, table in experiment_groups_with_fixed_fov:
         if len(table) >= 5:
-            table["source_file"] = table.apply(lambda row: process_source_file(row), axis=1)
+            table["source_file"] = table.apply(
+                lambda row: process_source_file(row), axis=1
+            )
             nwb_rc = smr.RecordingContainer.from_table(table, nwb_loader)
-            nwb_rc.metadata["container_id"] = container_id
+            nwb_rc.attrs["container_id"] = container_id
 
             plot_mpis(nwb_rc, output_directory)
 

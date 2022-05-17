@@ -52,7 +52,7 @@ class RecordingContainer(AbstractContainer):
     load_on_fly: bool = True
     last_loaded: "Recording" = field(default_factory=Recording)
     loader: Optional["BaseLoader"] = field(default=None)
-    metadata: dict = field(default_factory=dict)
+    attrs: dict = field(default_factory=dict)
     table: "pd.DataFrame" = field(default_factory=pd.DataFrame)
     _last_loaded_idx: int = field(repr=False, init=False, default=-1)
 
@@ -232,7 +232,7 @@ class RecordingContainer(AbstractContainer):
             if self._last_loaded_idx != idx:
                 # TODO define recording.shallow_copy()
                 self.last_loaded = Recording()
-                self.last_loaded.metadata = self[idx].metadata
+                self.last_loaded.attrs = self[idx].attrs
                 self.last_loaded.available_data = self[idx].available_data
                 self.last_loaded.loader = self[idx].loader
                 self.last_loaded.source_file = self[idx].source_file

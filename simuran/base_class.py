@@ -24,7 +24,7 @@ class BaseSimuran(ABC):
 
     Attributes
     ----------
-    metadata : dict or ParamHandler
+    attrs : dict or ParamHandler
         Fixed information about this object, e.g. model or session type.
     datetime : datetime.datetime
         The date associated with this object, e.g. recording date.
@@ -50,7 +50,7 @@ class BaseSimuran(ABC):
 
     """
 
-    metadata: Union[dict, "ParamHandler"] = field(default_factory=dict)
+    attrs: Union[dict, "ParamHandler"] = field(default_factory=dict)
     datetime: "datetime" = field(default_factory=datetime.now)
     tag: Optional[str] = None
     loader: Optional["BaseLoader"] = field(default=None)

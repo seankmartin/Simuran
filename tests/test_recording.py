@@ -28,9 +28,9 @@ def test_recording_setup():
         )
     )
     loader = MetadataLoader()
-    ex = Recording(metadata=metadata, loader=loader)
+    ex = Recording(attrs=metadata, loader=loader)
     loader.parse_metadata(ex)
-    assert ex.metadata["signals"]["region"][0] == "ACC"
+    assert ex.attrs["signals"]["region"][0] == "ACC"
     assert set(ex.available_data) == set(
         ("signals", "units", "spatial", "loader", "loader_kwargs")
     )

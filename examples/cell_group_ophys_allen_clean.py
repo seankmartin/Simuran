@@ -53,7 +53,7 @@ def main(
 
         # Loading using NWB
         nwb_rc = smr.RecordingContainer.from_table(table, nwb_loader)
-        nwb_rc.metadata["container_id"] = container_id
+        nwb_rc.attrs["container_id"] = container_id
         print(f"Memory stats before loading NWB: {print_memory_usage(as_string=True)}")
         no_allen_sdk_experiment(nwb_rc)
 

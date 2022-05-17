@@ -68,6 +68,41 @@ simuran TBD
 smtweb &
 ```
 
+## Parameter file layout
+
+### Datatable - Required
+
+Each row should list a single session/recording and the columns should describe metadata and necessary information to load the data for that recording
+
+### Function parameters - Required
+
+```Python
+params = {
+    "functions" = [Callable(recording, args, **kwargs)] # List of functions to run e.g power_spectrum(recording, filter_range)
+    "args_function" = Callable(recording_container, idx, figures) # arguments for functions on idx e.g lambda : return (1, 4)
+    "data_to_save": [Tuples] # Like ("results", "power_spectrum", "peak_power")
+    "data_names": [str] # One name for each output, "Peak power (Hz)" for example
+    "figures": Iterable # For instance, could be a big grid figure
+    "figure_names": [str] # One name for each figure
+    "load_all" : bool # Load all the data from recording
+    "to_load" : [str] # The data to load
+}
+```
+
+### Configuration - Required
+
+Supports python files, YAML, or JSON.
+Should also describe the loader to use and the kwargs to pass to that loader.
+
+### Datatable filter - Optional
+
+Either pass a YAML/Python/JSON with a dictionary describing the possible values each column can take OR directly pass a dictionary through command line.
+For more complex filtering, pass this instead
+
+```Python
+params = {"data_filter_function" : Callable(Dataframe)}
+```
+
 ## Requirements
 
 Listed in requirements.txt.

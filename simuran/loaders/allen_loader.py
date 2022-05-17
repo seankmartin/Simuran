@@ -2,8 +2,9 @@ from dataclasses import dataclass
 from os.path import isfile, splitext
 from pathlib import Path
 
-from allensdk.brain_observatory.behavior.behavior_project_cache import \
-    VisualBehaviorOphysProjectCache
+from allensdk.brain_observatory.behavior.behavior_project_cache import (
+    VisualBehaviorOphysProjectCache,
+)
 from simuran.loaders.base_loader import MetadataLoader
 from simuran.recording import Recording
 from simuran.spatial import Spatial
@@ -25,7 +26,9 @@ class AllenOphysLoader(MetadataLoader):
 
     @classmethod
     def from_s3_cache(cls, cache_directory):
-        s3_cache = VisualBehaviorOphysProjectCache.from_s3_cache(cache_dir=cache_directory)
+        s3_cache = VisualBehaviorOphysProjectCache.from_s3_cache(
+            cache_dir=cache_directory
+        )
         return cls(cache=s3_cache)
 
     @classmethod
@@ -36,7 +39,7 @@ class AllenOphysLoader(MetadataLoader):
     def path_to_nwb(self, recording) -> str:
         manifest_file = self.cache.current_manifest()
         manifest_version = splitext(manifest_file)[0].split("_")[-1][1:]
-        id_ = recording.metadata["ophys_experiment_id"]
+        id_ = recording.attrs["ophys_experiment_id"]
         fname = (
             Path(self.cache.fetch_api.cache._cache_dir)
             / f"visual-behavior-ophys-{manifest_version}"
@@ -65,10 +68,10 @@ class AllenOphysLoader(MetadataLoader):
         # TODO expand this
         recording.available_data = ["ophys", "spatial", "licks"]
         recording.source_file = self.path_to_nwb(recording)
-        recording.metadata["downloaded"] = isfile(recording.source_file)
+        recording.attrs["downloaded"] = isfile(recording.source_file)
 
     def load_recording(self, recording) -> "Recording":
-        ophys_experiment_id = recording.metadata["ophys_experiment_id"]
+        ophys_experiment_id = recording.attrs["ophys_experiment_id"]
         try:
             experiment = self.cache.get_behavior_ophys_experiment(ophys_experiment_id)
         except FileNotFoundError:

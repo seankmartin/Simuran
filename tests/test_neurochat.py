@@ -51,7 +51,7 @@ def test_nc_recording_loading(delete=False):
     metadata["source_file"] = axona_files[-1]
 
     loader = NCLoader(system="Axona", loader_kwargs={"pos_extension": ".txt"})
-    ex = Recording(metadata=metadata, loader=loader)
+    ex = Recording(attrs=metadata, loader=loader)
     ex.parse_metadata()
 
     ex.load()
