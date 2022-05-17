@@ -30,11 +30,14 @@ class NCLoader(MetadataLoader):
 
     def load_recording(self, recording):
         source_files = recording.attrs["source_files"]
+        if recording.data is None:
+            recording.data = {}
+        recording.last_loaded_source = recording.source_file
         if (
             source_files.get("Signal", None) is not None
             and "Signal" in recording.available_data
         ):
-            recording.signals = [
+            recording.data["signals"] = [
                 self.load_signal(fname) for fname in source_files["Signal"]
             ]
         if (
@@ -42,14 +45,14 @@ class NCLoader(MetadataLoader):
             and "Spike" in recording.available_data
         ):
             if source_files["Spike"] is not None:
-                recording.units = [
+                recording.data["units"] = [
                     self.load_single_unit(fname) for fname in source_files["Spike"]
                 ]
         if (
             source_files.get("Spatial", None) is not None
             and "Spatial" in recording.available_data
         ):
-            recording.spatial = self.load_spatial(source_files["Spatial"])
+            recording.data["spatial"] = self.load_spatial(source_files["Spatial"])
 
     def parse_metadata(self, recording: "Recording") -> None:
         if "source_file" in recording.attrs:
@@ -79,12 +82,13 @@ class NCLoader(MetadataLoader):
         self.signal = NLfp()
         self.signal.load(*args, self.system)
         obj = NoLoader()
-        obj.underlying = self.signal
+        obj.data = self.signal
         obj.timestamps = self.signal.get_timestamp() * u.s
         obj.samples = self.signal.get_samples() * u.mV
         obj.date = self.signal.get_date()
         obj.time = self.signal.get_time()
         obj.channel = self.signal.get_channel_id()
+        return obj
 
     def load_spatial(self, *args, **kwargs):
         """
@@ -99,7 +103,7 @@ class NCLoader(MetadataLoader):
         self.spatial = NSpatial()
         self.spatial.load(*args, self.system)
         obj = NoLoader()
-        obj.underlying = self.spatial
+        obj.data = self.spatial
         obj.date = self.spatial.get_date()
         obj.time = self.spatial.get_time()
         obj.speed = self.spatial.get_speed() * (u.cm / u.s)
@@ -108,6 +112,7 @@ class NCLoader(MetadataLoader):
             self.spatial.get_pos_y() * u.cm,
         )
         obj.direction = self.spatial.get_direction() * u.deg
+        return obj
 
     def load_single_unit(self, *args, **kwargs):
         """
@@ -126,13 +131,14 @@ class NCLoader(MetadataLoader):
         waveforms = deepcopy(self.single_unit.get_waveform())
         for chan, val in waveforms.items():
             waveforms[chan] = val * u.uV
-        obj.underlying = self.single_unit
+        obj.data = self.single_unit
         obj.timestamps = self.single_unit.get_timestamp() * u.s
         obj.unit_tags = self.single_unit.get_unit_tags()
         obj.waveforms = waveforms
         obj.date = self.single_unit.get_date()
         obj.time = self.single_unit.get_time()
         obj.available_units = self.single_unit.get_unit_list()
+        return obj
 
     def auto_fname_extraction(self, base, **kwargs):
         """

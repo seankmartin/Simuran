@@ -153,7 +153,8 @@ class MetadataLoader(BaseLoader):
         recording.loader = self
         row = table.iloc[index]
         row_as_dict = row.to_dict()
-        row_as_dict[table.index.name] = row.name
+        t_name = table.index.name if table.index.name is not None else "_index"
+        row_as_dict[t_name] = row.name
         recording.attrs = row_as_dict
         self.parse_metadata(recording)
         return recording
