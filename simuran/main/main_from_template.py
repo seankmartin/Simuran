@@ -7,11 +7,13 @@ from pprint import pformat
 from typing import TYPE_CHECKING, Optional, Union
 
 import typer
-from matplotlib.pyplot import figure
 from rich import print
-from simuran.analysis.run_analysis import (run_all_analysis, save_figures,
-                                           save_unclosed_figures,
-                                           set_output_locations)
+from simuran.analysis.run_analysis import (
+    run_all_analysis,
+    save_figures,
+    save_unclosed_figures,
+    set_output_locations,
+)
 from simuran.loaders.base_loader import BaseLoader
 from simuran.loaders.loader_list import loader_from_string
 from simuran.log_handler import establish_main_logger
@@ -36,6 +38,7 @@ def update_path(base_path: str):
             logger.debug(f"Added {site_dir} to path")
             site.addsitedir(site_dir)
 
+
 def wrap_up(recording_container):
     if len(recording_container.get_invalid_locations()) > 0:
         msg = pformat(
@@ -47,6 +50,7 @@ def wrap_up(recording_container):
         )
         logger.warning(msg)
         print("WARNING: " + msg)
+
 
 def main(
     datatable: "DataFrame",
@@ -74,15 +78,15 @@ def main(
         return
 
     figures = function_config.get("figures", [])
-    figure_names=function_config.get("figure_names", [])
+    figure_names = function_config.get("figure_names", [])
     figures = run_all_analysis(
         recording_container=recording_container,
         functions=function_config["functions"],
-        args_fn=function_config.get("args_function", None)
+        args_fn=function_config.get("args_function", None),
         figures=figures,
         figure_names=figure_names,
         load_all=function_config.get("load_all", True),
-        to_load=function_config.get("to_load", None)
+        to_load=function_config.get("to_load", None),
         out_dir=output_directory,
         cfg=param_config,
         num_cpus=num_cpus,
@@ -94,14 +98,22 @@ def main(
         function_config.get("data_names", None),
         decimals=function_config.get(""),
     )
-    save_figures(figures, output_directory, figure_names=figure_names, verbose=False, set_done=True)
+    save_figures(
+        figures,
+        output_directory,
+        figure_names=figure_names,
+        verbose=False,
+        set_done=True,
+    )
     save_unclosed_figures(output_directory)
 
     results = recording_container.get_results()
 
     logger.info(
-        "Operation completed in {:.2f}mins".format((time.perf_counter() - start_time) / 60)
-    )    
+        "Operation completed in {:.2f}mins".format(
+            (time.perf_counter() - start_time) / 60
+        )
+    )
 
     return results, recording_container
 
