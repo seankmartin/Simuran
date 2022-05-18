@@ -52,13 +52,15 @@ class BaseSignal(BaseSimuran):
         self.group = None
         self.channel = None
         self.channel_type = "eeg"
-        self.source_file = "<unknown>"
 
     ## TODO design thoughts!
     ## Passing source_file vs full recording??
     def load(self, *args, **kwargs):
         """Load the signal."""
-        super().load()
+        ## TODO is this needed? If yes, add to other classes
+        res = super().load()
+        if res == "skip":
+            return
         load_result = self.loader.load_signal(self.source_file, **kwargs)
         self.save_attrs(load_result)
         self.last_loaded_source = self.source_file
@@ -187,62 +189,6 @@ class BaseSignal(BaseSimuran):
     def get_end(self):
         """Get the last time recorded"""
         return self.timestamps[-1]
-
-    def get_sampling_rate(self):
-        """Return the sampling rate."""
-        return self.sampling_rate
-
-    def get_timestamps(self):
-        """Return the timestamps."""
-        return self.timestamps
-
-    def get_samples(self):
-        """Return the samples."""
-        return self.samples
-
-    def get_channel(self):
-        """Return the channel."""
-        return self.channel
-
-    def get_channel_type(self):
-        """Return the channel type."""
-        return self.channel_type
-
-    def get_source_file(self):
-        """Return the name of the source file."""
-        return self.source_file
-
-    def set_duration(self, duration):
-        """Set the value of self.duration."""
-        self.duration = duration
-
-    def set_samples(self, samples):
-        """Set the value of self.samples."""
-        self.samples = samples
-
-    def set_sampling_rate(self, sampling_rate):
-        """Set the value of self.sampling_rate."""
-        self.sampling_rate = sampling_rate
-
-    def set_timestamps(self, timestamps):
-        """Set the value of self.timestamps."""
-        self.timestamps = timestamps
-
-    def set_channel(self, channel):
-        """Set the value of self.channel."""
-        self.channel = channel
-
-    def set_channel_type(self, channel_type):
-        """Set the value of self.channel_type."""
-        self.channel_type = channel_type
-
-    def set_source_file(self, source_file):
-        """Set the value of self.source_file."""
-        self.source_file = source_file
-
-    def set_region(self, region):
-        """Set the value of self.region."""
-        self.region = region
 
 
 def convert_signals_to_mne(signals, ch_names=None, verbose=True):

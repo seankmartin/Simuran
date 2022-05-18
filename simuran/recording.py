@@ -1,6 +1,7 @@
 """This module holds single experiment related information."""
 import os
 from dataclasses import dataclass, field
+from pathlib import Path
 
 import astropy.units as u
 import numpy as np
@@ -161,12 +162,12 @@ class Recording(BaseSimuran):
             The name for saving, it has no extension and os.sep replaced by --
 
         """
+        path_sf = Path(self.source_file)
         if rel_dir is None:
-            base_name_part, _ = os.path.splitext(os.path.basename(self.source_file))
+            base_name_part = path_sf.stem
         else:
-            name_up_to_rel = self.source_file[len(rel_dir + os.sep) :]
-            base_name_part, _ = os.path.splitext(name_up_to_rel)
-            base_name_part = base_name_part.replace(os.sep, "--")
+            name_up_to_rel = path_sf.relative_to(rel_dir).with_suffix("")
+            base_name_part = "--".join(name_up_to_rel.parts)
         return base_name_part
 
     def get_available_units(self):

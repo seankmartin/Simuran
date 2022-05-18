@@ -1,12 +1,12 @@
 import os
 
-from simuran.base_signal import BaseSignal
-from simuran.base_container import GenericContainer
-
 import mne
 import numpy as np
-from astropy import units as u
 import scipy.signal as sg
+from astropy import units as u
+
+from simuran.base_container import GenericContainer
+from simuran.base_signal import BaseSignal
 
 
 class Eeg(BaseSignal):
@@ -15,23 +15,22 @@ class Eeg(BaseSignal):
     def __init__(self, samples=None, sampling_rate=None, signal=None):
         """See help(Eeg)"""
         super().__init__()
+        ## TODO also use copy method here
         if signal is not None:
             self.samples = signal.samples
             self.sampling_rate = signal.sampling_rate
             self.timestamps = signal.timestamps
-            self.source_file = signal.source_file
             self.region = signal.region
             self.group = signal.group
             self.channel = signal.channel
             self.channel_type = signal.channel_type
-            self.source_file = signal.source_file
-            self.kwargs = signal.kwargs
-            self.info = signal.info
+            self.attrs = signal.attrs
             self.datetime = signal.datetime
             self.tag = signal.tag
             self.loader = signal.loader
+            self.source_file = signal.source_file
             self.last_loaded_source = signal.last_loaded_source
-            self.underlying = signal.underlying
+            self.data = signal.data
             self.results = signal.results
         if samples is not None and sampling_rate is not None:
             self.from_numpy(samples, sampling_rate)
@@ -78,16 +77,10 @@ class Eeg(BaseSignal):
         butter_dict = {"method": "iir"}
 
         filter_ = (0, low, high, "bandpass")
-        nc_iir = {
-            "order": butter_filter(self.sampling_rate, *filter_),
-            "ftype": "butter",
-        }
-        nc_dict = {"method": "iir", "iir_params": nc_iir}
         filter1 = ("Default", low, high, {})
         filter2 = ("Butterworth", low, high, butter_dict)
-        filter3 = ("NeuroChaT", low, high, nc_dict)
 
-        self.compare_filters(filter1, filter2, filter3, **plot_args)
+        self.compare_filters(filter1, filter2, **plot_args)
 
     def __str__(self):
         """Convert to string representation"""
@@ -101,7 +94,7 @@ class EegArray(GenericContainer):
 
     def __init__(self):
         """See help(EegArray)"""
-        super().__init__(Eeg)
+        super().__init__(cls=Eeg)
 
     def convert_signals_to_mne(self, ch_names=None, verbose=True, bad_chans=None):
         """
@@ -242,65 +235,3 @@ class EegArray(GenericContainer):
         fig = mne_array.plot(verbose="ERROR", **kwargs)
 
         return fig
-
-
-def butter_filter(Fs, *args):
-    """
-    Filter using bidirectional zero-phase shift Butterworth filter.
-
-    Parameters
-    ----------
-    x : ndarray
-        Data or signal to filter
-    Fs : Sampling frequency
-    *kwargs
-        Arguments with filter paramters
-
-    Returns
-    -------
-    ndarray
-        Filtered signal
-
-    """
-    gstop = 20  # minimum dB attenuation at stopabnd
-    gpass = 3  # maximum dB loss during ripple
-    for arg in args:
-        if isinstance(arg, str):
-            filttype = arg
-    if filttype == "lowpass" or filttype == "highpass":
-        wp = args[1] / (Fs / 2)
-        if wp > 1:
-            wp = 1
-            if filttype == "lowpass":
-                print("Butterworth filter critical frequency Wp is capped at 1")
-            else:
-                exit(-1)
-
-    elif filttype == "bandpass":
-        if len(args) < 4:
-            exit(-1)
-        else:
-            wp = np.array(args[1:3]) / (Fs / 2)
-            if wp[0] >= wp[1]:
-                exit(-1)
-            if wp[0] == 0 and wp[1] >= 1:
-                exit(-1)
-            elif wp[0] == 0:
-                wp = wp[1]
-                filttype = "lowpass"
-            elif wp[1] >= 1:
-                wp = wp[0]
-                filttype = "highpass"
-
-    if filttype == "lowpass":
-        ws = min([wp + 0.1, 1])
-    elif filttype == "highpass":
-        ws = max([wp - 0.1, 0.01 / (Fs / 2)])
-    elif filttype == "bandpass":
-        ws = np.zeros_like(wp)
-        ws[0] = max([wp[0] - 0.1, 0.01 / (Fs / 2)])
-        ws[1] = min([wp[1] + 0.1, 1])
-
-    min_order, min_wp = sg.buttord(wp, ws, gpass, gstop)
-
-    return min_order

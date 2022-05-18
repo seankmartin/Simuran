@@ -95,7 +95,7 @@ def main(
         output_directory / output_name,
         function_config["data_to_save"],
         function_config.get("data_names", None),
-        decimals=function_config.get(""),
+        decimals=function_config.get("n_decimals"),
     )
     save_figures(
         figures,

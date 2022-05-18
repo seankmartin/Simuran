@@ -7,11 +7,14 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 from astropy import units as u
+from mne.epochs import _RawContainer
 from neurochat.nc_lfp import NLfp
 from neurochat.nc_spatial import NSpatial
 from neurochat.nc_spike import NSpike
 from simuran.base_class import NoLoader
+from simuran.base_signal import BaseSignal
 from simuran.loaders.base_loader import MetadataLoader
+from simuran.param_handler import ParamHandler
 from skm_pyutils.py_path import get_all_files_in_dir
 from skm_pyutils.py_table import list_to_df
 from tqdm import tqdm
@@ -29,6 +32,22 @@ class NCLoader(MetadataLoader):
         self.loader_kwargs = kwargs
 
     def load_recording(self, recording):
+        def add_mapping_info(recording):
+            mapping = recording.attrs.get("mapping")
+            if not hasattr(mapping, "items"):
+                return
+            for first_key, map_sub in mapping.items():
+                if first_key not in ["signals", "spatial", "units"]:
+                    continue
+                if first_key not in recording.data:
+                    continue
+                for key, value in map_sub.items():
+                    if isinstance(value, list):
+                        for i in range(len(recording.data[first_key])):
+                            setattr(recording.data[first_key][i], key, value[i])
+                    else:
+                        recording.attrs[f"{first_key}_{key}"] = value
+
         source_files = recording.attrs["source_files"]
         if recording.data is None:
             recording.data = {}
@@ -40,6 +59,7 @@ class NCLoader(MetadataLoader):
             recording.data["signals"] = [
                 self.load_signal(fname) for fname in source_files["Signal"]
             ]
+
         if (
             source_files.get("Spike", None) is not None
             and "Spike" in recording.available_data
@@ -53,6 +73,8 @@ class NCLoader(MetadataLoader):
             and "Spatial" in recording.available_data
         ):
             recording.data["spatial"] = self.load_spatial(source_files["Spatial"])
+
+        add_mapping_info(recording)
 
     def parse_metadata(self, recording: "Recording") -> None:
         if "source_file" in recording.attrs:
@@ -68,6 +90,10 @@ class NCLoader(MetadataLoader):
             recording.source_file
         )[0]
         recording.available_data = list(recording.attrs["source_files"].keys())
+        if "mapping" in recording.attrs:
+            ph = ParamHandler(source_file=recording.attrs["mapping"], name="mapping")
+            recording.attrs["mapping_file"] = recording.attrs["mapping"]
+            recording.attrs["mapping"] = ph
 
     def load_signal(self, *args, **kwargs):
         """
@@ -81,13 +107,16 @@ class NCLoader(MetadataLoader):
         """
         self.signal = NLfp()
         self.signal.load(*args, self.system)
-        obj = NoLoader()
+        obj = BaseSignal()
         obj.data = self.signal
         obj.timestamps = self.signal.get_timestamp() * u.s
         obj.samples = self.signal.get_samples() * u.mV
         obj.date = self.signal.get_date()
         obj.time = self.signal.get_time()
         obj.channel = self.signal.get_channel_id()
+        obj.sampling_rate = self.signal.get_sampling_rate()
+        obj.source_file = args[0]
+        obj.last_loaded_source = args[0]
         return obj
 
     def load_spatial(self, *args, **kwargs):
@@ -112,6 +141,8 @@ class NCLoader(MetadataLoader):
             self.spatial.get_pos_y() * u.cm,
         )
         obj.direction = self.spatial.get_direction() * u.deg
+        obj.source_file = args[0]
+        obj.last_loaded_source = args[0]
         return obj
 
     def load_single_unit(self, *args, **kwargs):
@@ -138,6 +169,8 @@ class NCLoader(MetadataLoader):
         obj.date = self.single_unit.get_date()
         obj.time = self.single_unit.get_time()
         obj.available_units = self.single_unit.get_unit_list()
+        obj.source_file = args[0]
+        obj.last_loaded_source = args[0]
         return obj
 
     def auto_fname_extraction(self, base, **kwargs):

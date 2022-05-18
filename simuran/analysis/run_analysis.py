@@ -12,6 +12,7 @@ from simuran.plot.figure import SimuranFigure
 from tqdm import tqdm
 
 module_logger = logging.getLogger("simuran.analysis.run_analysis")
+main_was_error = False
 
 
 def run_all_analysis(
@@ -146,7 +147,6 @@ def run_all_analysis(
 
     if main_was_error:
         module_logger.warning("A handled error occurred while loading files")
-
     return final_figs
 
 
@@ -171,7 +171,7 @@ def _multiprocessing_func(
         function_args = {}
     if load_all:
         if to_load is not None:
-            recording_container[i].available = to_load
+            recording_container[i].available_data = to_load
         if handle_errors:
             try:
                 recording = recording_container.load(i)
@@ -258,8 +258,8 @@ def save_figures(figures, out_dir, figure_names=[], verbose=False, set_done=Fals
         for f in figures:
             if f.isdone():
                 if verbose:
-                    print("Plotting to {}".format(f.get_filename()))
-                f.savefig(Path(out_dir) / "plots", f.get_filename())
+                    print("Plotting to {}".format(f.filename))
+                f.savefig(Path(out_dir) / "plots" / f.filename)
                 f.close()
 
     return [f for f in figures if not f.isdone()]

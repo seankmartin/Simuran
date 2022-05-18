@@ -10,6 +10,8 @@ import rich
 from simuran.param_handler import ParamHandler
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from simuran.loaders.base_loader import BaseLoader
 
 
@@ -54,8 +56,8 @@ class BaseSimuran(ABC):
     datetime: "datetime" = field(default_factory=datetime.now)
     tag: Optional[str] = None
     loader: Optional["BaseLoader"] = field(default=None)
-    source_file: Optional[str] = None
-    last_loaded_source: Optional[str] = None
+    source_file: Optional[Union[str, "Path"]] = None
+    last_loaded_source: Optional[Union[str, "Path"]] = None
     data: Any = None
     results: dict = field(default_factory=dict)
 
@@ -72,14 +74,14 @@ class BaseSimuran(ABC):
             If no loader has been set.
 
         """
+        if self.is_loaded():
+            return "skip"
         if self.loader is None:
             raise ValueError(
                 "Set a loader in {} before calling load.".format(
                     self.__class__.__name__
                 )
             )
-        if self.is_loaded():
-            return
 
     # TODO test with raw data (not from file)
     def is_loaded(self) -> bool:
