@@ -7,16 +7,15 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 from astropy import units as u
-from mne.epochs import _RawContainer
 from neurochat.nc_lfp import NLfp
 from neurochat.nc_spatial import NSpatial
 from neurochat.nc_spike import NSpike
-from simuran.base_class import NoLoader
-from simuran.base_signal import BaseSignal
+from simuran.core.base_class import NoLoader
+from simuran.core.base_signal import BaseSignal
+from simuran.core.param_handler import ParamHandler
 from simuran.loaders.base_loader import MetadataLoader
-from simuran.param_handler import ParamHandler
-from skm_pyutils.py_path import get_all_files_in_dir
-from skm_pyutils.py_table import list_to_df
+from skm_pyutils.path import get_all_files_in_dir
+from skm_pyutils.table import list_to_df
 from tqdm import tqdm
 
 if TYPE_CHECKING:

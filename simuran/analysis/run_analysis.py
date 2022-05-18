@@ -7,7 +7,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 from simuran.analysis.analysis_handler import AnalysisHandler
-from simuran.log_handler import log_exception
+from simuran.core.log_handler import log_exception
 from simuran.plot.figure import SimuranFigure
 from tqdm import tqdm
 

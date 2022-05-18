@@ -1,9 +1,7 @@
 """Test BaseSimuran"""
 
-import datetime
-
 import pytest
-from simuran.base_class import BaseSimuran
+from simuran.core.base_class import BaseSimuran
 from simuran.loaders.base_loader import MetadataLoader
 
 
@@ -27,7 +25,7 @@ def test_parameter_load():
 
     # Make sure not load on creation
     loader = MetadataLoader()
-    base_obj = BaseClassToTest(metadata=meta_dict, loader=loader)
+    base_obj = BaseClassToTest(attrs=meta_dict, loader=loader)
     assert not base_obj.is_loaded()
 
     # Loading first time

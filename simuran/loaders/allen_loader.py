@@ -5,9 +5,9 @@ from pathlib import Path
 from allensdk.brain_observatory.behavior.behavior_project_cache import (
     VisualBehaviorOphysProjectCache,
 )
+from simuran.core.base_class import NoLoader
 from simuran.loaders.base_loader import MetadataLoader
 from simuran.recording import Recording
-from simuran.spatial import Spatial
 
 
 @dataclass
@@ -80,7 +80,7 @@ class AllenOphysLoader(MetadataLoader):
             return recording
         recording.data = experiment
         # TODO is this needed?
-        recording.spatial = Spatial()
+        recording.spatial = NoLoader()
         recording.spatial.data = experiment.running_speed
         return recording
 

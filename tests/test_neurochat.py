@@ -5,8 +5,8 @@ import numpy as np
 from neurochat.nc_lfp import NLfp
 from neurochat.nc_spatial import NSpatial
 from neurochat.nc_spike import NSpike
+from simuran.core.param_handler import ParamHandler
 from simuran.loaders.nc_loader import NCLoader
-from simuran.param_handler import ParamHandler
 from simuran.recording import Recording
 
 main_dir = os.path.dirname(__file__)[: -len(os.sep + "tests")]
@@ -50,13 +50,13 @@ def test_nc_recording_loading(delete=False):
     )
     metadata["source_file"] = axona_files[-1]
 
-    loader = NCLoader(system="Axona", loader_kwargs={"pos_extension": ".txt"})
+    loader = NCLoader(system="Axona", pos_extension=".txt")
     ex = Recording(attrs=metadata, loader=loader)
     ex.parse_metadata()
 
     ex.load()
 
-    ex.units[0]["underlying"].set_unit_no(1)
+    ex.data["units"][0].data.set_unit_no(1)
     # Load using NeuroChaT
     lfp = NLfp()
     lfp.set_filename(os.path.join(main_test_dir, "010416b-LS3-50Hz10.V5.ms.eeg"))
@@ -71,10 +71,10 @@ def test_nc_recording_loading(delete=False):
     spatial.set_filename(os.path.join(main_test_dir, "010416b-LS3-50Hz10.V5.ms_2.txt"))
     spatial.load(system="Axona")
 
-    assert np.all(ex.signals[0]["underlying"].get_samples() == lfp.get_samples())
-    assert np.all(ex.units[0]["underlying"].get_unit_stamp() == unit.get_unit_stamp())
-    assert np.all(ex.units[0]["underlying"].get_unit_tags() == unit.get_unit_tags())
-    assert np.all(ex.spatial["underlying"].get_pos_x() == spatial.get_pos_x())
+    assert np.all(ex.data["signals"][0].data.get_samples() == lfp.get_samples())
+    assert np.all(ex.data["units"][0].data.get_unit_stamp() == unit.get_unit_stamp())
+    assert np.all(ex.data["units"][0].data.get_unit_tags() == unit.get_unit_tags())
+    assert np.all(ex.data["spatial"].data.get_pos_x() == spatial.get_pos_x())
 
     ncl = NCLoader()
     ncl.system = "Axona"

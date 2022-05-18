@@ -5,8 +5,8 @@ import logging.handlers
 import traceback
 from pathlib import Path
 
-from skm_pyutils.py_log import FileLogger, FileStdoutLogger, get_default_log_loc
-from skm_pyutils.py_path import make_path_if_not_exists
+from skm_pyutils.log import FileLogger, FileStdoutLogger, get_default_log_loc
+from skm_pyutils.path import make_path_if_not_exists
 
 log = FileLogger("simuran_cli")
 out = FileStdoutLogger()

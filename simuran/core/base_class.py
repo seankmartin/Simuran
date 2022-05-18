@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any, Optional, Union
 
 import rich
 
-from simuran.param_handler import ParamHandler
+from simuran.core.param_handler import ParamHandler
 
 if TYPE_CHECKING:
     from pathlib import Path

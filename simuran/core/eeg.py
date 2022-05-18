@@ -4,9 +4,8 @@ import mne
 import numpy as np
 import scipy.signal as sg
 from astropy import units as u
-
-from simuran.base_container import GenericContainer
-from simuran.base_signal import BaseSignal
+from simuran.core.base_container import GenericContainer
+from simuran.core.base_signal import BaseSignal
 
 
 class Eeg(BaseSignal):

@@ -7,9 +7,8 @@ from typing import Any, Optional, Type
 
 import numpy as np
 import rich
-from skm_pyutils.py_save import save_dicts_to_csv, save_mixed_dict_to_csv
-
-from simuran.base_class import BaseSimuran
+from simuran.core.base_class import BaseSimuran
+from skm_pyutils.save import save_dicts_to_csv, save_mixed_dict_to_csv
 
 
 # TODO consider making this something that you can pass list like into

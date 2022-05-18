@@ -53,10 +53,7 @@ CLASSIFIERS = [
 
 ENTRY_POINTS = {
     "console_scripts": [
-        "simuran = simuran.cli:cli_entry",
-        "simuran-merge = simuran.cli:merge_entry",
-        "simuran-ui = simuran.ui.simuran_ui:cli_entry",
-        "simuran-new = simuran.main.main_from_template:typer_entry",
+        "simuran = simuran.main:typer_entry",
     ],
 }
 

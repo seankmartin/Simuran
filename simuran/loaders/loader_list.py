@@ -5,8 +5,6 @@ Current loaders are:
 1. params_only : only loads parameters from files.
 2. nc_loader : requires the neurochat package to be installed.
 """
-import sys
-import traceback
 from typing import Type
 
 from simuran.loaders.base_loader import BaseLoader, MetadataLoader

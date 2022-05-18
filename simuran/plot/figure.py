@@ -2,9 +2,8 @@
 import os
 
 import matplotlib.pyplot as plt
-
+from simuran.core.log_handler import log
 from simuran.plot.base_plot import save_simuran_plot
-from simuran.log_handler import log
 
 
 class SimuranFigure(object):

@@ -1,5 +1,5 @@
 import numpy as np
-from simuran.base_container import GenericContainer
+from simuran.core.base_container import GenericContainer
 
 
 def test_numpy_container():

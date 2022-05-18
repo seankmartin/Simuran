@@ -1,8 +1,7 @@
 import os
 
-from skm_pyutils.py_log import get_default_log_loc, override_excepthook
-
 from simuran.analysis.analysis_handler import AnalysisHandler
+from skm_pyutils.log import get_default_log_loc, override_excepthook
 
 
 def add(a, b):

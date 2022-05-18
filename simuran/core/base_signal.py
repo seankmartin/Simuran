@@ -6,8 +6,7 @@ from copy import deepcopy
 import mne
 import numpy as np
 from astropy import units as u
-
-from simuran.base_class import BaseSimuran
+from simuran.core.base_class import BaseSimuran
 
 
 class BaseSignal(BaseSimuran):

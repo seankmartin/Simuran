@@ -2,8 +2,8 @@ import os
 from pathlib import Path
 from pprint import pformat
 
+from simuran.core.param_handler import ParamHandler
 from simuran.loaders.base_loader import MetadataLoader
-from simuran.param_handler import ParamHandler
 from simuran.recording import Recording
 
 main_dir = os.path.dirname(__file__)[: -len(os.sep + "tests")]
@@ -23,9 +23,7 @@ def test_param_load():
 
 def test_recording_setup():
     metadata = ParamHandler(
-        source_file=os.path.join(
-            main_dir, "simuran", "params", "simuran_base_params.py"
-        )
+        source_file=os.path.join(main_dir, "tests", "params", "simuran_base_params.py")
     )
     loader = MetadataLoader()
     ex = Recording(attrs=metadata, loader=loader)
@@ -39,9 +37,7 @@ def test_recording_setup():
 if __name__ == "__main__":
     test_param_load()
     metadata = ParamHandler(
-        source_file=os.path.join(
-            main_dir, "simuran", "params", "simuran_base_params.py"
-        )
+        source_file=os.path.join(main_dir, "tests", "params", "simuran_base_params.py")
     )
     str_1 = pformat(str(metadata.attrs))
     str_2 = metadata.to_str()

@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional, Union
 
-from skm_pyutils.py_config import read_json, read_python, read_yaml
+from skm_pyutils.config import read_json, read_python, read_yaml
 
 
 @dataclass

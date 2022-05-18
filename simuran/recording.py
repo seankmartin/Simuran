@@ -6,8 +6,8 @@ from pathlib import Path
 import astropy.units as u
 import numpy as np
 
-from simuran.base_class import BaseSimuran
-from simuran.eeg import Eeg, EegArray
+from simuran.core.base_class import BaseSimuran
+from simuran.core.eeg import Eeg, EegArray
 
 
 @dataclass

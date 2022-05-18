@@ -4,8 +4,7 @@ import os
 
 import matplotlib.pyplot as plt
 import seaborn as sns
-
-import skm_pyutils.py_path
+import skm_pyutils.path
 
 
 def setup_ax(ax, default, **kwargs):
