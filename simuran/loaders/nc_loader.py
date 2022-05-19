@@ -1,4 +1,5 @@
 """This module handles interfacing with NeuroChaT."""
+import datetime
 import logging
 import os
 from copy import deepcopy
@@ -36,6 +37,8 @@ class NCLoader(MetadataLoader):
             if not hasattr(mapping, "items"):
                 return
             for first_key, map_sub in mapping.items():
+                if map_sub is None:
+                    continue
                 if first_key not in ["signals", "spatial", "units"]:
                     continue
                 if first_key not in recording.data:
@@ -64,9 +67,15 @@ class NCLoader(MetadataLoader):
             and "Spike" in recording.available_data
         ):
             if source_files["Spike"] is not None:
-                recording.data["units"] = [
-                    self.load_single_unit(fname) for fname in source_files["Spike"]
-                ]
+                recording.data["units"] = []
+                for spike_f, clust_f in zip(
+                    source_files["Spike"], source_files["Cluster"]
+                ):
+                    if clust_f is not None:
+                        unit = self.load_single_unit(spike_f)
+                    else:
+                        unit = NoLoader(source_file=spike_f)
+                    recording.data["units"].append(unit)
         if (
             source_files.get("Spatial", None) is not None
             and "Spatial" in recording.available_data
@@ -77,7 +86,7 @@ class NCLoader(MetadataLoader):
 
     def parse_metadata(self, recording: "Recording") -> None:
         if "source_file" in recording.attrs:
-            source_file = recording.attrs.get("source_file")
+            source_file = recording.attrs.pop("source_file")
         elif "directory" in recording.attrs:
             source_file = (
                 Path(recording.attrs["directory"]) / recording.attrs["filename"]
@@ -93,6 +102,11 @@ class NCLoader(MetadataLoader):
             ph = ParamHandler(source_file=recording.attrs["mapping"], name="mapping")
             recording.attrs["mapping_file"] = recording.attrs["mapping"]
             recording.attrs["mapping"] = ph
+        if "datetime" in recording.attrs:
+            print(recording.attrs["datetime"])
+            recording.datetime = datetime.datetime.strptime(
+                recording.attrs.pop("datetime"), "%Y-%m-%d %H:%M:%S"
+            )
 
     def load_signal(self, *args, **kwargs):
         """
@@ -170,6 +184,7 @@ class NCLoader(MetadataLoader):
         obj.available_units = self.single_unit.get_unit_list()
         obj.source_file = args[0]
         obj.last_loaded_source = args[0]
+        obj.tag = int(Path(args[0]).suffix[1:])
         return obj
 
     def auto_fname_extraction(self, base, **kwargs):
@@ -315,7 +330,7 @@ class NCLoader(MetadataLoader):
 
             file_locs = {
                 "Spike": spike_names_all,
-                "Clusters": cluster_names_all,
+                "Cluster": cluster_names_all,
                 "Spatial": spatial_name,
                 "Signal": signal_names,
                 "Stimulation": stim_name,
