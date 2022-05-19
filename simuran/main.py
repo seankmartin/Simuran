@@ -1,11 +1,10 @@
 """main using old as templates"""
 import logging
-import re
 import site
 import time
 from pathlib import Path
 from pprint import pformat
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Optional, Tuple, Union
 
 import typer
 from rich import print
@@ -54,7 +53,7 @@ def wrap_up(recording_container):
         print("WARNING: " + msg)
 
 
-def main(
+def main_with_data(
     datatable: "DataFrame",
     loader: "BaseLoader",
     output_directory: "Path",
@@ -64,7 +63,7 @@ def main(
     dummy: bool = False,
     handle_errors: bool = False,
     num_cpus: int = 1,
-):
+) -> "Tuple[list[dict], RecordingContainer]":
     start_time = time.perf_counter()
     recording_container = RecordingContainer.from_table(datatable, loader)
     recording_container.attrs["base_dir"] = param_config.get("cfg_base_dir", "")
@@ -118,7 +117,7 @@ def main(
     return results, recording_container
 
 
-def cli_entry(
+def main_with_files(
     datatable_filepath: str,
     config_filepath: str,
     function_filepath: str,
@@ -127,7 +126,8 @@ def cli_entry(
     num_cpus: int = 1,
     data_filter: Optional[str] = None,
     output_directory: Optional[str] = None,
-):
+) -> "Tuple[list[dict], RecordingContainer]":
+    """Run analysis on files using specified configuration."""
     update_path(function_filepath)
     datatable = df_from_file(datatable_filepath)
     config_params = ParamHandler(source_file=config_filepath, name="params")
@@ -152,7 +152,7 @@ def cli_entry(
         datatable_filepath, function_filepath, config_filepath
     )
     output_directory = output_directory if output_directory is not None else od
-    main(
+    return main_with_data(
         datatable,
         loader,
         output_directory,
@@ -166,7 +166,7 @@ def cli_entry(
 
 
 def typer_entry():
-    typer.run(cli_entry)
+    typer.run(main_with_files)
 
 
 if __name__ == "__main__":

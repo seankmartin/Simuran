@@ -5,6 +5,8 @@ from typing import Optional, Union
 
 from skm_pyutils.config import read_json, read_python, read_yaml
 
+DEFAULT = object()
+
 
 @dataclass
 class ParamHandler(object):
@@ -13,6 +15,11 @@ class ParamHandler(object):
 
     Provides loaders for this and helper functions.
 
+    TODO
+    ----
+    consider replacing by a function which returns dict
+    and moving some functionality to a utils.
+
     Attributes
     ----------
     dictionary : dict
@@ -20,7 +27,7 @@ class ParamHandler(object):
     source_file : Path
         The path to the file containing the parameters.
     name : str
-        The name of the variable describing the parameters, default is "mapping".
+        The name of the variable describing the parameters, default is "params".
         This is only used if in_loc is not None.
     dirname_replacement : str
         The directory name to replace __dirname__ by.
@@ -30,7 +37,7 @@ class ParamHandler(object):
 
     attrs: dict = field(default_factory=dict)
     source_file: Optional[Union[str, "Path"]] = None
-    name: str = "mapping"
+    name: str = "params"
     dirname_replacement: str = ""
 
     def __post_init__(self):
@@ -178,3 +185,9 @@ class ParamHandler(object):
 
     def update(self, dict_):
         self.attrs.update(dict_)
+
+    def pop(self, key, default=DEFAULT):
+        if default is DEFAULT:
+            self.attrs.pop(key)
+        else:
+            self.attrs.pop(key, default)

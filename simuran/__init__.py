@@ -7,6 +7,7 @@ from .core.eeg import Eeg, EegArray
 from .core.log_handler import log, log_exception, print
 from .core.param_handler import ParamHandler
 from .loaders.loader_list import loader_from_string, loaders_dict
+from .main import main_with_data, main_with_files
 from .plot.base_plot import despine, save_simuran_plot, set_plot_style, setup_ax
 from .plot.figure import SimuranFigure
 from .recording import Recording
