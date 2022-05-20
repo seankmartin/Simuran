@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 from astropy import units as u
+from dateutil.tz import tzlocal
 from neurochat.nc_lfp import NLfp
 from neurochat.nc_spatial import NSpatial
 from neurochat.nc_spike import NSpike
@@ -75,6 +76,7 @@ class NCLoader(MetadataLoader):
                         unit = self.load_single_unit(spike_f)
                     else:
                         unit = NoLoader(source_file=spike_f)
+                        unit.available_units = None
                     recording.data["units"].append(unit)
         if (
             source_files.get("Spatial", None) is not None
@@ -103,10 +105,10 @@ class NCLoader(MetadataLoader):
             recording.attrs["mapping_file"] = recording.attrs["mapping"]
             recording.attrs["mapping"] = ph
         if "datetime" in recording.attrs:
-            print(recording.attrs["datetime"])
             recording.datetime = datetime.datetime.strptime(
                 recording.attrs.pop("datetime"), "%Y-%m-%d %H:%M:%S"
             )
+            recording.datetime = recording.datetime.replace(tzinfo=tzlocal())
 
     def load_signal(self, *args, **kwargs):
         """
