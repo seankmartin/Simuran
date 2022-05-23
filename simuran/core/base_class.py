@@ -78,9 +78,7 @@ class BaseSimuran(ABC):
             return "skip"
         if self.loader is None:
             raise ValueError(
-                "Set a loader in {} before calling load.".format(
-                    self.__class__.__name__
-                )
+                f"Set a loader in {self.__class__.__name__} before calling load."
             )
 
     # TODO test with raw data (not from file)
@@ -94,10 +92,9 @@ class BaseSimuran(ABC):
             True if the source file has been loaded.
 
         """
-        loaded = (self.last_loaded_source is not None) and (
+        return (self.last_loaded_source is not None) and (
             self.last_loaded_source == self.source_file
         )
-        return loaded
 
     # TODO this might be better in pyutils
     def data_dict_from_attr_list(
@@ -148,9 +145,8 @@ class BaseSimuran(ABC):
             attr_list and friendly_names are not the same size.
 
         """
-        if friendly_names is not None:
-            if len(friendly_names) != len(attr_list):
-                raise ValueError("friendly_names and attr_list must be the same length")
+        if friendly_names is not None and len(friendly_names) != len(attr_list):
+            raise ValueError("friendly_names and attr_list must be the same length")
 
         data_out = {}
         for i, attr_tuple in enumerate(attr_list):
@@ -158,13 +154,11 @@ class BaseSimuran(ABC):
             for a in attr_tuple:
                 if a is None:
                     break
-                if isinstance(a, str):
-                    if hasattr(item, a):
-                        item = getattr(item, a)
-                    else:
-                        item = item[a]
-                else:
-                    item = item[a]
+                item = (
+                    getattr(item, a)
+                    if isinstance(a, str) and hasattr(item, a)
+                    else item[a]
+                )
                 if callable(item):
                     item = item()
             if isinstance(item, dict):
@@ -188,8 +182,7 @@ class BaseSimuran(ABC):
     def get_attrs_and_methods(self) -> "list[str]":
         """Return all attributes and methods of this object"""
         class_dir = dir(self)
-        attrs_and_methods = [r for r in class_dir if not r.startswith("_")]
-        return attrs_and_methods
+        return [r for r in class_dir if not r.startswith("_")]
 
     def inspect(self, methods: bool = False, **kwargs) -> None:
         """

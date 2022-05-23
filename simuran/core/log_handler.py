@@ -10,7 +10,6 @@ from skm_pyutils.path import make_path_if_not_exists
 
 log = FileLogger("simuran_cli")
 out = FileStdoutLogger()
-print = out.print
 
 
 def default_log_location():

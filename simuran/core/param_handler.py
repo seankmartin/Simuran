@@ -129,10 +129,7 @@ class ParamHandler(object):
             The value as a string.
 
         """
-        if isinstance(val, str):
-            return "'{}'".format(val)
-        else:
-            return val
+        return f"'{val}'" if isinstance(val, str) else val
 
     ## Below this point mimics regular dictionary operations
     ## Equivalent to self.dictionary.blah() = self.blah()

@@ -80,10 +80,10 @@ class BaseSignal(BaseSimuran):
         None
 
         """
-        if not hasattr(np_array, "unit"):
-            self.samples = np_array * u.mV
-        else:
-            self.samples = np_array.to(u.mV)
+        self.samples = (
+            np_array.to(u.mV) if hasattr(np_array, "unit") else np_array * u.mV
+        )
+
         self.sampling_rate = sampling_rate
         self.timestamps = [i / sampling_rate for i in range(len(self.samples))] * u.s
 
@@ -91,9 +91,9 @@ class BaseSignal(BaseSimuran):
         """Get the default name for this signal based on region."""
         name = self.channel_type
         if self.channel is not None:
-            name += " {}".format(self.channel)
+            name += f" {self.channel}"
         if self.region is not None:
-            name = "{} - {}".format(self.region, name)
+            name = f"{self.region} - {name}"
 
         return name
 
@@ -101,9 +101,8 @@ class BaseSignal(BaseSimuran):
         """Convert to NeuroChaT NLfp object."""
         from neurochat.nc_lfp import NLfp
 
-        if self.data is not None:
-            if type(self.data) == NLfp:
-                return self.data
+        if self.data is not None and type(self.data) == NLfp:
+            return self.data
 
         lfp = NLfp()
         lfp.set_channel_id(self.channel)
@@ -133,11 +132,10 @@ class BaseSignal(BaseSimuran):
         """
         start = int(math.floor(start * self.sampling_rate))
         stop = int(math.ceil(stop * self.sampling_rate))
-        if step is not None:
-            step = int(math.round(self.step * self.sampling_rate))
-            return self.samples[start:stop:step]
-        else:
+        if step is None:
             return self.samples[start:stop]
+        step = int(math.round(self.step * self.sampling_rate))
+        return self.samples[start:stop:step]
 
     def filter(self, low, high, inplace=False, **kwargs):
         """
@@ -207,11 +205,7 @@ def convert_signals_to_mne(signals, ch_names=None, verbose=True):
         The data converted to MNE format
 
     """
-    if not verbose:
-        verbose = "WARNING"
-    else:
-        verbose = None
-
+    verbose = None if verbose else "WARNING"
     if ch_names is None:
         ch_names = [sig.default_name() for sig in signals]
     raw_data = np.array([sig.get_samples().to(u.V) for sig in signals], float)
@@ -221,6 +215,4 @@ def convert_signals_to_mne(signals, ch_names=None, verbose=True):
     ch_types = [sig.get_channel_type() for sig in signals]
 
     info = mne.create_info(ch_names=ch_names, sfreq=sfreq, ch_types=ch_types)
-    raw = mne.io.RawArray(raw_data, info=info, verbose=verbose)
-
-    return raw
+    return mne.io.RawArray(raw_data, info=info, verbose=verbose)

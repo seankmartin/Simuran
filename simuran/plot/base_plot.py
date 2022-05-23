@@ -124,10 +124,10 @@ def save_simuran_plot(fig, save_location, **kwargs):
     # Save bitmap
     out_format = kwargs.get("format", "png")
     if out_format is not None:
-        save_location = os.path.splitext(save_location)[0] + "." + out_format
+        save_location = f"{os.path.splitext(save_location)[0]}.{out_format}"
 
         if verbose:
-            print("Saving raster image to {}".format(save_location))
+            print(f"Saving raster image to {save_location}")
 
         skm_pyutils.py_path.make_path_if_not_exists(save_location)
         fig.savefig(
@@ -137,10 +137,10 @@ def save_simuran_plot(fig, save_location, **kwargs):
     # Save vector
     out_format = kwargs.get("vector_format", "pdf")
     if out_format is not None:
-        save_location = os.path.splitext(save_location)[0] + "." + out_format
+        save_location = f"{os.path.splitext(save_location)[0]}.{out_format}"
 
         if verbose:
-            print("Saving vector image to {}".format(save_location))
+            print(f"Saving vector image to {save_location}")
 
         skm_pyutils.py_path.make_path_if_not_exists(save_location)
         fig.savefig(

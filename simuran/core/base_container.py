@@ -1,4 +1,6 @@
 """This module holds containers to allow for batch processing."""
+
+import contextlib
 import copy
 import os
 from abc import ABC, abstractmethod
@@ -224,17 +226,18 @@ class AbstractContainer(ABC):
 
         """
         if idx_list is None:
-            idx_list = [i for i in range(len(self))]
+            idx_list = list(range(len(self)))
 
         if name_list is None:
-            name_list = ["sim_results" + str(i) + ".csv" for i in idx_list]
+            name_list = [f"sim_results{i}.csv" for i in idx_list]
         elif len(name_list) != len(idx_list):
             raise ValueError("Number of names must match number of items")
 
         if out_dir_list is None:
             out_dir_list = [
-                os.path.join(os.getcwd(), "sim_results") for i in range(len(idx_list))
+                os.path.join(os.getcwd(), "sim_results") for _ in range(len(idx_list))
             ]
+
         elif len(out_dir_list) != len(idx_list):
             raise ValueError(
                 "Number of output directories must match the number of items"
@@ -336,26 +339,21 @@ class AbstractContainer(ABC):
                 friendly_names = None
 
         def get_single(item, attr_list):
-            if isinstance(item, BaseSimuran):
-                data = item.data_dict_from_attr_list(attr_list, friendly_names)
-                try:
-                    round(data, decimals)
-                except BaseException:
-                    try:
-                        data = np.round(data, decimals)
-                    except BaseException:
-                        try:
-                            for key, value in data.items():
-                                try:
-                                    data[key] = round(value, decimals)
-                                except BaseException:
-                                    pass
-                        except BaseException:
-                            pass
-            else:
+            if not isinstance(item, BaseSimuran):
                 raise ValueError(
                     "data_from_attr_list is only called on BaseSimuran objects"
                 )
+            data = item.data_dict_from_attr_list(attr_list, friendly_names)
+            try:
+                round(data, decimals)
+            except BaseException:
+                try:
+                    data = np.round(data, decimals)
+                except BaseException:
+                    with contextlib.suppress(BaseException):
+                        for key, value in data.items():
+                            with contextlib.suppress(BaseException):
+                                data[key] = round(value, decimals)
             return data
 
         if idx is None:
@@ -409,19 +407,16 @@ class AbstractContainer(ABC):
 
         """
         if interactive:
-            if prop is None:
-                full_list = self.container
-            else:
-                full_list = self.get_property(prop)
+            full_list = self.container if prop is None else self.get_property(prop)
             print("Items to sample from:")
             for i, item in enumerate(full_list):
-                print("{}: {}".format(i + 1, item))
+                print(f"{i + 1}: {item}")
             indices = input(
                 "Please enter the number of the items you want to "
                 + "keep seperated by spaces. Enter empty to keep all.\n"
             )
             if indices == "":
-                return [i for i in range(len(self))]
+                return list(range(len(self)))
             indices = indices.strip().split(" ")
             idx_list = [int(i) - 1 for i in indices]
         if inplace:
@@ -437,8 +432,7 @@ class AbstractContainer(ABC):
 
     def get_attrs_and_methods(self) -> "list[str]":
         class_dir = dir(self)
-        attrs_and_methods = [r for r in class_dir if not r.startswith("_")]
-        return attrs_and_methods
+        return [r for r in class_dir if not r.startswith("_")]
 
     def inspect(self, methods: bool = False, **kwargs) -> None:
         """Note: could also try objexplore"""
@@ -498,6 +492,4 @@ class GenericContainer(AbstractContainer):
 
         if hasattr(new, "setup"):
             new.setup(params)
-            return new
-        else:
-            return new
+        return new

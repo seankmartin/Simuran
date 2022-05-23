@@ -2,20 +2,14 @@
 
 import logging
 import os
-import pickle
 from pathlib import Path
 from pprint import pprint
 from typing import Any, Callable, Optional, Union
 
 import pandas as pd
-from skm_pyutils.log import get_default_log_loc
 from skm_pyutils.path import get_all_files_in_dir, get_base_dir_to_files
-from skm_pyutils.table import (df_from_file, df_subset_from_rows, df_to_file,
-                               list_to_df)
+from skm_pyutils.table import df_from_file, df_to_file, list_to_df
 
-from simuran.analysis.analysis_handler import AnalysisHandler
-from simuran.core.log_handler import log_exception, print
-from simuran.core.param_handler import ParamHandler
 from simuran.loaders.base_loader import BaseLoader
 from simuran.recording import Recording
 from simuran.recording_container import RecordingContainer
@@ -76,11 +70,7 @@ def dir_to_table(directory, cell_id="cell_list", file_id="file_list", ext=".txt"
         file_loc = v.get("file", None)
         if (cell_loc is None) or (file_loc is None):
             continue
-        if k.startswith("--"):
-            start_dir = None
-        else:
-            start_dir = (os.sep).join(k.split("--")[:-1])
-
+        start_dir = None if k.startswith("--") else (os.sep).join(k.split("--")[:-1])
         with open(file_loc, "r") as f:
             if start_dir is not None:
                 files = [
@@ -99,8 +89,7 @@ def dir_to_table(directory, cell_id="cell_list", file_id="file_list", ext=".txt"
                 dirname, basename = os.path.split(fname)
                 saved_info.append([dirname, basename, int(g), int(r)])
 
-    df = list_to_df(saved_info, headers=["Directory", "Filename", "Group", "Unit"])
-    return df
+    return list_to_df(saved_info, headers=["Directory", "Filename", "Group", "Unit"])
 
 
 def process_paths_from_df(df):
@@ -136,14 +125,11 @@ def process_paths_from_df(df):
         # TODO ensure same functionality as val == val check
         vals = [val for val in directories if not pd.isna(val)]
         fname = value.Filename
-        if len(vals) != 0:
-            path = os.path.join(*vals, fname)
-        else:
-            path = fname
+        path = os.path.join(*vals, fname) if vals else fname
         if path != last_fname:
             curr_idx += 1
             last_fname = path
-            file_list.append(path)
+            file_list.append(last_fname)
             mapping_list.append(value.Mapping)
         cell_list.append((curr_idx, value.Group, value.Unit))
 
@@ -173,32 +159,29 @@ def data_convert(filename, start_dir, optional_func=None):
     c_out = os.path.join(start_dir, "cell_list.txt")
 
     start_dir = os.sep.join(start_dir.split(os.sep)[:-1])
-    ffile = open(f_out, "w")
-    cfile = open(c_out, "w")
-    cfile.write("Recording,Group,Unit\n")
+    with open(f_out, "w") as ffile:
+        with open(c_out, "w") as cfile:
+            cfile.write("Recording,Group,Unit\n")
 
-    # directories = df.iloc[:, : df.columns.get_loc("Filename")]
-    last_fname = ""
-    curr_idx = -1
-    for value in df.itertuples():
-        directories = value[1 : df.columns.get_loc("Filename") + 1]
-        vals = directories[1:]
-        # TODO ensure same functionality as val == val check
-        vals = [val for val in vals if not pd.isna(val)]
-        fname = value.Filename
-        if optional_func is not None:
-            fname = optional_func(fname)
-        if len(vals) != 0:
-            path = os.path.join(start_dir, *vals, fname)
-            if path != last_fname:
-                curr_idx += 1
-                last_fname = path
-                ffile.write(last_fname.replace("\\", "/") + "\n")
-            cstr = "{},{},{}\n".format(curr_idx, value.Group, value.Unit)
-            cfile.write(cstr)
-
-    ffile.close()
-    cfile.close()
+            # directories = df.iloc[:, : df.columns.get_loc("Filename")]
+            last_fname = ""
+            curr_idx = -1
+            for value in df.itertuples():
+                directories = value[1 : df.columns.get_loc("Filename") + 1]
+                vals = directories[1:]
+                # TODO ensure same functionality as val == val check
+                vals = [val for val in vals if not pd.isna(val)]
+                fname = value.Filename
+                if optional_func is not None:
+                    fname = optional_func(fname)
+                if vals:
+                    path = os.path.join(start_dir, *vals, fname)
+                    if path != last_fname:
+                        curr_idx += 1
+                        last_fname = path
+                        ffile.write(last_fname.replace("\\", "/") + "\n")
+                    cstr = "{},{},{}\n".format(curr_idx, value.Group, value.Unit)
+                    cfile.write(cstr)
 
 
 def populate_table_directories(filename, dir_to_start, ext=None, re_filter=None):
@@ -248,10 +231,7 @@ def populate_table_directories(filename, dir_to_start, ext=None, re_filter=None)
 
     def new_col_maker(item):
         to_use = file_dict.get(item, [])
-        if len(to_use) == 1:
-            return to_use[0]
-        else:
-            return ""
+        return to_use[0] if len(to_use) == 1 else ""
 
     new_col = new_df["Filename"].apply(new_col_maker)
 
@@ -322,7 +302,7 @@ def index_ephys_files(
     """
     post_process_kwargs = {} if post_process_kwargs is None else post_process_kwargs
     loader_index_kwargs = {} if loader_index_kwargs is None else loader_index_kwargs
-    if (overwrite is False) and os.path.exists(output_path):
+    if not overwrite and os.path.exists(output_path):
         module_logger.warning(
             f"{output_path} exists, so loading this table - "
             + "please delete to reindex or pass overwrite as True."
@@ -366,8 +346,7 @@ def recording_container_from_file(filename, base_dir, load=False):
     """
     df = df_from_file(filename)
     param_dir = os.path.abspath(os.path.join(os.path.dirname(filename), ".."))
-    rc = recording_container_from_df(df, base_dir, param_dir, load=load)
-    return rc
+    return recording_container_from_df(df, base_dir, param_dir, load=load)
 
 
 def recording_container_from_df(df, base_dir, param_dir, load=False):

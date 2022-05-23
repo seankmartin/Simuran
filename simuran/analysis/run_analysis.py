@@ -67,11 +67,7 @@ def run_all_analysis(
     final_figs = []
     if num_cpus > 1:
         pool = multiprocessing.get_context("spawn").Pool(num_cpus)
-        print(
-            "Launching {} workers for {} iterations".format(
-                num_cpus, len(recording_container)
-            )
-        )
+        print(f"Launching {num_cpus} workers for {len(recording_container)} iterations")
         for i in pbar:
             pool.apply_async(
                 _multiprocessing_func(
@@ -97,11 +93,10 @@ def run_all_analysis(
         base_dir = recording_container.attrs.get("base_dir", None)
         for i in pbar:
             spath = Path(recording_container[i].source_file)
-            if base_dir is not None:
-                disp_name = spath.relative_to(base_dir)
-            else:
-                disp_name = spath.stem
-            pbar.set_description("Running on {}".format(disp_name))
+            disp_name = (
+                spath.relative_to(base_dir) if base_dir is not None else spath.stem
+            )
+            pbar.set_description(f"Running on {disp_name}")
             figures = _multiprocessing_func(
                 i,
                 recording_container,
@@ -127,7 +122,7 @@ def run_all_analysis(
 
             # This allows for multiple runs of the same function
             if isinstance(fn_args, dict):
-                for key, value in fn_args.items():
+                for _, value in fn_args.items():
                     cfg_cpy = copy(cfg)
                     args, kwargs = value
                     cfg_cpy.update(kwargs)
@@ -196,7 +191,7 @@ def _multiprocessing_func(
 
             # This allows for multiple runs of the same function
             if isinstance(fn_args, dict):
-                for key, value in fn_args.items():
+                for _, value in fn_args.items():
                     cfg_cpy = copy(cfg)
                     args, kwargs = value
                     cfg_cpy.update(kwargs)

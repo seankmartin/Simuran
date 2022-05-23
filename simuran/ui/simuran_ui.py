@@ -93,7 +93,7 @@ class SimuranUI(object):
             self.last_clicked_content = user_data[1]
             self.last_clicked_node = user_data[2]
         else:
-            print("Unrecognised clicked type {}".format(user_data[0]))
+            print(f"Unrecognised clicked type {user_data[0]}")
 
         mouse_pos = dpg.get_mouse_pos(local=False)
         dpg.configure_item("NodeContextWindow", show=True, pos=mouse_pos)
@@ -144,16 +144,15 @@ class SimuranUI(object):
             for basename, fpath in selections.items():
                 last_node = self.nodes[self.last_clicked_node]
                 last_node.set_source_file(fpath, label=self.last_clicked_content)
+        elif len(selections) == 1:
+            dpg.set_value(user_data, selections[0])
         else:
-            if len(selections) == 1:
-                dpg.set_value(user_data, selections[0])
-            else:
-                print("Selected multiple files, please choose one.")
+            print("Selected multiple files, please choose one.")
 
     def show_plots_callback(self, sender, app_data, user_data):
         node_clicked = self.last_clicked_node
         paths = self.nodes[node_clicked].plot_paths
-        for i, path in enumerate(paths):
+        for path in paths:
             if path not in self.loaded_images.keys():
                 t_id = dpg.generate_uuid()
                 image = PIL.Image.open(path)
@@ -176,11 +175,7 @@ class SimuranUI(object):
             else:
                 t_id = self.loaded_images[path]
 
-            with dpg.window(
-                label="Plot information from {}".format(self.nodes[node_clicked].label),
-                width=self.width - 50,
-                height=self.height - 40,
-            ):
+            with dpg.window(label=f"Plot information from {self.nodes[node_clicked].label}", width=self.width - 50, height=self.height - 40):
                 dpg.add_image(label="drawing", texture_id=t_id)
 
     def run_graph_callback(self, sender, app_data, user_data):

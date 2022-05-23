@@ -50,7 +50,7 @@ def wrap_up(recording_container):
             )
         )
         logger.warning(msg)
-        print("WARNING: " + msg)
+        print(f"WARNING: {msg}")
 
 
 def main_with_data(
@@ -70,10 +70,11 @@ def main_with_data(
 
     if dummy:
         print(
-            "Would run on {} and write results of {} with config {} to {}".format(
-                recording_container, function_config, param_config, output_directory
-            )
+            f"Would run on {recording_container} "
+            f"and write results of {function_config} "
+            f"with config {param_config} to {output_directory}"
         )
+
         return
 
     figures = function_config.get("figures", [])

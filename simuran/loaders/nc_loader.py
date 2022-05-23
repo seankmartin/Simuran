@@ -289,22 +289,16 @@ class NCLoader(MetadataLoader):
             # Extract the positional data
             output_list = [None, None]
             for i, ext in enumerate([pos_extension, stm_extension]):
-                for fname in get_all_files_in_dir(
-                    os.path.dirname(base),
-                    ext=ext,
-                    return_absolute=False,
-                    case_sensitive_ext=True,
-                ):
-                    if ext == ".txt":
-                        if fname[: len(base_filename) + 1] == base_filename + "_":
-                            name = os.path.join(os.path.dirname(base), fname)
-                            output_list[i] = name
+                if isinstance(ext, list):
+                    for ext_ in ext:
+                        filename_ = self.grab_stim_pos_files(base, base_filename, ext_)
+                        if filename_ is not None:
+                            output_list[i] = filename_
                             break
                     else:
-                        if fname[: len(base_filename)] == base_filename:
-                            name = os.path.join(os.path.dirname(base), fname)
-                            output_list[i] = name
-                            break
+                        output_list[i] = self.grab_stim_pos_files(
+                            base, base_filename, ext
+                        )
             spatial_name, stim_name = output_list
 
             base_sig_name = filename + lfp_extension
@@ -341,6 +335,22 @@ class NCLoader(MetadataLoader):
             return file_locs, base
         else:
             raise ValueError("auto_fname_extraction only implemented for Axona")
+
+    def grab_stim_pos_files(self, base, base_filename, ext):
+        for fname in get_all_files_in_dir(
+            os.path.dirname(base),
+            ext=ext,
+            return_absolute=False,
+            case_sensitive_ext=True,
+        ):
+            if ext == ".txt":
+                if fname[: len(base_filename) + 1] == base_filename + "_":
+                    name = os.path.join(os.path.dirname(base), fname)
+                    return name
+            else:
+                if fname[: len(base_filename)] == base_filename:
+                    name = os.path.join(os.path.dirname(base), fname)
+                    return name
 
     def index_files(self, folder, **kwargs):
         """Find all available neurochat files in the given folder"""

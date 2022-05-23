@@ -174,19 +174,17 @@ class RecordingContainer(AbstractContainer):
         for i, param_file in enumerate(param_files):
             if verbose:
                 print(
-                    "{} recording {} of {} at {}".format(
-                        out_str_load, i + 1, len(param_files), param_file
-                    )
+                    f"{out_str_load} recording {i + 1} of {len(param_files)} at {param_file}"
                 )
+
             recording = Recording(param_file=param_file, load=should_load)
             if not recording.valid:
                 if verbose:
                     log.print(
-                        "WARNING: Recording from {} was invalid, not adding to container".format(
-                            param_file
-                        )
+                        f"WARNING: Recording from {param_file} was invalid, not adding to container"
                     )
-                file_log.warning("Recording from {} was invalid".format(param_file))
+
+                file_log.warning(f"Recording from {param_file} was invalid")
                 self.invalid_recording_locations.append(param_file)
             else:
                 self.append(recording)
@@ -230,22 +228,25 @@ class RecordingContainer(AbstractContainer):
             return
         if self.load_on_fly:
             if self._last_loaded_idx != idx:
-                # TODO define recording.shallow_copy()
-                self.last_loaded = Recording()
-                self.last_loaded.attrs = self[idx].attrs
-                self.last_loaded.datetime = self[idx].datetime
-                self.last_loaded.tag = self[idx].tag
-                self.last_loaded.loader = self[idx].loader
-                self.last_loaded.source_file = self[idx].source_file
-                self.last_loaded.data = self[idx].data
-                self.last_loaded.results = self[idx].results
-                self.last_loaded.available_data = self[idx].available_data
-                self.last_loaded.load()
-                self._last_loaded_idx = idx
+                self.copy_recording(idx)
             return self.last_loaded
         else:
             self[idx].load()
             return self[idx]
+
+    def copy_recording(self, idx):
+        # TODO define recording.shallow_copy()
+        self.last_loaded = Recording()
+        self.last_loaded.attrs = self[idx].attrs
+        self.last_loaded.datetime = self[idx].datetime
+        self.last_loaded.tag = self[idx].tag
+        self.last_loaded.loader = self[idx].loader
+        self.last_loaded.source_file = self[idx].source_file
+        self.last_loaded.data = self[idx].data
+        self.last_loaded.results = self[idx].results
+        self.last_loaded.available_data = self[idx].available_data
+        self.last_loaded.load()
+        self._last_loaded_idx = idx
 
     def get_results(self, idx=None):
         """
@@ -280,9 +281,7 @@ class RecordingContainer(AbstractContainer):
         """
         all_units = []
         for r in self:
-            unit_l = []
-            for u in r.units:
-                unit_l.append(u.units_to_use)
+            unit_l = [u.units_to_use for u in r.units]
             all_units.append(unit_l)
         return all_units
 
@@ -352,16 +351,13 @@ class RecordingContainer(AbstractContainer):
         for i, recording in enumerate(self):
             compare = recording.source_file[-len(source_file) :]
             if os.path.normpath(source_file) == os.path.normpath(compare):
-                if not found:
-                    found = True
-                    location = i
-                else:
+                if found:
                     raise ValueError("Found two recordings with the same source")
+                found = True
+                location = i
         if found:
             return location
-        raise LookupError(
-            "Could not find a recording with the source {}".format(source_file)
-        )
+        raise LookupError(f"Could not find a recording with the source {source_file}")
 
     def subsample_by_name(self, source_files, inplace=False):
         """
@@ -409,7 +405,7 @@ class RecordingContainer(AbstractContainer):
             units_to_use = self.pick_cells(cell_location)
             self.set_chosen_cells(units_to_use, cell_location)
         else:
-            print("Loading cells from {}".format(cell_location))
+            print(f"Loading cells from {cell_location}")
             self.load_cells(cell_location)
 
     def load_cells(self, cell_location):
@@ -432,9 +428,7 @@ class RecordingContainer(AbstractContainer):
 
         """
         if not os.path.isfile(cell_location):
-            raise FileNotFoundError(
-                "No cell list available at {}.".format(cell_location)
-            )
+            raise FileNotFoundError(f"No cell list available at {cell_location}.")
         with open(cell_location, "r") as f:
             if f.readline().strip().lower() != "all":
                 reader = csv.reader(f, delimiter=",")
@@ -533,9 +527,7 @@ class RecordingContainer(AbstractContainer):
         for u in unit_spec_list:
             for val in u[1]:
                 if val not in all_cells[u[0]][1][1]:
-                    raise LookupError(
-                        "{}: {} not in {}".format(u[0], val, all_cells[u[0]][1][1])
-                    )
+                    raise LookupError(f"{u[0]}: {val} not in {all_cells[u[0]][1][1]}")
             # Recording container index, single unit group at that index, group units
             final_units.append([all_cells[u[0]][0], all_cells[u[0]][1][0], u[1]])
 
@@ -559,8 +551,8 @@ class RecordingContainer(AbstractContainer):
 
         """
         with open(cell_location, "w") as f:
-            max_num = max([len(u[2]) for u in final_units])
-            unit_as_string = ["Unit_{}".format(i) for i in range(max_num)]
+            max_num = max(len(u[2]) for u in final_units)
+            unit_as_string = [f"Unit_{i}" for i in range(max_num)]
             unit_str = ",".join(unit_as_string)
             f.write("Recording,Group,{}\n".format(unit_str))
             for u in final_units:
@@ -581,7 +573,7 @@ class RecordingContainer(AbstractContainer):
                 )
                 record_unit_idx = recording.units.group_by_property("group", u[1])[1][0]
                 recording.units[record_unit_idx].units_to_use = u[2]
-            print("Saved cells to {}".format(cell_location))
+            print(f"Saved cells to {cell_location}")
 
     def print_units(self, f=None):
         """
@@ -677,8 +669,8 @@ class RecordingContainer(AbstractContainer):
             The created recording
 
         """
-        if isinstance(params, str):
-            recording = Recording(param_file=params)
-        else:
-            recording = Recording(params=params)
-        return recording
+        return (
+            Recording(param_file=params)
+            if isinstance(params, str)
+            else Recording(params=params)
+        )

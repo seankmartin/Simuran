@@ -47,13 +47,13 @@ class SimuranFigure(object):
         # raster image
         out_format = self.kwargs.get("format", "png")
         if out_format is not None:
-            filename = os.path.splitext(self.filename)[0] + "." + out_format
+            filename = f"{os.path.splitext(self.filename)[0]}.{out_format}"
             self._output_filenames["raster"] = filename
 
         # vector image
         out_format = self.kwargs.get("vector_format", "pdf")
         if out_format is not None:
-            filename = os.path.splitext(self.filename)[0] + "." + out_format
+            filename = f"{os.path.splitext(self.filename)[0]}.{out_format}"
             self._output_filenames["vector"] = filename
 
         return self._output_filenames
@@ -99,23 +99,24 @@ class SimuranFigure(object):
 
     def close(self):
         """Close the underlying figure if not closed."""
-        if not self.closed:
-            self.closed = True
-            if self.figure is None:
-                return
-            try:
-                plt.close(self.figure)
-            except BaseException:
-                if hasattr(self.figure, "close"):
-                    self.figure.close()
-                elif hasattr(self.figure, "_close"):
-                    self.figure._close(None)
+        if self.closed:
+            return
+        self.closed = True
+        if self.figure is None:
+            return
+        try:
+            plt.close(self.figure)
+        except BaseException:
+            if hasattr(self.figure, "close"):
+                self.figure.close()
+            elif hasattr(self.figure, "_close"):
+                self.figure._close(None)
+            else:
+                if self.filename is None:
+                    log.warning("Unable to close figure")
                 else:
-                    if self.filename is None:
-                        log.warning("Unable to close figure")
-                    else:
-                        log.warning("Unable to close {}".format(self.filename))
-                    self.closed = False
+                    log.warning(f"Unable to close {self.filename}")
+                self.closed = False
 
     def isdone(self):
         """Return if this figure is ready for saving."""

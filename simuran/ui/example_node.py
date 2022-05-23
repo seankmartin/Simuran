@@ -1,3 +1,4 @@
+import contextlib
 import os
 import dearpygui.dearpygui as dpg
 
@@ -88,18 +89,21 @@ class RecordingNode(BaseNode):
             self.last_loaded_param_file != self.param_file
             or self.last_loaded_source_file != self.source_file
         ):
-            if self.debug:
-                print(f"Loading {self.source_file} with params {self.param_file}")
-            self.recording.source_file = self.source_file
-            self.recording.setup_from_file(self.param_file, load=True)
-            self.last_loaded_param_file = self.param_file
-            self.last_loaded_source_file = self.source_file
-            if self.debug:
-                print(f"Loaded {self.source_file} with params {self.param_file}")
+            self.load_setup()
         else:
             print(f"Already Loaded {self.source_file} with params {self.param_file}")
 
         return True
+
+    def load_setup(self):
+        if self.debug:
+            print(f"Loading {self.source_file} with params {self.param_file}")
+        self.recording.source_file = self.source_file
+        self.recording.setup_from_file(self.param_file, load=True)
+        self.last_loaded_param_file = self.param_file
+        self.last_loaded_source_file = self.source_file
+        if self.debug:
+            print(f"Loaded {self.source_file} with params {self.param_file}")
 
 
 class LFPCleanNodeFactory(NodeFactory):
@@ -163,17 +167,12 @@ class LFPCleanNode(BaseNode):
             method = "avg"
 
         # Use the input data
-        for key, value in self.input_attributes.items():
+        for key, _ in self.input_attributes.items():
             sender, receiver = key.split("--")
-            try:
+            with contextlib.suppress(ValueError):
                 sender = int(sender)
-            except ValueError:
-                pass
-            try:
+            with contextlib.suppress(ValueError):
                 receiver = int(receiver)
-            except ValueError:
-                pass
-
             attr = self.get_attribute(receiver)
             if attr["label"] == "Input recording":
                 source_file_tag = sender
@@ -206,7 +205,7 @@ class LFPCleanNode(BaseNode):
                 (results["ica_figs"][0], f"ica_excluded_{method}"),
                 (results["ica_figs"][1], f"ica_reconstructed_{method}"),
             ]
-            all_figs = all_figs + ica_figs
+            all_figs += ica_figs
 
         for f in all_figs:
             figure, name = f
