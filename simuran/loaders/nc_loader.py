@@ -291,14 +291,14 @@ class NCLoader(MetadataLoader):
             for i, ext in enumerate([pos_extension, stm_extension]):
                 if isinstance(ext, list):
                     for ext_ in ext:
-                        filename_ = self.grab_stim_pos_files(base, base_filename, ext_)
+                        filename_ = self._grab_stim_pos_files(base, base_filename, ext_)
                         if filename_ is not None:
                             output_list[i] = filename_
                             break
-                    else:
-                        output_list[i] = self.grab_stim_pos_files(
-                            base, base_filename, ext
-                        )
+                else:
+                    output_list[i] = self._grab_stim_pos_files(
+                        base, base_filename, ext
+                    )
             spatial_name, stim_name = output_list
 
             base_sig_name = filename + lfp_extension
@@ -336,7 +336,7 @@ class NCLoader(MetadataLoader):
         else:
             raise ValueError("auto_fname_extraction only implemented for Axona")
 
-    def grab_stim_pos_files(self, base, base_filename, ext):
+    def _grab_stim_pos_files(self, base, base_filename, ext):
         for fname in get_all_files_in_dir(
             os.path.dirname(base),
             ext=ext,
