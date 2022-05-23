@@ -337,7 +337,6 @@ class NCLoader(MetadataLoader):
             raise ValueError("auto_fname_extraction only implemented for Axona")
 
     def _grab_stim_pos_files(self, base, base_filename, ext):
-        print(base, base_filename, ext)
         for fname in get_all_files_in_dir(
             os.path.dirname(base),
             ext=ext,
