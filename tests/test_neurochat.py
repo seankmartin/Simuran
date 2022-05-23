@@ -46,7 +46,8 @@ def test_nc_recording_loading(delete=False):
     metadata = ParamHandler(
         source_file=os.path.join(
             main_dir, "tests", "resources", "params", "axona_test.py"
-        )
+        ),
+        name="mapping",
     )
     metadata["source_file"] = axona_files[-1]
 
@@ -89,7 +90,7 @@ def test_nc_recording_loading(delete=False):
             1,
         ],
     )
-    clust_locs = [os.path.basename(f) for f in file_locs["Clusters"] if f is not None]
+    clust_locs = [os.path.basename(f) for f in file_locs["Cluster"] if f is not None]
     assert "010416b-LS3-50Hz10.V5.ms_2.cut" in clust_locs
 
     if delete:

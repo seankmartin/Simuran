@@ -23,7 +23,8 @@ def test_param_load():
 
 def test_recording_setup():
     metadata = ParamHandler(
-        source_file=os.path.join(main_dir, "tests", "params", "simuran_base_params.py")
+        source_file=os.path.join(main_dir, "tests", "resources", "params", "simuran_base_params.py"),
+        name="mapping",
     )
     loader = MetadataLoader()
     ex = Recording(attrs=metadata, loader=loader)

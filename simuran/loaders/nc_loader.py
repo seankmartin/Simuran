@@ -39,6 +39,7 @@ class NCLoader(MetadataLoader):
                 return
             for first_key, map_sub in mapping.items():
                 if map_sub is None:
+                    recording.attrs["units"] = None
                     continue
                 if first_key not in ["signals", "spatial", "units"]:
                     continue
@@ -88,7 +89,7 @@ class NCLoader(MetadataLoader):
 
     def parse_metadata(self, recording: "Recording") -> None:
         if "source_file" in recording.attrs:
-            source_file = recording.attrs.pop("source_file")
+            source_file = recording.attrs["source_file"]
         elif "directory" in recording.attrs:
             source_file = (
                 Path(recording.attrs["directory"]) / recording.attrs["filename"]
@@ -106,7 +107,7 @@ class NCLoader(MetadataLoader):
             recording.attrs["mapping"] = ph
         if "datetime" in recording.attrs:
             recording.datetime = datetime.datetime.strptime(
-                recording.attrs.pop("datetime"), "%Y-%m-%d %H:%M:%S"
+                recording.attrs["datetime"], "%Y-%m-%d %H:%M:%S"
             )
             recording.datetime = recording.datetime.replace(tzinfo=tzlocal())
 
