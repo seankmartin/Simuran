@@ -417,37 +417,3 @@ def recording_container_from_df(df, base_dir, param_dir, load=False):
 
     rc.base_dir = base_dir
     return rc
-
-
-def main_analyse_cell_list(params, dirname_replacement, overwrite=False):
-    if isinstance(params, dict):
-        ph = ParamHandler(
-            params=params,
-        )
-        default = "sim_results__"
-    else:
-        ph = ParamHandler(
-            source_file=params, name="params", dirname_replacement=dirname_replacement
-        )
-        default = os.path.join(
-            os.path.dirname(params),
-            "..",
-            "sim_results",
-            os.path.splitext(os.path.basename(params))[0],
-        )
-    out_dir = ph.get("out_dir", None)
-    if out_dir is None:
-        out_dir = default
-
-    cfg = parse_config()
-    cfg.update(ph.get("fn_kwargs", {}))
-    return analyse_cell_list(
-        filename=ph["cell_list_path"],
-        fn_to_use=ph["function_to_run"],
-        headers=ph["headers"],
-        after_fn=ph.get("after_fn", None),
-        out_dir=out_dir,
-        fn_args=ph.get("fn_args", []),
-        fn_kwargs=cfg,
-        overwrite=ph.get("overwrite", overwrite),
-    )
