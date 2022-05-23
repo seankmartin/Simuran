@@ -15,10 +15,8 @@ from .recording_container import RecordingContainer
 
 # For main import differently
 from .table import (
-    analyse_cell_list,
     dir_to_table,
     index_ephys_files,
-    main_analyse_cell_list,
     populate_table_directories,
     recording_container_from_df,
     recording_container_from_file,
