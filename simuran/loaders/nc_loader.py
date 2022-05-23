@@ -337,6 +337,7 @@ class NCLoader(MetadataLoader):
             raise ValueError("auto_fname_extraction only implemented for Axona")
 
     def _grab_stim_pos_files(self, base, base_filename, ext):
+        print(base, base_filename, ext)
         for fname in get_all_files_in_dir(
             os.path.dirname(base),
             ext=ext,
@@ -344,52 +345,49 @@ class NCLoader(MetadataLoader):
             case_sensitive_ext=True,
         ):
             if ext == ".txt":
-                if fname[: len(base_filename) + 1] == base_filename + "_":
+                if fname[: len(base_filename) + 1] == f"{base_filename}_":
                     name = os.path.join(os.path.dirname(base), fname)
                     return name
-            else:
-                if fname[: len(base_filename)] == base_filename:
-                    name = os.path.join(os.path.dirname(base), fname)
-                    return name
+            elif fname[: len(base_filename)] == base_filename:
+                name = os.path.join(os.path.dirname(base), fname)
+                return name
 
     def index_files(self, folder, **kwargs):
         """Find all available neurochat files in the given folder"""
-        if self.system == "Axona":
-            set_files = []
-            root_folders = []
-            times = []
-            durations = []
-            print("Finding all .set files...")
-            files = get_all_files_in_dir(
-                folder,
-                ext=".set",
-                recursive=True,
-                return_absolute=True,
-                case_sensitive_ext=True,
-            )
-            print(f"Found {len(files)} set files")
-
-            for fname in tqdm(files, desc="Processing files"):
-                set_files.append(os.path.basename(fname))
-                root_folders.append(os.path.normpath(os.path.dirname(fname)))
-                with open(fname) as f:
-                    f.readline()
-                    t = f.readline()[-9:-2]
-                    try:
-                        int(t[:2])
-                        times.append(t)
-                        f.readline()
-                        f.readline()
-                        durations.append(f.readline()[-11:-8])
-                    except:
-                        if len(times) != len(set_files):
-                            times.append(np.nan)
-                        if len(durations) != len(set_files):
-                            durations.append(np.nan)
-
-            headers = ["directory", "filename", "time", "duration"]
-            in_list = [root_folders, set_files, times, durations]
-            results_df = list_to_df(in_list, transpose=True, headers=headers)
-            return results_df
-        else:
+        if self.system != "Axona":
             raise ValueError("auto_fname_extraction only implemented for Axona")
+        set_files = []
+        root_folders = []
+        times = []
+        durations = []
+        print("Finding all .set files...")
+        files = get_all_files_in_dir(
+            folder,
+            ext=".set",
+            recursive=True,
+            return_absolute=True,
+            case_sensitive_ext=True,
+        )
+        print(f"Found {len(files)} set files")
+
+        for fname in tqdm(files, desc="Processing files"):
+            set_files.append(os.path.basename(fname))
+            root_folders.append(os.path.normpath(os.path.dirname(fname)))
+            with open(fname) as f:
+                f.readline()
+                t = f.readline()[-9:-2]
+                try:
+                    int(t[:2])
+                    times.append(t)
+                    f.readline()
+                    f.readline()
+                    durations.append(f.readline()[-11:-8])
+                except Exception:
+                    if len(times) != len(set_files):
+                        times.append(np.nan)
+                    if len(durations) != len(set_files):
+                        durations.append(np.nan)
+
+        headers = ["directory", "filename", "time", "duration"]
+        in_list = [root_folders, set_files, times, durations]
+        return list_to_df(in_list, transpose=True, headers=headers)

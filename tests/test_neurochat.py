@@ -9,7 +9,7 @@ from simuran.core.param_handler import ParamHandler
 from simuran.loaders.nc_loader import NCLoader
 from simuran.recording import Recording
 
-main_dir = os.path.dirname(__file__)[: -len(os.sep + "tests")]
+main_dir = os.path.dirname(__file__)[:-len(f"{os.sep}tests")]
 
 
 def fetch_axona_data():
