@@ -23,6 +23,8 @@ from tqdm import tqdm
 if TYPE_CHECKING:
     from simuran.recording import Recording
 
+module_logger = logging.getLogger("simuran.loaders")
+
 # TODO support non-sequential eeg numbers
 # TODO clean up a little
 class NCLoader(MetadataLoader):
@@ -222,7 +224,9 @@ class NCLoader(MetadataLoader):
             if os.path.isdir(base):
                 set_files = get_all_files_in_dir(base, ext="set")
                 if len(set_files) == 0:
-                    print("WARNING: No set files found in {}, skipping".format(base))
+                    module_logger.warning(
+                        "No set files found in {}, skipping".format(base)
+                    )
                     return None, None
                 elif len(set_files) > 1:
                     raise ValueError(
@@ -296,9 +300,7 @@ class NCLoader(MetadataLoader):
                             output_list[i] = filename_
                             break
                 else:
-                    output_list[i] = self._grab_stim_pos_files(
-                        base, base_filename, ext
-                    )
+                    output_list[i] = self._grab_stim_pos_files(base, base_filename, ext)
             spatial_name, stim_name = output_list
 
             base_sig_name = filename + lfp_extension
@@ -359,7 +361,7 @@ class NCLoader(MetadataLoader):
         root_folders = []
         times = []
         durations = []
-        print("Finding all .set files...")
+        module_logger.info("Finding all .set files...")
         files = get_all_files_in_dir(
             folder,
             ext=".set",
@@ -367,7 +369,7 @@ class NCLoader(MetadataLoader):
             return_absolute=True,
             case_sensitive_ext=True,
         )
-        print(f"Found {len(files)} set files")
+        module_logger.info(f"Found {len(files)} set files")
 
         for fname in tqdm(files, desc="Processing files"):
             set_files.append(os.path.basename(fname))

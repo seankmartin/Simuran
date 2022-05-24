@@ -175,7 +175,11 @@ class SimuranUI(object):
             else:
                 t_id = self.loaded_images[path]
 
-            with dpg.window(label=f"Plot information from {self.nodes[node_clicked].label}", width=self.width - 50, height=self.height - 40):
+            with dpg.window(
+                label=f"Plot information from {self.nodes[node_clicked].label}",
+                width=self.width - 50,
+                height=self.height - 40,
+            ):
                 dpg.add_image(label="drawing", texture_id=t_id)
 
     def run_graph_callback(self, sender, app_data, user_data):

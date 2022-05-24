@@ -29,30 +29,6 @@ logger = logging.getLogger("simuran")
 establish_main_logger(logger)
 
 
-def update_path(base_path: str):
-    possible_analysis_directories = [
-        Path(base_path).parent.parent / "Scripts",
-        Path.cwd() / "scripts",
-    ]
-    for site_dir in possible_analysis_directories:
-        if site_dir.is_dir():
-            logger.debug(f"Added {site_dir} to path")
-            site.addsitedir(site_dir)
-
-
-def wrap_up(recording_container):
-    if len(recording_container.get_invalid_locations()) > 0:
-        msg = pformat(
-            "Loaded {} recordings and skipped loading from {} locations:\n {}".format(
-                len(recording_container),
-                len(recording_container.get_invalid_locations()),
-                recording_container.get_invalid_locations(),
-            )
-        )
-        logger.warning(msg)
-        print(f"WARNING: {msg}")
-
-
 def main_with_data(
     datatable: "DataFrame",
     loader: "BaseLoader",
@@ -69,13 +45,9 @@ def main_with_data(
     recording_container.attrs["base_dir"] = param_config.get("cfg_base_dir", "")
 
     if dummy:
-        print(
-            f"Would run on {recording_container} "
-            f"and write results of {function_config} "
-            f"with config {param_config} to {output_directory}"
+        return _print_setup(
+            recording_container, function_config, param_config, output_directory
         )
-
-        return
 
     figures = function_config.get("figures", [])
     figure_names = function_config.get("figure_names", [])
@@ -106,8 +78,8 @@ def main_with_data(
         set_done=True,
     )
     save_unclosed_figures(output_directory)
-
     results = recording_container.get_results()
+    _wrap_up(recording_container)
 
     logger.info(
         "Operation completed in {:.2f}mins".format(
@@ -129,11 +101,42 @@ def main_with_files(
     output_directory: Optional[str] = None,
 ) -> "Tuple[list[dict], RecordingContainer]":
     """Run analysis on files using specified configuration."""
-    update_path(function_filepath)
+    _update_path(function_filepath)
     datatable = df_from_file(datatable_filepath)
     config_params = ParamHandler(source_file=config_filepath, name="params")
     function_params = ParamHandler(source_file=function_filepath, name="params")
 
+    output_directory, datatable, loader, output_name = _process_config(
+        datatable_filepath,
+        config_filepath,
+        function_filepath,
+        data_filter,
+        output_directory,
+        datatable,
+        config_params,
+    )
+    return main_with_data(
+        datatable,
+        loader,
+        output_directory,
+        output_name,
+        config_params,
+        function_params,
+        dry_run,
+        handle_errors,
+        num_cpus,
+    )
+
+
+def _process_config(
+    datatable_filepath,
+    config_filepath,
+    function_filepath,
+    data_filter,
+    output_directory,
+    datatable,
+    config_params,
+):
     data_filter = "" if data_filter is None else data_filter
     if Path(data_filter).is_file():
         data_filter = ParamHandler(source_file=data_filter, name="params")
@@ -153,16 +156,38 @@ def main_with_files(
         datatable_filepath, function_filepath, config_filepath
     )
     output_directory = output_directory if output_directory is not None else od
-    return main_with_data(
-        datatable,
-        loader,
-        output_directory,
-        output_name,
-        config_params,
-        function_params,
-        dry_run,
-        handle_errors,
-        num_cpus,
+    return output_directory, datatable, loader, output_name
+
+
+def _update_path(base_path: str):
+    possible_analysis_directories = [
+        Path(base_path).parent.parent / "Scripts",
+        Path.cwd() / "scripts",
+    ]
+    for site_dir in possible_analysis_directories:
+        if site_dir.is_dir():
+            logger.debug(f"Added {site_dir} to path")
+            site.addsitedir(site_dir)
+
+
+def _wrap_up(recording_container):
+    if len(recording_container.get_invalid_locations()) > 0:
+        msg = pformat(
+            "Loaded {} recordings and skipped loading from {} locations:\n {}".format(
+                len(recording_container),
+                len(recording_container.get_invalid_locations()),
+                recording_container.get_invalid_locations(),
+            )
+        )
+        logger.warning(msg)
+        print(f"WARNING: {msg}")
+
+
+def _print_setup(recording_container, function_config, param_config, output_directory):
+    print(
+        f"Would run on {recording_container} "
+        f"and write results of {function_config} "
+        f"with config {param_config} to {output_directory}"
     )
 
 
