@@ -101,42 +101,31 @@ def main_with_files(
     output_directory: Optional[str] = None,
 ) -> "Tuple[list[dict], RecordingContainer]":
     """Run analysis on files using specified configuration."""
+
+    kwargs = process_config(
+        datatable_filepath,
+        config_filepath,
+        function_filepath,
+        output_directory,
+        data_filter,
+    )
+    kwargs["dry_run"] = dry_run
+    kwargs["handle_errors"] = handle_errors
+    kwargs["num_cpus"] = num_cpus
+    return main_with_data(**kwargs)
+
+
+def process_config(
+    datatable_filepath,
+    config_filepath,
+    function_filepath,
+    output_directory,
+    data_filter=None,
+):
     _update_path(function_filepath)
     datatable = df_from_file(datatable_filepath)
     config_params = ParamHandler(source_file=config_filepath, name="params")
     function_params = ParamHandler(source_file=function_filepath, name="params")
-
-    output_directory, datatable, loader, output_name = _process_config(
-        datatable_filepath,
-        config_filepath,
-        function_filepath,
-        data_filter,
-        output_directory,
-        datatable,
-        config_params,
-    )
-    return main_with_data(
-        datatable,
-        loader,
-        output_directory,
-        output_name,
-        config_params,
-        function_params,
-        dry_run,
-        handle_errors,
-        num_cpus,
-    )
-
-
-def _process_config(
-    datatable_filepath,
-    config_filepath,
-    function_filepath,
-    data_filter,
-    output_directory,
-    datatable,
-    config_params,
-):
     data_filter = "" if data_filter is None else data_filter
     if Path(data_filter).is_file():
         data_filter = ParamHandler(source_file=data_filter, name="params")
@@ -156,7 +145,14 @@ def _process_config(
         datatable_filepath, function_filepath, config_filepath
     )
     output_directory = output_directory if output_directory is not None else od
-    return output_directory, datatable, loader, output_name
+    return {
+        "datatable": datatable,
+        "loader": loader,
+        "output_directory": output_directory,
+        "output_name": output_name,
+        "config_params": config_params,
+        "function_params": function_params,
+    }
 
 
 def _update_path(base_path: str):
