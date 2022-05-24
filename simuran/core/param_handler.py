@@ -76,7 +76,7 @@ class ParamHandler(object):
             self.attrs = read_python(
                 self.source_file, dirname_replacement=self.dirname_replacement
             )[self.name]
-        elif self.source_file.suffix == ".yaml":
+        elif self.source_file.suffix in [".yaml", ".yml"]:
             self.attrs = read_yaml(self.source_file)
         elif self.source_file.suffix == ".json":
             self.attrs = read_json(self.source_file)
