@@ -4,7 +4,7 @@ from rich import inspect
 from .analysis.analysis_handler import AnalysisHandler
 from .core.base_container import GenericContainer
 from .core.eeg import Eeg, EegArray
-from .core.log_handler import log, log_exception
+from .core.log_handler import log, log_exception, set_only_log_to_file
 from .core.param_handler import ParamHandler
 from .loaders.loader_list import loader_from_string, loaders_dict
 from .main import main_with_data, main_with_files

@@ -4,10 +4,18 @@ import logging
 import logging.handlers
 import traceback
 from pathlib import Path
+from typing import Optional, Union
 
-from skm_pyutils.log import FileLogger, FileStdoutLogger, get_default_log_loc
+from skm_pyutils.log import (
+    FileLogger,
+    FileStdoutLogger,
+    clear_handlers,
+    convert_log_level,
+    get_default_log_loc,
+)
 from skm_pyutils.path import make_path_if_not_exists
 
+# TODO remove these later in favour of built in logging
 log = FileLogger("simuran_cli")
 out = FileStdoutLogger()
 
@@ -18,6 +26,19 @@ def default_log_location():
     return log_location
 
 
+def set_only_log_to_file(
+    log_location: Union[str, "Path"],
+    logger: Optional["logging.Logger"] = None,
+    log_level: Union[str, int] = "DEBUG",
+):
+    logger = logging.getLogger("simuran") if logger is None else logger
+    fh = logging.FileHandler(log_location, mode="w")
+    fh.setFormatter(default_formatter())
+    fh.setLevel(convert_log_level(log_level))
+    clear_handlers(logger)
+    logger.addHandler(fh)
+
+
 def establish_main_logger(logger: "logging.Logger") -> None:
     """
     Set the handlers on the simuran logger and simuran.module loggers.
@@ -25,10 +46,7 @@ def establish_main_logger(logger: "logging.Logger") -> None:
     TODO check can remove logging
     """
     logger.setLevel(logging.DEBUG)
-    formatter = logging.Formatter(
-        fmt="%(levelname)s: %(asctime)s %(message)s",
-        datefmt="%d/%m/%Y %I:%M:%S %p",
-    )
+    formatter = default_formatter()
 
     fh = logging.handlers.RotatingFileHandler(
         default_log_location(), backupCount=5, maxBytes=100000
@@ -40,6 +58,13 @@ def establish_main_logger(logger: "logging.Logger") -> None:
     ch.setFormatter(formatter)
     logger.addHandler(ch)
     logger.addHandler(fh)
+
+
+def default_formatter():
+    return logging.Formatter(
+        fmt="%(levelname)s - %(name)s: %(asctime)s %(message)s",
+        datefmt="%d/%m/%Y %I:%M:%S %p",
+    )
 
 
 def log_exception(ex, more_info="", location=None):
