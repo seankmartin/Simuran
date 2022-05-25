@@ -654,6 +654,10 @@ class RecordingContainer(AbstractContainer):
             for j in range(len(recording.units)):
                 self[i].units[j].units_to_use = available_units[j][1]
 
+    def load_iter(self):
+        """Iterator through the container that loads data on item retrieval."""
+        return RecordingContainerLoadIterator(self)
+
     def _create_new(self, params):
         """
         Create a new recording with the given parameters.
@@ -674,3 +678,20 @@ class RecordingContainer(AbstractContainer):
             if isinstance(params, str)
             else Recording(params=params)
         )
+
+
+class RecordingContainerLoadIterator(object):
+    """An iterator for loading recording container on the fly."""
+
+    def __init__(self, recording_container: "RecordingContainer"):
+        self.recording_container = recording_container
+        self.current = -1
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        self.current += 1
+        if self.current < len(self.recording_container):
+            return self.recording_container.load(self.current)
+        raise StopIteration

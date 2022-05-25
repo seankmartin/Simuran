@@ -10,15 +10,18 @@ if TYPE_CHECKING:
 
 @dataclass
 class NWBLoader(MetadataLoader):
-    """
-    Load NWB data.
-
-    Currently, need to call recording.data.close() when done.
-
-    """
+    """Load NWB data."""
 
     def parse_metadata(self, recording: "Recording") -> None:
-        recording.source_file = recording.attrs["source_file"]
+        options = ["nwb_file", "source_file"]
+        for option in options:
+            if option in recording.attrs:
+                recording.source_file = recording.attrs[option]
+                break
+        else:
+            raise ValueError(
+                f"Please provide one of {options} as metadata for NWB parsing"
+            )
 
     def load_recording(self, recording) -> "Recording":
         try:

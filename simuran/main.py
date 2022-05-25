@@ -122,7 +122,7 @@ def process_config(
     output_directory,
     data_filter=None,
 ):
-    _update_path(function_filepath)
+    update_path(function_filepath)
     datatable = df_from_file(datatable_filepath)
     config_params = ParamHandler(source_file=config_filepath, name="params")
     function_params = ParamHandler(source_file=function_filepath, name="params")
@@ -155,9 +155,10 @@ def process_config(
     }
 
 
-def _update_path(base_path: str):
+def update_path(base_path: str):
+    """Update the path using cwd/scripts and base_path.parent.parent/scripts"""
     possible_analysis_directories = [
-        Path(base_path).parent.parent / "Scripts",
+        Path(base_path).parent.parent / "scripts",
         Path.cwd() / "scripts",
     ]
     for site_dir in possible_analysis_directories:
