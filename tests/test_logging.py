@@ -19,7 +19,7 @@ def test_analysis_logging():
     ah = AnalysisHandler(handle_errors=True)
     ah.add_fn(add, 1.34, "hi")
     ah.add_fn(add, 1.1, 3)
-    ah.add_fn(add, int(1), "hello")
+    ah.add_fn(add, 1, "hello")
 
     ah.run_all_fns()
 

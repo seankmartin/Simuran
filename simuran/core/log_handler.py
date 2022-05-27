@@ -37,6 +37,7 @@ def set_only_log_to_file(
     fh.setLevel(convert_log_level(log_level))
     clear_handlers(logger)
     logger.addHandler(fh)
+    return fh
 
 
 def establish_main_logger(logger: "logging.Logger") -> None:
