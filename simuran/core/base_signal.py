@@ -51,6 +51,7 @@ class BaseSignal(BaseSimuran):
         self.group = None
         self.channel = None
         self.channel_type = "eeg"
+        self.conversion = 1.0  # To convert to Volts
 
     ## TODO design thoughts!
     ## Passing source_file vs full recording??
@@ -64,7 +65,8 @@ class BaseSignal(BaseSimuran):
         self.save_attrs(load_result)
         self.last_loaded_source = self.source_file
 
-    def from_numpy(self, np_array, sampling_rate):
+    @classmethod
+    def from_numpy(cls, np_array, sampling_rate):
         """
         Set data from a numpy array, assumed in mV and srate in Hz.
 
@@ -80,12 +82,11 @@ class BaseSignal(BaseSimuran):
         None
 
         """
-        self.samples = (
-            np_array.to(u.mV) if hasattr(np_array, "unit") else np_array * u.mV
-        )
-
-        self.sampling_rate = sampling_rate
-        self.timestamps = [i / sampling_rate for i in range(len(self.samples))] * u.s
+        signal = cls()
+        signal.samples = np_array
+        signal.sampling_rate = sampling_rate
+        signal.timestamps = [i / sampling_rate for i in range(len(signal.samples))]
+        return signal
 
     def default_name(self):
         """Get the default name for this signal based on region."""
@@ -208,11 +209,11 @@ def convert_signals_to_mne(signals, ch_names=None, verbose=True):
     verbose = None if verbose else "WARNING"
     if ch_names is None:
         ch_names = [sig.default_name() for sig in signals]
-    raw_data = np.array([sig.get_samples().to(u.V) for sig in signals], float)
+    raw_data = np.array([sig.samples * sig.conversion for sig in signals], float)
 
-    sfreq = signals[0].get_sampling_rate()
+    sfreq = signals[0].sampling_rate
 
-    ch_types = [sig.get_channel_type() for sig in signals]
+    ch_types = [sig.channel_type for sig in signals]
 
     info = mne.create_info(ch_names=ch_names, sfreq=sfreq, ch_types=ch_types)
     return mne.io.RawArray(raw_data, info=info, verbose=verbose)

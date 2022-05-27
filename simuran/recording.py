@@ -7,7 +7,7 @@ import astropy.units as u
 import numpy as np
 
 from simuran.core.base_class import BaseSimuran
-from simuran.core.eeg import Eeg, EegArray
+from simuran.core.eeg import EEG, EEGArray
 
 
 @dataclass
@@ -236,17 +236,17 @@ class Recording(BaseSimuran):
 
         Returns
         -------
-        simuran.eeg.EegArray
+        simuran.eeg.EEGArray
             The signals as an EegArray.
 
         """
         inplace = not copy
-        eeg_array = EegArray()
+        eeg_array = EEGArray()
         _, eeg_idxs = self.signals.group_by_property("channel_type", "eeg")
         eeg_sigs = self.signals.subsample(idx_list=eeg_idxs, inplace=inplace)
         if inplace:
             eeg_sigs = self.signals
-        eeg_array.set_container([Eeg(signal=eeg) for eeg in eeg_sigs])
+        eeg_array.set_container([EEG(signal=eeg) for eeg in eeg_sigs])
 
         return eeg_array
 
@@ -259,6 +259,5 @@ class Recording(BaseSimuran):
         return np.array([s.samples.to(u.mV) for s in self.signals], float) * u.mV
 
     def __del__(self):
-        if self.loader is not None:
-            if hasattr(self.loader, "unload"):
-                self.loader.unload(self)
+        if self.loader is not None and hasattr(self.loader, "unload"):
+            self.loader.unload(self)

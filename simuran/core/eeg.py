@@ -7,7 +7,7 @@ from simuran.core.base_container import GenericContainer
 from simuran.core.base_signal import BaseSignal
 
 
-class Eeg(BaseSignal):
+class EEG(BaseSignal):
     """EEG class. Provides extra functionality on top of base signal."""
 
     def __init__(self, samples=None, sampling_rate=None, signal=None):
@@ -56,7 +56,7 @@ class Eeg(BaseSignal):
         matplotlib.figure.Figure
             The filtered version of the signals
         """
-        eeg_array = EegArray()
+        eeg_array = EEGArray()
         eeg_array.append(self)
         ch_names = ["Original"]
         for f in filters:
@@ -85,12 +85,12 @@ class Eeg(BaseSignal):
         return f"EEG signal at {self.sampling_rate}Hz with {len(self.samples)} samples"
 
 
-class EegArray(GenericContainer):
+class EEGArray(GenericContainer):
     """Hold a set of EEG signals."""
 
     def __init__(self):
-        """See help(EegArray)"""
-        super().__init__(cls=Eeg)
+        """See help(EEGArray)"""
+        super().__init__(cls=EEG)
 
     def convert_signals_to_mne(self, ch_names=None, verbose=True, bad_chans=None):
         """
@@ -115,11 +115,11 @@ class EegArray(GenericContainer):
         signals = self
         if ch_names is None:
             ch_names = [eeg.default_name() for eeg in signals]
-        raw_data = np.array([eeg.get_samples().to(u.V) for eeg in signals], float)
+        raw_data = np.array([eeg.samples * eeg.conversion for eeg in signals], float)
 
-        sfreq = signals[0].get_sampling_rate()
+        sfreq = signals[0].sampling_rate
 
-        ch_types = [eeg.get_channel_type() for eeg in signals]
+        ch_types = [eeg.channel_type for eeg in signals]
 
         info = mne.create_info(ch_names=ch_names, sfreq=sfreq, ch_types=ch_types)
         raw = mne.io.RawArray(raw_data, info=info, verbose=verbose)
