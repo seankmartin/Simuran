@@ -34,12 +34,14 @@ except ModuleNotFoundError:
     print("INFO: The pynwb module is not installed.")
 
 
-def loader_from_string(value: str) -> Type["BaseLoader"]:
+def loader_from_string(value: str, *args, **kwargs) -> Type["BaseLoader"]:
     """
     Loader class from string value
 
     Currently supports:
     "nwb", "neurochat", "allen_ophys"
+
+    args and kwargs are passed to the loader initialiser
 
     """
     data_loader_cls = loaders_dict.get(value, None)
@@ -48,4 +50,4 @@ def loader_from_string(value: str) -> Type["BaseLoader"]:
             f"Unrecognised loader {value}, options are {list(loaders_dict.keys())}"
         )
 
-    return data_loader_cls
+    return data_loader_cls(*args, **kwargs)
