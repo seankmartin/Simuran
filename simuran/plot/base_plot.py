@@ -129,7 +129,7 @@ def save_simuran_plot(fig, save_location, **kwargs):
         if verbose:
             print(f"Saving raster image to {save_location}")
 
-        skm_pyutils.py_path.make_path_if_not_exists(save_location)
+        skm_pyutils.path.make_path_if_not_exists(save_location)
         fig.savefig(
             save_location, dpi=dpi, bbox_inches=bbox_inches, pad_inches=pad_inches
         )
@@ -142,7 +142,7 @@ def save_simuran_plot(fig, save_location, **kwargs):
         if verbose:
             print(f"Saving vector image to {save_location}")
 
-        skm_pyutils.py_path.make_path_if_not_exists(save_location)
+        skm_pyutils.path.make_path_if_not_exists(save_location)
         fig.savefig(
             save_location, dpi=dpi, bbox_inches=bbox_inches, pad_inches=pad_inches
         )

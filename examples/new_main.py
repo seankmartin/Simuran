@@ -16,8 +16,8 @@ from simuran.recording import Recording
 
 # TODO should this be one level down
 from simuran.recording_container import RecordingContainer
-from skm_pyutils.py_plot import GridFig
-from skm_pyutils.py_table import df_from_file
+from skm_pyutils.plot import GridFig
+from skm_pyutils.table import df_from_file
 
 # Pseudo of idea
 input_file_dir = Path(r"D:\AllenBrainObservatory\ophys_data")

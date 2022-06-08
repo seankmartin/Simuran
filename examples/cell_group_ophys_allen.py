@@ -12,8 +12,8 @@ from icecream import ic
 # TODO can this be a member of smr directly? Should it be?
 from simuran.loaders.allen_loader import AllenOphysLoader
 from simuran.loaders.nwb_loader import NWBLoader
-from skm_pyutils.py_log import print_memory_usage
-from skm_pyutils.py_plot import GridFig
+from skm_pyutils.log import print_memory_usage
+from skm_pyutils.plot import GridFig
 
 from utils import get_path_to_allen_ophys_nwb
 

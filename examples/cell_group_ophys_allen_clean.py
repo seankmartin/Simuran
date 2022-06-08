@@ -6,7 +6,7 @@ import simuran as smr
 from allensdk.brain_observatory.behavior.behavior_project_cache import (
     VisualBehaviorOphysProjectCache,
 )
-from skm_pyutils.py_log import print_memory_usage
+from skm_pyutils.log import print_memory_usage
 
 from utils import get_path_to_allen_ophys_nwb
 

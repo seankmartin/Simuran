@@ -207,6 +207,7 @@ def convert_signals_to_mne(signals, ch_names=None, verbose=True):
 
     """
     verbose = None if verbose else "WARNING"
+    
     if ch_names is None:
         ch_names = [sig.default_name() for sig in signals]
     raw_data = np.array([sig.samples * sig.conversion for sig in signals], float)
