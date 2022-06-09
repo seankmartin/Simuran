@@ -10,7 +10,17 @@ if TYPE_CHECKING:
 
 @dataclass
 class NWBLoader(MetadataLoader):
-    """Load NWB data."""
+    """
+    Load NWB data.
+    
+    Attributes
+    ----------
+    mode : str 
+        The mode to open the file in, by default "r"
+        But "a" and "w" are other options for example.
+
+    """
+    mode : str = "r"
 
     def parse_metadata(self, recording: "Recording") -> None:
         options = ["nwb_file", "source_file"]
@@ -25,9 +35,12 @@ class NWBLoader(MetadataLoader):
 
     def load_recording(self, recording) -> "Recording":
         try:
-            nwb_io = pynwb.NWBHDF5IO(recording.source_file, "r")
+            nwb_io = pynwb.NWBHDF5IO(recording.source_file, self.mode)
         except OSError as e:
             print(f"{recording.source_file} is not a valid NWB file")
+            raise (e)
+        except TypeError as e:
+            print(f"{recording.source_file} is not a valid type for NWB file")
             raise (e)
         recording.data = nwb_io.read()
         recording._nwb_io = nwb_io
