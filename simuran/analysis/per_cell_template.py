@@ -30,7 +30,7 @@ def stat_per_cell(recording):
         available_units = unit.underlying.get_unit_list()
 
         for cell in to_analyse:
-            name_for_save = out_str_start + "_" + str(cell)
+            name_for_save = f"{out_str_start}_{str(cell)}"
             output[name_for_save] = [np.nan] * NUM_RESULTS
 
             # Check to see if this data is ok

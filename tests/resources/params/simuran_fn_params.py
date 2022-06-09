@@ -74,7 +74,7 @@ def setup_figures():
 
     See also
     --------
-    skm_pyutils.py_plot.GridFig
+    skm_pyutils.plot.GridFig
 
     """
     # The list of figures to use

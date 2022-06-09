@@ -18,10 +18,7 @@ from rich import print
 # TODO remove getter and setter
 class BaseNode(object):
     def __init__(self, parent, label="Node", tag=None, debug=False):
-        if tag is None:
-            self.tag = dpg.generate_uuid()
-        else:
-            self.tag = tag
+        self.tag = dpg.generate_uuid() if tag is None else tag
         self.label = label
         self.parent = parent
         self.attributes = {}
@@ -46,13 +43,13 @@ class BaseNode(object):
             self.output_attributes[f"{sender}--{receiver}"] = receiver
 
             if self.debug:
-                print("{}: Connected to {} as sender".format(self.tag, receiver))
+                print(f"{self.tag}: Connected to {receiver} as sender")
 
         if receiver_attr is not None:
             self.input_attributes[f"{sender}--{receiver}"] = sender
 
             if self.debug:
-                print("{}: Connected to {} as receiver".format(self.tag, sender))
+                print(f"{self.tag}: Connected to {sender} as receiver")
 
     def on_disconnect(self, sender, receiver):
         # Needs work for context
@@ -63,15 +60,17 @@ class BaseNode(object):
             receiver_attr = self.output_attributes.pop(f"{sender}--{receiver}")
 
             if self.debug:
-                print("{}: Disconnected from {} as sender".format(self.tag, receiver))
+                print(f"{self.tag}: Disconnected from {receiver} as sender")
 
         if receiver_attr is not None:
             sender_attr = self.input_attributes.pop(f"{sender}--{receiver}")
 
             if self.debug:
-                print("{}: Disconnected from {} as receiver".format(self.tag, sender))
+                print(f"{self.tag}: Disconnected from {sender} as receiver")
 
-    def create(self, attributes, clicked_callback, tooltip=None, position=[]):
+    def create(self, attributes, clicked_callback, tooltip=None, position=None):
+        if position is None:
+            position = []
         dpg.add_node(
             label=self.label,
             parent=self.parent,
@@ -123,10 +122,9 @@ class BaseNode(object):
                     dpg.bind_item_handler_registry(content_tag, handler_tag)
                 else:
                     raise ValueError(
-                        "Unsupported content type {}, options are {}".format(
-                            type_, ("INT", "FLOAT", "TEXT")
-                        ),
+                        f'Unsupported content type {type_}, options are {("INT", "FLOAT", "TEXT")}'
                     )
+
                 content["type"] = type_
                 content["parent"] = attribute_tag
                 self.contents[content_tag] = content
@@ -145,9 +143,7 @@ class BaseNode(object):
             print(f"Processing {self.tag} -- {self.label}")
 
     def __str__(self):
-        return "SIMURAN node with label {}, tag {} and contains {}".format(
-            self.label, self.tag, [self.attribute_tags, self.content_tags]
-        )
+        return f"SIMURAN node with label {self.label}, tag {self.tag} and contains {[self.attribute_tags, self.content_tags]}"
 
     def get_values(self):
         return dpg.get_values(list(self.contents.keys()))
@@ -157,19 +153,20 @@ class BaseNode(object):
         return dpg.get_value(content_tag)
 
     def get_content_with_label(self, label):
-        for content_tag, content in self.contents.items():
-            if label == content.get("label", ""):
-                return content_tag, content
-        return None, None
+        return next(
+            (
+                (content_tag, content)
+                for content_tag, content in self.contents.items()
+                if label == content.get("label", "")
+            ),
+            (None, None),
+        )
 
     def has_attribute(self, tag):
         return tag in self.attributes.keys()
 
     def get_attribute(self, tag):
-        if tag in self.attributes.keys():
-            return self.attributes[tag]
-        else:
-            return None
+        return self.attributes[tag] if tag in self.attributes.keys() else None
 
     def get_owning_attribute(self, content_tag):
         return self.attributes[self.contents[content_tag]["parent"]]
@@ -190,10 +187,13 @@ class BaseNode(object):
     def get_downstream_nodes(self, nodes):
         downstream_nodes = []
         output_attributes = self.output_attributes.values()
-        for key, node in nodes.items():
-            for attribute in output_attributes:
-                if node.has_attribute(attribute):
-                    downstream_nodes.append(node.tag)
+        for _, node in nodes.items():
+            downstream_nodes.extend(
+                node.tag
+                for attribute in output_attributes
+                if node.has_attribute(attribute)
+            )
+
         return downstream_nodes
 
 
@@ -215,7 +215,7 @@ class NodeFactory(object):
         num_nodes = len(self.created_nodes)
         new_node_label = self.label
         if num_nodes > 0:
-            new_node_label = new_node_label + " " + str(num_nodes)
+            new_node_label = f"{new_node_label} {num_nodes}"
         new_node = self.node_class(
             parent=editor_id, label=new_node_label, debug=self.debug
         )

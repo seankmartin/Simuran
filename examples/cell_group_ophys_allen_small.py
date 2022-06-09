@@ -16,6 +16,8 @@ def allen_memory_experiment(
         print(f"Before loading iteration {i}; {print_memory_usage(as_string=True)}")
         experiment = cache.get_behavior_ophys_experiment(id_)
         print(f"After loading iteration {i}; {print_memory_usage(as_string=True)}")
+        # del experiment
+        # print(f"After delete iteration {i}; {print_memory_usage(as_string=True)}")
 
 
 def main(data_storage_directory):

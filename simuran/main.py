@@ -1,11 +1,10 @@
 """main using old as templates"""
 import logging
-import re
 import site
 import time
 from pathlib import Path
 from pprint import pformat
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Optional, Tuple, Union
 
 import typer
 from rich import print
@@ -30,31 +29,7 @@ logger = logging.getLogger("simuran")
 establish_main_logger(logger)
 
 
-def update_path(base_path: str):
-    possible_analysis_directories = [
-        Path(base_path).parent.parent / "Scripts",
-        Path.cwd() / "scripts",
-    ]
-    for site_dir in possible_analysis_directories:
-        if site_dir.is_dir():
-            logger.debug(f"Added {site_dir} to path")
-            site.addsitedir(site_dir)
-
-
-def wrap_up(recording_container):
-    if len(recording_container.get_invalid_locations()) > 0:
-        msg = pformat(
-            "Loaded {} recordings and skipped loading from {} locations:\n {}".format(
-                len(recording_container),
-                len(recording_container.get_invalid_locations()),
-                recording_container.get_invalid_locations(),
-            )
-        )
-        logger.warning(msg)
-        print("WARNING: " + msg)
-
-
-def main(
+def main_with_data(
     datatable: "DataFrame",
     loader: "BaseLoader",
     output_directory: "Path",
@@ -64,18 +39,15 @@ def main(
     dummy: bool = False,
     handle_errors: bool = False,
     num_cpus: int = 1,
-):
+) -> "Tuple[list[dict], RecordingContainer]":
     start_time = time.perf_counter()
     recording_container = RecordingContainer.from_table(datatable, loader)
     recording_container.attrs["base_dir"] = param_config.get("cfg_base_dir", "")
 
     if dummy:
-        print(
-            "Would run on {} and write results of {} with config {} to {}".format(
-                recording_container, function_config, param_config, output_directory
-            )
+        return _print_setup(
+            recording_container, function_config, param_config, output_directory
         )
-        return
 
     figures = function_config.get("figures", [])
     figure_names = function_config.get("figure_names", [])
@@ -106,8 +78,8 @@ def main(
         set_done=True,
     )
     save_unclosed_figures(output_directory)
-
     results = recording_container.get_results()
+    _wrap_up(recording_container)
 
     logger.info(
         "Operation completed in {:.2f}mins".format(
@@ -118,7 +90,7 @@ def main(
     return results, recording_container
 
 
-def cli_entry(
+def main_with_files(
     datatable_filepath: str,
     config_filepath: str,
     function_filepath: str,
@@ -127,12 +99,33 @@ def cli_entry(
     num_cpus: int = 1,
     data_filter: Optional[str] = None,
     output_directory: Optional[str] = None,
+) -> "Tuple[list[dict], RecordingContainer]":
+    """Run analysis on files using specified configuration."""
+
+    kwargs = process_config(
+        datatable_filepath,
+        config_filepath,
+        function_filepath,
+        output_directory,
+        data_filter,
+    )
+    kwargs["dry_run"] = dry_run
+    kwargs["handle_errors"] = handle_errors
+    kwargs["num_cpus"] = num_cpus
+    return main_with_data(**kwargs)
+
+
+def process_config(
+    datatable_filepath,
+    config_filepath,
+    function_filepath,
+    output_directory,
+    data_filter=None,
 ):
     update_path(function_filepath)
     datatable = df_from_file(datatable_filepath)
     config_params = ParamHandler(source_file=config_filepath, name="params")
     function_params = ParamHandler(source_file=function_filepath, name="params")
-
     data_filter = "" if data_filter is None else data_filter
     if Path(data_filter).is_file():
         data_filter = ParamHandler(source_file=data_filter, name="params")
@@ -152,21 +145,51 @@ def cli_entry(
         datatable_filepath, function_filepath, config_filepath
     )
     output_directory = output_directory if output_directory is not None else od
-    main(
-        datatable,
-        loader,
-        output_directory,
-        output_name,
-        config_params,
-        function_params,
-        dry_run,
-        handle_errors,
-        num_cpus,
+    return {
+        "datatable": datatable,
+        "loader": loader,
+        "output_directory": output_directory,
+        "output_name": output_name,
+        "config_params": config_params,
+        "function_params": function_params,
+    }
+
+
+def update_path(base_path: str):
+    """Update the path using cwd/scripts and base_path.parent.parent/scripts"""
+    possible_analysis_directories = [
+        Path(base_path).parent.parent / "scripts",
+        Path.cwd() / "scripts",
+    ]
+    for site_dir in possible_analysis_directories:
+        if site_dir.is_dir():
+            logger.debug(f"Added {site_dir} to path")
+            site.addsitedir(site_dir)
+
+
+def _wrap_up(recording_container):
+    if len(recording_container.get_invalid_locations()) > 0:
+        msg = pformat(
+            "Loaded {} recordings and skipped loading from {} locations:\n {}".format(
+                len(recording_container),
+                len(recording_container.get_invalid_locations()),
+                recording_container.get_invalid_locations(),
+            )
+        )
+        logger.warning(msg)
+        print(f"WARNING: {msg}")
+
+
+def _print_setup(recording_container, function_config, param_config, output_directory):
+    print(
+        f"Would run on {recording_container} "
+        f"and write results of {function_config} "
+        f"with config {param_config} to {output_directory}"
     )
 
 
 def typer_entry():
-    typer.run(cli_entry)
+    typer.run(main_with_files)
 
 
 if __name__ == "__main__":

@@ -9,7 +9,7 @@ from simuran.core.param_handler import ParamHandler
 from simuran.loaders.nc_loader import NCLoader
 from simuran.recording import Recording
 
-main_dir = os.path.dirname(__file__)[: -len(os.sep + "tests")]
+main_dir = os.path.dirname(__file__)[:-len(f"{os.sep}tests")]
 
 
 def fetch_axona_data():
@@ -46,7 +46,8 @@ def test_nc_recording_loading(delete=False):
     metadata = ParamHandler(
         source_file=os.path.join(
             main_dir, "tests", "resources", "params", "axona_test.py"
-        )
+        ),
+        name="mapping",
     )
     metadata["source_file"] = axona_files[-1]
 
@@ -89,7 +90,7 @@ def test_nc_recording_loading(delete=False):
             1,
         ],
     )
-    clust_locs = [os.path.basename(f) for f in file_locs["Clusters"] if f is not None]
+    clust_locs = [os.path.basename(f) for f in file_locs["Cluster"] if f is not None]
     assert "010416b-LS3-50Hz10.V5.ms_2.cut" in clust_locs
 
     if delete:

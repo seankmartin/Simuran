@@ -156,7 +156,7 @@ class AnalysisHandler(object):
 
         """
         with open(output_location, "w") as f:
-            print("Saving results to {}".format(output_location))
+            print(f"Saving results to {output_location}")
             for k, v in self.results.items():
                 f.write(k.replace(" ", "_").replace(",", "_") + "\n")
                 o_str = save_mixed_dict_to_csv(v, None, save=False)
@@ -187,10 +187,7 @@ class AnalysisHandler(object):
                 result = fn(*args, **kwargs)
             except BaseException as e:
                 log_exception(
-                    e,
-                    "Running {} with args {} and kwargs {}".format(
-                        fn.__name__, args, kwargs
-                    ),
+                    e, f"Running {fn.__name__} with args {args} and kwargs {kwargs}"
                 )
                 self._was_error = True
                 result = "SIMURAN-ERROR"
@@ -202,7 +199,7 @@ class AnalysisHandler(object):
         save_name = str(fn.__name__)
         if save_result:
             while save_name in self.results.keys():
-                save_name = str(fn.__name__) + "_{}".format(ctr)
+                save_name = f"{str(fn.__name__)}_{ctr}"
                 ctr = ctr + 1
             self.results[save_name] = result
 

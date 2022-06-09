@@ -1,4 +1,5 @@
 """This module handles interfacing with NeuroChaT."""
+import datetime
 import logging
 import os
 from copy import deepcopy
@@ -7,6 +8,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 from astropy import units as u
+from dateutil.tz import tzlocal
 from neurochat.nc_lfp import NLfp
 from neurochat.nc_spatial import NSpatial
 from neurochat.nc_spike import NSpike
@@ -20,6 +22,8 @@ from tqdm import tqdm
 
 if TYPE_CHECKING:
     from simuran.recording import Recording
+
+module_logger = logging.getLogger("simuran.loaders")
 
 # TODO support non-sequential eeg numbers
 # TODO clean up a little
@@ -36,6 +40,9 @@ class NCLoader(MetadataLoader):
             if not hasattr(mapping, "items"):
                 return
             for first_key, map_sub in mapping.items():
+                if map_sub is None:
+                    recording.attrs["units"] = None
+                    continue
                 if first_key not in ["signals", "spatial", "units"]:
                     continue
                 if first_key not in recording.data:
@@ -64,9 +71,16 @@ class NCLoader(MetadataLoader):
             and "Spike" in recording.available_data
         ):
             if source_files["Spike"] is not None:
-                recording.data["units"] = [
-                    self.load_single_unit(fname) for fname in source_files["Spike"]
-                ]
+                recording.data["units"] = []
+                for spike_f, clust_f in zip(
+                    source_files["Spike"], source_files["Cluster"]
+                ):
+                    if clust_f is not None:
+                        unit = self.load_single_unit(spike_f)
+                    else:
+                        unit = NoLoader(source_file=spike_f)
+                        unit.available_units = None
+                    recording.data["units"].append(unit)
         if (
             source_files.get("Spatial", None) is not None
             and "Spatial" in recording.available_data
@@ -77,7 +91,7 @@ class NCLoader(MetadataLoader):
 
     def parse_metadata(self, recording: "Recording") -> None:
         if "source_file" in recording.attrs:
-            source_file = recording.attrs.get("source_file")
+            source_file = recording.attrs["source_file"]
         elif "directory" in recording.attrs:
             source_file = (
                 Path(recording.attrs["directory"]) / recording.attrs["filename"]
@@ -93,6 +107,11 @@ class NCLoader(MetadataLoader):
             ph = ParamHandler(source_file=recording.attrs["mapping"], name="mapping")
             recording.attrs["mapping_file"] = recording.attrs["mapping"]
             recording.attrs["mapping"] = ph
+        if "datetime" in recording.attrs:
+            recording.datetime = datetime.datetime.strptime(
+                recording.attrs["datetime"], "%Y-%m-%d %H:%M:%S"
+            )
+            recording.datetime = recording.datetime.replace(tzinfo=tzlocal())
 
     def load_signal(self, *args, **kwargs):
         """
@@ -170,6 +189,7 @@ class NCLoader(MetadataLoader):
         obj.available_units = self.single_unit.get_unit_list()
         obj.source_file = args[0]
         obj.last_loaded_source = args[0]
+        obj.tag = int(Path(args[0]).suffix[1:])
         return obj
 
     def auto_fname_extraction(self, base, **kwargs):
@@ -204,7 +224,9 @@ class NCLoader(MetadataLoader):
             if os.path.isdir(base):
                 set_files = get_all_files_in_dir(base, ext="set")
                 if len(set_files) == 0:
-                    print("WARNING: No set files found in {}, skipping".format(base))
+                    module_logger.warning(
+                        "No set files found in {}, skipping".format(base)
+                    )
                     return None, None
                 elif len(set_files) > 1:
                     raise ValueError(
@@ -271,22 +293,14 @@ class NCLoader(MetadataLoader):
             # Extract the positional data
             output_list = [None, None]
             for i, ext in enumerate([pos_extension, stm_extension]):
-                for fname in get_all_files_in_dir(
-                    os.path.dirname(base),
-                    ext=ext,
-                    return_absolute=False,
-                    case_sensitive_ext=True,
-                ):
-                    if ext == ".txt":
-                        if fname[: len(base_filename) + 1] == base_filename + "_":
-                            name = os.path.join(os.path.dirname(base), fname)
-                            output_list[i] = name
+                if isinstance(ext, list):
+                    for ext_ in ext:
+                        filename_ = self._grab_stim_pos_files(base, base_filename, ext_)
+                        if filename_ is not None:
+                            output_list[i] = filename_
                             break
-                    else:
-                        if fname[: len(base_filename)] == base_filename:
-                            name = os.path.join(os.path.dirname(base), fname)
-                            output_list[i] = name
-                            break
+                else:
+                    output_list[i] = self._grab_stim_pos_files(base, base_filename, ext)
             spatial_name, stim_name = output_list
 
             base_sig_name = filename + lfp_extension
@@ -315,7 +329,7 @@ class NCLoader(MetadataLoader):
 
             file_locs = {
                 "Spike": spike_names_all,
-                "Clusters": cluster_names_all,
+                "Cluster": cluster_names_all,
                 "Spatial": spatial_name,
                 "Signal": signal_names,
                 "Stimulation": stim_name,
@@ -324,44 +338,57 @@ class NCLoader(MetadataLoader):
         else:
             raise ValueError("auto_fname_extraction only implemented for Axona")
 
+    def _grab_stim_pos_files(self, base, base_filename, ext):
+        for fname in get_all_files_in_dir(
+            os.path.dirname(base),
+            ext=ext,
+            return_absolute=False,
+            case_sensitive_ext=True,
+        ):
+            if ext == ".txt":
+                if fname[: len(base_filename) + 1] == f"{base_filename}_":
+                    name = os.path.join(os.path.dirname(base), fname)
+                    return name
+            elif fname[: len(base_filename)] == base_filename:
+                name = os.path.join(os.path.dirname(base), fname)
+                return name
+
     def index_files(self, folder, **kwargs):
         """Find all available neurochat files in the given folder"""
-        if self.system == "Axona":
-            set_files = []
-            root_folders = []
-            times = []
-            durations = []
-            print("Finding all .set files...")
-            files = get_all_files_in_dir(
-                folder,
-                ext=".set",
-                recursive=True,
-                return_absolute=True,
-                case_sensitive_ext=True,
-            )
-            print(f"Found {len(files)} set files")
-
-            for fname in tqdm(files, desc="Processing files"):
-                set_files.append(os.path.basename(fname))
-                root_folders.append(os.path.normpath(os.path.dirname(fname)))
-                with open(fname) as f:
-                    f.readline()
-                    t = f.readline()[-9:-2]
-                    try:
-                        int(t[:2])
-                        times.append(t)
-                        f.readline()
-                        f.readline()
-                        durations.append(f.readline()[-11:-8])
-                    except:
-                        if len(times) != len(set_files):
-                            times.append(np.nan)
-                        if len(durations) != len(set_files):
-                            durations.append(np.nan)
-
-            headers = ["directory", "filename", "time", "duration"]
-            in_list = [root_folders, set_files, times, durations]
-            results_df = list_to_df(in_list, transpose=True, headers=headers)
-            return results_df
-        else:
+        if self.system != "Axona":
             raise ValueError("auto_fname_extraction only implemented for Axona")
+        set_files = []
+        root_folders = []
+        times = []
+        durations = []
+        module_logger.info("Finding all .set files...")
+        files = get_all_files_in_dir(
+            folder,
+            ext=".set",
+            recursive=True,
+            return_absolute=True,
+            case_sensitive_ext=True,
+        )
+        module_logger.info(f"Found {len(files)} set files")
+
+        for fname in tqdm(files, desc="Processing files"):
+            set_files.append(os.path.basename(fname))
+            root_folders.append(os.path.normpath(os.path.dirname(fname)))
+            with open(fname) as f:
+                f.readline()
+                t = f.readline()[-9:-2]
+                try:
+                    int(t[:2])
+                    times.append(t)
+                    f.readline()
+                    f.readline()
+                    durations.append(f.readline()[-11:-8])
+                except Exception:
+                    if len(times) != len(set_files):
+                        times.append(np.nan)
+                    if len(durations) != len(set_files):
+                        durations.append(np.nan)
+
+        headers = ["directory", "filename", "time", "duration"]
+        in_list = [root_folders, set_files, times, durations]
+        return list_to_df(in_list, transpose=True, headers=headers)

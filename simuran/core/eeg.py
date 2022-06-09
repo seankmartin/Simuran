@@ -2,13 +2,12 @@ import os
 
 import mne
 import numpy as np
-import scipy.signal as sg
 from astropy import units as u
 from simuran.core.base_container import GenericContainer
 from simuran.core.base_signal import BaseSignal
 
 
-class Eeg(BaseSignal):
+class EEG(BaseSignal):
     """EEG class. Provides extra functionality on top of base signal."""
 
     def __init__(self, samples=None, sampling_rate=None, signal=None):
@@ -38,9 +37,9 @@ class Eeg(BaseSignal):
         """Get the default name for this signal based on region."""
         name = ""
         if self.channel is not None:
-            name += "{}".format(self.channel)
+            name += f"{self.channel}"
         if self.region is not None:
-            name = "{} - {}".format(self.region, name)
+            name = f"{self.region} - {name}"
 
         return name
 
@@ -57,7 +56,7 @@ class Eeg(BaseSignal):
         matplotlib.figure.Figure
             The filtered version of the signals
         """
-        eeg_array = EegArray()
+        eeg_array = EEGArray()
         eeg_array.append(self)
         ch_names = ["Original"]
         for f in filters:
@@ -70,12 +69,12 @@ class Eeg(BaseSignal):
     def default_filt_compare(self, low, high, **plot_args):
         """Compare a FIR filter and and IIR butter filter."""
         plot_args["title"] = plot_args.get(
-            "title", "Filter Comparison -- {}".format(self.source_file)
+            "title", f"Filter Comparison -- {self.source_file}"
         )
+
         plot_args["duration"] = 5
         butter_dict = {"method": "iir"}
 
-        filter_ = (0, low, high, "bandpass")
         filter1 = ("Default", low, high, {})
         filter2 = ("Butterworth", low, high, butter_dict)
 
@@ -83,17 +82,15 @@ class Eeg(BaseSignal):
 
     def __str__(self):
         """Convert to string representation"""
-        return "EEG signal at {}Hz with {} samples".format(
-            self.sampling_rate, len(self.samples)
-        )
+        return f"EEG signal at {self.sampling_rate}Hz with {len(self.samples)} samples"
 
 
-class EegArray(GenericContainer):
+class EEGArray(GenericContainer):
     """Hold a set of EEG signals."""
 
     def __init__(self):
-        """See help(EegArray)"""
-        super().__init__(cls=Eeg)
+        """See help(EEGArray)"""
+        super().__init__(cls=EEG)
 
     def convert_signals_to_mne(self, ch_names=None, verbose=True, bad_chans=None):
         """
@@ -114,19 +111,15 @@ class EegArray(GenericContainer):
             The data converted to MNE format
 
         """
-        if not verbose:
-            verbose = "WARNING"
-        else:
-            verbose = None
-
+        verbose = None if verbose else "WARNING"
         signals = self
         if ch_names is None:
             ch_names = [eeg.default_name() for eeg in signals]
-        raw_data = np.array([eeg.get_samples().to(u.V) for eeg in signals], float)
+        raw_data = np.array([eeg.samples * eeg.conversion for eeg in signals], float)
 
-        sfreq = signals[0].get_sampling_rate()
+        sfreq = signals[0].sampling_rate
 
-        ch_types = [eeg.get_channel_type() for eeg in signals]
+        ch_types = [eeg.channel_type for eeg in signals]
 
         info = mne.create_info(ch_names=ch_names, sfreq=sfreq, ch_types=ch_types)
         raw = mne.io.RawArray(raw_data, info=info, verbose=verbose)
@@ -134,9 +127,12 @@ class EegArray(GenericContainer):
         mne_bad = []
         if bad_chans is not None:
             for i in bad_chans:
-                for j in range(len(signals)):
-                    if signals[j].channel == i:
-                        mne_bad.append(raw.info["ch_names"][j])
+                mne_bad.extend(
+                    raw.info["ch_names"][j]
+                    for j in range(len(signals))
+                    if signals[j].channel == i
+                )
+
         raw.info["bads"] = mne_bad
 
         return raw
@@ -152,7 +148,7 @@ class EegArray(GenericContainer):
         proj=False,
         show=True,
         bad_chans=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Plot signals through MNE interface.
@@ -231,6 +227,4 @@ class EegArray(GenericContainer):
             max_val = 1.8 * np.max(np.abs(mne_array.get_data(stop=duration)))
             scalings["eeg"] = max_val
             kwargs["scalings"] = scalings
-        fig = mne_array.plot(verbose="ERROR", **kwargs)
-
-        return fig
+        return mne_array.plot(verbose="ERROR", **kwargs)

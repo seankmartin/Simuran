@@ -40,13 +40,12 @@ class AllenOphysLoader(MetadataLoader):
         manifest_file = self.cache.current_manifest()
         manifest_version = splitext(manifest_file)[0].split("_")[-1][1:]
         id_ = recording.attrs["ophys_experiment_id"]
-        fname = (
+        return (
             Path(self.cache.fetch_api.cache._cache_dir)
             / f"visual-behavior-ophys-{manifest_version}"
             / "behavior_ophys_experiments"
             / f"behavior_ophys_experiment_{id_}.nwb"
         )
-        return fname
 
     def parse_metadata(self, recording: "Recording") -> None:
         """

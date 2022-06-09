@@ -14,7 +14,7 @@ import seaborn as sns
 import simuran as smr
 from allensdk.brain_observatory.behavior.behavior_project_cache import \
     VisualBehaviorOphysProjectCache
-from skm_pyutils.py_plot import GridFig
+from skm_pyutils.plot import GridFig
 from tqdm import tqdm
 
 # %%
