@@ -124,16 +124,8 @@ class EEGArray(GenericContainer):
         info = mne.create_info(ch_names=ch_names, sfreq=sfreq, ch_types=ch_types)
         raw = mne.io.RawArray(raw_data, info=info, verbose=verbose)
 
-        mne_bad = []
         if bad_chans is not None:
-            for i in bad_chans:
-                mne_bad.extend(
-                    raw.info["ch_names"][j]
-                    for j in range(len(signals))
-                    if signals[j].channel == i
-                )
-
-        raw.info["bads"] = mne_bad
+            raw.info["bads"] = bad_chans
 
         return raw
 
