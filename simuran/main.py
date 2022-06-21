@@ -168,12 +168,12 @@ def update_path(base_path: str):
 
 
 def _wrap_up(recording_container):
-    if len(recording_container.get_invalid_locations()) > 0:
+    if len(recording_container.invalid_recording_locations) > 0:
         msg = pformat(
             "Loaded {} recordings and skipped loading from {} locations:\n {}".format(
                 len(recording_container),
-                len(recording_container.get_invalid_locations()),
-                recording_container.get_invalid_locations(),
+                len(recording_container.invalid_recording_locations),
+                recording_container.invalid_recording_locations,
             )
         )
         logger.warning(msg)

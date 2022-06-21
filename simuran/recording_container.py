@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 import csv
+import copy
 import os
 from collections.abc import Iterable as abcIterable
 from dataclasses import dataclass, field
+import logging
 from typing import TYPE_CHECKING, Iterable, Optional, Union, overload
 
 import pandas as pd
-from skm_pyutils.log import FileLogger, FileStdoutLogger
 from skm_pyutils.path import get_all_files_in_dir, get_dirs_matching_regex
 
 from simuran.core.base_container import AbstractContainer
@@ -18,9 +19,7 @@ if TYPE_CHECKING:
     from simuran.loaders.base_loader import BaseLoader
 
 # TODO make this easier
-log = FileStdoutLogger()
-file_log = FileLogger("simuran_cli")
-
+module_logger = logging.getLogger("simuran.recording_container")
 
 @dataclass
 class RecordingContainer(AbstractContainer):
@@ -33,19 +32,16 @@ class RecordingContainer(AbstractContainer):
         Should information be loaded at the start in bulk, or as needed.
     last_loaded : simuran.recording.Recording
         A reference to the last used recording.
-    last_loaded_idx : int
+    _last_loaded_idx : int
         The index of the last loaded recording.
-    base_dir : str
-        The base directory where the recording files are stored.
-    invalid_recording_locations : list of str
-        Paths to recordings that could not be set up.
-
-    Parameters
-    ----------
-    load_on_fly : bool, optional
-        Sets the load_on_fly attribute, by default False
-    **kwargs : keyword arguments
-        Currently these are not used.
+    attrs : dict
+        Dictionary of metadata.
+    invalid_recording_locations : list of int
+        Index of recordings that could not be set up.
+    table : Dataframe
+        A table which describes each recording in the container.
+        For example, each row could contain metadata about the session,
+        and a path to a source NWB file to load the data for that session.
 
     """
 
@@ -53,6 +49,7 @@ class RecordingContainer(AbstractContainer):
     last_loaded: "Recording" = field(default_factory=Recording)
     loader: Optional["BaseLoader"] = field(default=None)
     attrs: dict = field(default_factory=dict)
+    invalid_recording_locations: list = field(default_factory=list)
     table: "pd.DataFrame" = field(default_factory=pd.DataFrame)
     _last_loaded_idx: int = field(repr=False, init=False, default=-1)
 
@@ -89,113 +86,13 @@ class RecordingContainer(AbstractContainer):
         for i in range(len(table)):
             if isinstance(rc.loader, abcIterable):
                 loader = rc.loader[i]
-            recording = Recording()
+            recording = copy.copy(rc[i])
+            module_logger.debug(f"Parsing information from table for row {i}")
             loader.parse_table_row(table, i, recording)
             rc.append(recording)
 
         return rc
 
-    # TODO perhaps these are move to their own place
-    def auto_setup(
-        self,
-        start_dir,
-        param_name="simuran_params.py",
-        recursive=True,
-        file_regex_filter=None,
-        batch_regex_filters=None,
-        verbose=False,
-    ):
-        """
-        Automatically set up the recording container by finding valid files.
-
-        Parameters
-        ----------
-        start_dir : str
-            The directory to start the search in.
-        param_name : str, optional
-            The name of the parameter file to look for, by default "simuran_params.py"
-        recursive : bool, optional
-            Whether to recurse in subdirectories, by default True
-        file_regex_filter : str, optional
-            A regular expression to filter files by, by default None
-        batch_regex_filters : list of str, optional
-            A list of regular expressions to filter directories by, by default None
-        verbose : bool, optional
-            Whether to print extra information, by default False
-
-        Returns
-        -------
-        list of strings
-            The path to the parameter files used for set up.
-
-        """
-        fnames = get_all_files_in_dir(
-            start_dir,
-            ext=".py",
-            return_absolute=True,
-            recursive=recursive,
-            case_sensitive_ext=True,
-            re_filter=file_regex_filter,
-        )
-        dirs = get_dirs_matching_regex(
-            start_dir, re_filters=batch_regex_filters, return_absolute=True
-        )
-        dirs = [d for d in dirs if ("__pycache__" not in d) and (d != "")]
-        fnames = [
-            fname
-            for fname in fnames
-            if (os.path.dirname(fname) in dirs)
-            and (os.path.basename(fname) == param_name)
-        ]
-        return self.setup(fnames, start_dir, verbose=verbose)
-
-    def setup(self, param_files, start_dir=None, verbose=False):
-        """
-        Set up the recording container.
-
-        Parameters
-        ----------
-        param_files : list of str
-            Each entry should be the path to a parameter file.
-        start_dir : str, optional
-            The directory to set self.base_dir to, defaults to None.
-        verbose : bool, optional
-            Whether to print more information, by default False
-
-        Returns
-        -------
-        list of str
-            The param_files that were loaded from
-
-        """
-        should_load = not self.load_on_fly
-        out_str_load = "Loading" if should_load else "Parsing"
-        good_param_files = []
-        for i, param_file in enumerate(param_files):
-            if verbose:
-                print(
-                    f"{out_str_load} recording {i + 1} of {len(param_files)} at {param_file}"
-                )
-
-            recording = Recording(param_file=param_file, load=should_load)
-            if not recording.valid:
-                if verbose:
-                    log.print(
-                        f"WARNING: Recording from {param_file} was invalid, not adding to container"
-                    )
-
-                file_log.warning(f"Recording from {param_file} was invalid")
-                self.invalid_recording_locations.append(param_file)
-            else:
-                self.append(recording)
-                good_param_files.append(param_file)
-
-        if start_dir is not None:
-            self.base_dir = start_dir
-
-        return good_param_files
-
-    @overload
     def load(self) -> None:
         ...
         """Load all recordings."""
@@ -234,20 +131,6 @@ class RecordingContainer(AbstractContainer):
             self[idx].load()
             return self[idx]
 
-    def copy_recording(self, idx):
-        # TODO define recording.shallow_copy()
-        self.last_loaded = Recording()
-        self.last_loaded.attrs = self[idx].attrs
-        self.last_loaded.datetime = self[idx].datetime
-        self.last_loaded.tag = self[idx].tag
-        self.last_loaded.loader = self[idx].loader
-        self.last_loaded.source_file = self[idx].source_file
-        self.last_loaded.data = self[idx].data
-        self.last_loaded.results = self[idx].results
-        self.last_loaded.available_data = self[idx].available_data
-        self.last_loaded.load()
-        self._last_loaded_idx = idx
-
     def get_results(self, idx=None):
         """
         Get the results stored on the objects in the container.
@@ -265,43 +148,9 @@ class RecordingContainer(AbstractContainer):
         """
         return self.data_from_attr_list([("results", None)], idx=idx)
 
-    def get_set_units(self):
-        """
-        Return all the units that are set in the container.
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        list of list of int
-            The units that are set in the container.
-
-        """
-        all_units = []
-        for r in self:
-            unit_l = [u.units_to_use for u in r.units]
-            all_units.append(unit_l)
-        return all_units
-
-    def get_invalid_locations(self):
-        """
-        Get a list of invalid locations (can not be loaded)
-
-        For example, these recordings could have invalid mappings.
-
-        Returns
-        -------
-        list
-            These are in index form.
-
-        """
-        return self.invalid_recording_locations
-
     def subsample(self, idx_list=None, interactive=False, prop=None, inplace=False):
         """
-        Subsample the recording, optionally in place.
+        Subsample the recording container, optionally in place.
 
         Parameters
         ----------
@@ -407,252 +256,6 @@ class RecordingContainer(AbstractContainer):
         else:
             print(f"Loading cells from {cell_location}")
             self.load_cells(cell_location)
-
-    def load_cells(self, cell_location):
-        """
-        Load cells from a csv file at the given location.
-
-        Parameters
-        ----------
-        cell_location : str
-            Path to a csv file listing the cells to use.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        FileNotFoundError
-            If the file passed does not exist.
-
-        """
-        if not os.path.isfile(cell_location):
-            raise FileNotFoundError(f"No cell list available at {cell_location}.")
-        with open(cell_location, "r") as f:
-            if f.readline().strip().lower() != "all":
-                reader = csv.reader(f, delimiter=",")
-                for row in reader:
-                    row = [x.strip() for x in row]
-                    row[1:] = [int(x) for x in row[1:]]
-                    try:
-                        row[0] = int(row[0])
-                        recording = self[row[0]]
-                    except ValueError:
-                        recording = self[
-                            self.find_recording_with_source(os.path.normpath(row[0]))
-                        ]
-                    record_unit_idx = recording.units.group_by_property(
-                        "group", row[1]
-                    )[1][0]
-                    recording.units[record_unit_idx].units_to_use = row[2:]
-
-    def pick_cells(self, cell_location):
-        """
-        Launch an interactive prompt to select cells in this container.
-
-        The chosen cells are saved to cell_location.
-
-        1. Enter the word all to select every single unit.
-        2. Enter a single number to select that unit from everything.
-        3. Enter <group>_<unit-num> to analyse one unit.
-        4. Enter Idx: Unit, Unit, Unit | Idx, Unit, Unit, ... for anything
-
-        Parameters
-        ----------
-        cell_location : str
-            The path to a file to save the selected cells to.
-
-        Raises
-        ------
-        LookupError
-            If any unit in the user input is not found.
-
-        Returns
-        -------
-        list of tuple
-            Each tuple is layed out as
-            Recording container index, single unit group at that index, group units
-
-        """
-        total, all_cells, _ = self.print_units()
-        final_units = []
-        input_str = (
-            "Please enter the units to analyse, the input options are:\n"
-            + "\t 1. Enter the word all to select every single unit.\n"
-            + "\t 2. Enter a single number to select that unit from everything.\n"
-            + "\t 3. Enter <group>_<unit-num> to analyse one unit.\n"
-            + "\t 4. Enter Idx: Unit, Unit, Unit | Idx: Unit, Unit, ... "
-            + "to select anything\n"
-        )
-
-        user_inp = input(input_str)
-        while user_inp == "":
-            print("No user input entered, please enter something.\n")
-            user_inp = input(input_str)
-
-        # Handle option 1
-        if user_inp == "all":
-            with open(cell_location, "w") as f:
-                f.write("all")
-            return
-
-        # Handle option 2 and 3
-        try:
-            parts = user_inp.strip().split("_")
-            if len(parts) == 2:
-                group, unit_number = parts
-                group = int(group.strip())
-                unit_number = int(unit_number.strip())
-                unit_spec_list = [
-                    [i, [unit_number]]
-                    for i in range(total)
-                    if all_cells[i][1][0] == group
-                ]
-            else:
-                value = int(user_inp.strip())
-                unit_spec_list = [[i, [value]] for i in range(total)]
-
-        # Handle option 4
-        except BaseException:
-            unit_spec_list = []
-            unit_specifications = user_inp.split("|")
-            for u in unit_specifications:
-                parts = u.split(":")
-                idx = int(parts[0].strip())
-                units = [int(x.strip()) for x in parts[1].split(",")]
-                unit_spec_list.append([idx, units])
-
-        # Use the result option 2, 3, or 4
-        for u in unit_spec_list:
-            for val in u[1]:
-                if val not in all_cells[u[0]][1][1]:
-                    raise LookupError(f"{u[0]}: {val} not in {all_cells[u[0]][1][1]}")
-            # Recording container index, single unit group at that index, group units
-            final_units.append([all_cells[u[0]][0], all_cells[u[0]][1][0], u[1]])
-
-        return final_units
-
-    def set_chosen_cells(self, final_units, cell_location):
-        """
-        Set the cells available to final_units, and write chosen to cell_location.
-
-        Parameters
-        ----------
-        final_units : list of tuple
-            Each tuple should be layed out as
-            Recording container index, single unit group at that index, group units
-        cell_location : str
-            Path to a file to write the choice to
-
-        Returns
-        -------
-        None
-
-        """
-        with open(cell_location, "w") as f:
-            max_num = max(len(u[2]) for u in final_units)
-            unit_as_string = [f"Unit_{i}" for i in range(max_num)]
-            unit_str = ",".join(unit_as_string)
-            f.write("Recording,Group,{}\n".format(unit_str))
-            for u in final_units:
-                units_as_str = [str(val) for val in u[2]]
-                unit_str = ",".join(units_as_str)
-                recording = self[u[0]]
-                f.write(
-                    "{},{},{}\n".format(
-                        os.path.normpath(
-                            os.path.relpath(
-                                recording.source_file,
-                                self.base_dir,
-                            )
-                        ),
-                        u[1],
-                        unit_str,
-                    )
-                )
-                record_unit_idx = recording.units.group_by_property("group", u[1])[1][0]
-                recording.units[record_unit_idx].units_to_use = u[2]
-            print(f"Saved cells to {cell_location}")
-
-    def print_units(self, f=None):
-        """
-        Print all the units in this container, optionally to a file.
-
-        Also returns all the units found.
-
-        Parameters
-        ----------
-        f : file, optional
-            An open writable file, by default None
-
-        Returns
-        -------
-        total : int
-            The total number of groups in this container
-        all_cells : list of tuples
-            The first item in the tuple is the index of the recording in the container,
-            The second item in the tuple is some of the units found for that recording,
-            which is a tuple consisting of (group, units_in_group).
-        printed : str
-            The string which was printed
-
-        """
-        total = 0
-        all_cells = []
-        full_str = []
-        for i in range(len(self)):
-            was_available = self[i].available
-            self[i].available = ["units"]
-            recording = self.load(i)
-            available_units = recording.get_available_units()
-            ## TODO many files could have same name, use join on --
-            out_str = "--------{}: {}--------\n".format(
-                i, os.path.basename(recording.source_file)
-            )
-            self[i].available = was_available
-            full_str.append(out_str)
-            if f is not None:
-                f.write(out_str)
-            else:
-                print(out_str, end="")
-
-            any_units = False
-            for available_unit in available_units:
-                if len(available_unit[1]) != 0:
-                    out_str = "    {}: Group {} with Units {}\n".format(
-                        total, available_unit[0], available_unit[1]
-                    )
-                    full_str.append(out_str)
-                    if f is not None:
-                        f.write(out_str)
-                    else:
-                        print(out_str, end="")
-                    all_cells.append([i, available_unit])
-                    total += 1
-                    any_units = True
-
-            if not any_units:
-                out_str = "    NONE\n"
-                full_str.append(out_str)
-                if f is not None:
-                    f.write(out_str)
-                else:
-                    print(out_str, end="")
-
-        final_str = "".join(full_str)
-        return total, all_cells, final_str
-
-    def set_all_units_on(self):
-        """Flag all cells as to be analysed."""
-        for i in range(len(self)):
-            was_available = self[i].available
-            self[i].available = ["units"]
-            recording = self.load(i)
-            available_units = recording.get_available_units()
-            self[i].available = was_available
-            for j in range(len(recording.units)):
-                self[i].units[j].units_to_use = available_units[j][1]
 
     def load_iter(self):
         """Iterator through the container that loads data on item retrieval."""
