@@ -1,13 +1,10 @@
 """This module holds single experiment related information."""
-import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
-import astropy.units as u
 import numpy as np
 
 from simuran.core.base_class import BaseSimuran
-from simuran.core.eeg import EEG, EEGArray
 
 
 @dataclass
@@ -75,71 +72,6 @@ class Recording(BaseSimuran):
         """Parse the table row."""
         self.loader.parse_table_row(table, index, self)
 
-    def get_available(self):
-        """Get the available attributes."""
-        return [getattr(self, item) for item in self.available]
-
-    def set_base_file(self, base):
-        """Set the source file of this recording."""
-        self.source_file = base
-
-    def get_signal_channels(self, as_idx=False):
-        """
-        Get the channel of each signal in the recording.
-
-        Parameters
-        ----------
-        as_idx : bool, optional
-            If true, just returns [i for i in range(num_signals)]
-
-        Returns
-        -------
-        list
-            The channels found. Returns None if no channels are set.
-
-        """
-        if self.signals is None:
-            if self.param_handler.get("signals", None) is not None:
-                num_sigs = self.param_handler["signals"]["num_signals"]
-                if as_idx:
-                    return [i for i in range(num_sigs)]
-                default_chans = [i + 1 for i in range(num_sigs)]
-                chans = self.param_handler["signals"].get("channels", default_chans)
-                return chans
-            else:
-                return None
-        else:
-            chans = []
-            if as_idx:
-                return [i for i in range(len(self.signals))]
-            for s in self.signals:
-                if s.channel is not None:
-                    chans.append(s.channel)
-                else:
-                    return [i for i in range(len(self.signals))]
-            return chans
-
-    def get_unit_groups(self):
-        """
-        Get the groups of the units.
-
-        For example, the list of tetrodes in the recording.
-        Or the IDs of the sites on a ephys probe.
-
-        Returns
-        -------
-        list
-            The found groups. Returns None if none are set yet.
-        """
-        if self.units is None:
-            if self.param_handler.get("units", None) is not None:
-                groups = self.param_handler["units"]["group"]
-                return groups
-            else:
-                return None
-        else:
-            groups = set([unit.group for unit in self.units])
-
     def get_name_for_save(self, rel_dir=None):
         """
         Get the name of the recording for saving purposes.
@@ -164,99 +96,13 @@ class Recording(BaseSimuran):
         """
         path_sf = Path(self.source_file)
         if rel_dir is None:
-            base_name_part = path_sf.stem
-        else:
-            name_up_to_rel = path_sf.relative_to(rel_dir).with_suffix("")
-            base_name_part = "--".join(name_up_to_rel.parts)
-        return base_name_part
-
-    def get_available_units(self):
-        """
-        Get the list of available units.
-
-        Returns
-        -------
-        list
-            list of tuple(group, list of units)
-
-        """
-        all_units = []
-        for i, unit in enumerate(self.units):
-            all_units.append([unit.group, unit.get_available_units()])
-        return all_units
-
-    def load_available_neurochat_units(self):
-        """
-        Load and return the available neurochat units.
-
-        Returns
-        -------
-        generator
-            generator of SingleUnit instances.
-
-        """
-        available_units = self.get_available_units()
-        non_zero_units = [(g, u) for (g, u) in available_units if len(u) != 0]
-        for group, units in non_zero_units:
-            print("Using tetrode {} unit {}".format(group, units[0]))
-            idx = self.units.group_by_property("group", group)[1][0]
-            unit = self.units[idx]
-            unit.load()
-            spike_obj = unit.underlying
-            spike_obj.set_unit_no(units[0])
-            yield spike_obj
-
-    def get_set_units(self):
-        """Get the units which are set for analysis."""
-        return [unit.units_to_use for unit in self.units]
-
-    def get_set_units_as_dict(self):
-        """Get the units which are set as a dictionary"""
-        groups = [unit.group for unit in self.units]
-        units = self.get_set_units()
-        out_dict = {}
-
-        for g, u in zip(groups, units):
-            out_dict[g] = u
-
-        return out_dict
-
-    def get_signals(self):
-        """Get the signals."""
-        return self.signals
-
-    def get_eeg_signals(self, copy=True):
-        """
-        Get the eeg signals as an EegArray.
-
-        Parameters
-        ----------
-        copy : bool, optional
-            Whether to copy the retrieved signals, by default True.
-
-        Returns
-        -------
-        simuran.eeg.EEGArray
-            The signals as an EegArray.
-
-        """
-        inplace = not copy
-        eeg_array = EEGArray()
-        _, eeg_idxs = self.signals.group_by_property("channel_type", "eeg")
-        eeg_sigs = self.signals.subsample(idx_list=eeg_idxs, inplace=inplace)
-        if inplace:
-            eeg_sigs = self.signals
-        eeg_array.set_container([EEG(signal=eeg) for eeg in eeg_sigs])
-
-        return eeg_array
+            return "--".join(path_sf.with_suffix("").parts)
+        name_up_to_rel = path_sf.relative_to(rel_dir).with_suffix("")
+        return "--".join(name_up_to_rel.parts)
 
     def get_np_signals(self):
         """Return a 2D array of signals as a numpy array."""
         return np.array([s.samples for s in self.signals], float)
-
-    def get_unit_signals(self):
-        """Return a 2D array of signals with units."""
-        return np.array([s.samples.to(u.mV) for s in self.signals], float) * u.mV
 
     def __del__(self):
         if self.loader is not None and hasattr(self.loader, "unload"):
