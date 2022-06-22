@@ -86,7 +86,7 @@ class RecordingContainer(AbstractContainer):
         for i in range(len(table)):
             if isinstance(rc.loader, abcIterable):
                 loader = rc.loader[i]
-            recording = copy.copy(rc[i])
+            recording = Recording()
             module_logger.debug(f"Parsing information from table for row {i}")
             loader.parse_table_row(table, i, recording)
             rc.append(recording)
@@ -125,7 +125,9 @@ class RecordingContainer(AbstractContainer):
             return
         if self.load_on_fly:
             if self._last_loaded_idx != idx:
-                self.copy_recording(idx)
+                self.last_loaded = copy.copy(self[idx])
+                self.last_loaded.load()
+                self._last_loaded_idx = idx
             return self.last_loaded
         else:
             self[idx].load()
