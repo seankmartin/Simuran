@@ -1,5 +1,9 @@
 """Package for multi-region analysis."""
 from rich import inspect
+from typing import Union, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 from .analysis.analysis_handler import AnalysisHandler
 from .core.base_container import GenericContainer
@@ -23,3 +27,7 @@ from .table import (
 )
 
 loader = loader_from_string
+
+def config_from_file(filename : Union[str, "Path"]) -> ParamHandler:
+    """Return a configuration from a filename."""
+    return ParamHandler(source_file=filename)

@@ -91,7 +91,7 @@ class NCLoader(MetadataLoader):
 
     def parse_metadata(self, recording: "Recording") -> None:
         if "source_file" in recording.attrs:
-            source_file = recording.attrs["source_file"]
+            source_file = Path(recording.attrs["source_file"])
         elif "directory" in recording.attrs:
             source_file = (
                 Path(recording.attrs["directory"]) / recording.attrs["filename"]
