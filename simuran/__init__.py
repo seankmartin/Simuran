@@ -10,7 +10,7 @@ from .core.base_container import GenericContainer
 from .core.eeg import EEG, EEGArray
 from .core.log_handler import log, log_exception, set_only_log_to_file
 from .core.param_handler import ParamHandler
-from .loaders.loader_list import loader_from_string, loaders_dict
+from .loaders.loader_list import loader_from_string
 from .main import main_with_data, main_with_files
 from .plot.base_plot import despine, save_simuran_plot, set_plot_style, setup_ax
 from .plot.figure import SimuranFigure

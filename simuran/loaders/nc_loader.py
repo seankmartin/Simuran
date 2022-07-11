@@ -5,6 +5,7 @@ import os
 from copy import deepcopy
 from pathlib import Path
 from typing import TYPE_CHECKING
+from collections.abc import Iterable
 
 import numpy as np
 from astropy import units as u
@@ -309,7 +310,7 @@ class NCLoader(MetadataLoader):
             # Extract the positional data
             output_list = [None, None]
             for i, ext in enumerate([pos_extension, stm_extension]):
-                if isinstance(ext, list):
+                if isinstance(ext, Iterable) and not isinstance(ext, str):
                     for ext_ in ext:
                         filename_ = self._grab_stim_pos_files(base, base_filename, ext_)
                         if filename_ is not None:
