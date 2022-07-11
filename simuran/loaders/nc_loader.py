@@ -25,10 +25,26 @@ if TYPE_CHECKING:
 
 module_logger = logging.getLogger("simuran.loaders")
 
-# TODO support non-sequential eeg numbers
 # TODO clean up a little
 class NCLoader(MetadataLoader):
-    """Load data compatible with the NeuroChaT package."""
+    """
+    Load data compatible with the NeuroChaT package.
+
+    Parameters
+    ----------
+    system : str
+        The system to load, default is "Axona".
+    
+    Kwargs and defaults
+    -------------------
+    pos_extension : (".txt", ".pos")
+    clu_extension : ".clu.X"
+    sig_channels : None
+    unit_groups : None
+    stm_extension : ".stm"
+    lfp_extension : ".eeg"
+    cluster_extension : ".cut"
+    """
 
     def __init__(self, system="Axona", **kwargs):
         self.system = system
@@ -152,7 +168,7 @@ class NCLoader(MetadataLoader):
         obj = NoLoader()
         obj.data = self.spatial
         obj.date = self.spatial.get_date()
-        obj.time = self.spatial.get_time()
+        obj.timestamps = self.spatial.get_time() * u.s
         obj.speed = self.spatial.get_speed() * (u.cm / u.s)
         obj.position = (
             self.spatial.get_pos_x() * u.cm,
@@ -244,7 +260,7 @@ class NCLoader(MetadataLoader):
             joined_params.update(**kwargs)
             cluster_extension = joined_params.get("cluster_extension", ".cut")
             clu_extension = joined_params.get("clu_extension", ".clu.X")
-            pos_extension = joined_params.get("pos_extension", ".pos")
+            pos_extension = joined_params.get("pos_extension", (".txt", ".pos"))
             lfp_extension = joined_params.get("lfp_extension", ".eeg")  # eeg or egf
             stm_extension = joined_params.get("stm_extension", ".stm")
             tet_groups = joined_params.get("unit_groups", None)
