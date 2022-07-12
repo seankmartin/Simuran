@@ -6,7 +6,6 @@ before_intall:
   - pip install -U pip
 install:
   - python -m pip install .[tests]
-  - python -m pip install neurochat
 script:
   - python -m pytest
 after_success:
