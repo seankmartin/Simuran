@@ -35,7 +35,7 @@ class NCLoader(MetadataLoader):
     ----------
     system : str
         The system to load, default is "Axona".
-    
+
     Kwargs and defaults
     -------------------
     pos_extension : (".txt", ".pos")
@@ -58,11 +58,12 @@ class NCLoader(MetadataLoader):
                 return
             for first_key, map_sub in mapping.items():
                 if map_sub is None:
-                    recording.attrs["units"] = None
+                    recording.attrs[first_key] = None
                     continue
-                if first_key not in ["signals", "spatial", "units"]:
-                    continue
-                if first_key not in recording.data:
+                if (
+                    first_key not in ["signals", "spatial", "units"]
+                    or first_key not in recording.data
+                ):
                     continue
                 for key, value in map_sub.items():
                     if isinstance(value, list):
