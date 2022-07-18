@@ -1,7 +1,7 @@
 import os
 
 from simuran.analysis.analysis_handler import AnalysisHandler
-from skm_pyutils.log import get_default_log_loc, override_excepthook
+from skm_pyutils.log import get_default_log_loc
 
 
 def add(a, b):
@@ -29,10 +29,3 @@ def test_analysis_logging():
         assert "ValueError" in contents
 
     return ah
-
-
-if __name__ == "__main__":
-    ah = test_analysis_logging()
-    override_excepthook()
-    ah.set_handle_errors(False)
-    ah.run_all_fns()
