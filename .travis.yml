@@ -4,14 +4,8 @@ python:
 before_intall:
   - python --version
   - pip install -U pip
-  - pip install -U pytest
-  - pip install codecov
-  - pip install pytest-cov
 install:
-  - python -m pip install --upgrade setuptools
-  - python -m pip install -r requirements.txt
-  - python -m pip install .
-  - python -m pip install neurochat
+  - python -m pip install .[tests]
 script:
   - python -m pytest
 after_success:

@@ -5,6 +5,7 @@ import os
 from copy import deepcopy
 from pathlib import Path
 from typing import TYPE_CHECKING
+from collections.abc import Iterable
 
 import numpy as np
 from astropy import units as u
@@ -25,10 +26,26 @@ if TYPE_CHECKING:
 
 module_logger = logging.getLogger("simuran.loaders")
 
-# TODO support non-sequential eeg numbers
 # TODO clean up a little
 class NCLoader(MetadataLoader):
-    """Load data compatible with the NeuroChaT package."""
+    """
+    Load data compatible with the NeuroChaT package.
+
+    Parameters
+    ----------
+    system : str
+        The system to load, default is "Axona".
+
+    Kwargs and defaults
+    -------------------
+    pos_extension : (".txt", ".pos")
+    clu_extension : ".clu.X"
+    sig_channels : None
+    unit_groups : None
+    stm_extension : ".stm"
+    lfp_extension : ".eeg"
+    cluster_extension : ".cut"
+    """
 
     def __init__(self, system="Axona", **kwargs):
         self.system = system
@@ -41,11 +58,12 @@ class NCLoader(MetadataLoader):
                 return
             for first_key, map_sub in mapping.items():
                 if map_sub is None:
-                    recording.attrs["units"] = None
+                    recording.attrs[first_key] = None
                     continue
-                if first_key not in ["signals", "spatial", "units"]:
-                    continue
-                if first_key not in recording.data:
+                if (
+                    first_key not in ["signals", "spatial", "units"]
+                    or first_key not in recording.data
+                ):
                     continue
                 for key, value in map_sub.items():
                     if isinstance(value, list):
@@ -91,7 +109,7 @@ class NCLoader(MetadataLoader):
 
     def parse_metadata(self, recording: "Recording") -> None:
         if "source_file" in recording.attrs:
-            source_file = recording.attrs["source_file"]
+            source_file = Path(recording.attrs["source_file"])
         elif "directory" in recording.attrs:
             source_file = (
                 Path(recording.attrs["directory"]) / recording.attrs["filename"]
@@ -152,7 +170,7 @@ class NCLoader(MetadataLoader):
         obj = NoLoader()
         obj.data = self.spatial
         obj.date = self.spatial.get_date()
-        obj.time = self.spatial.get_time()
+        obj.timestamps = self.spatial.get_time() * u.s
         obj.speed = self.spatial.get_speed() * (u.cm / u.s)
         obj.position = (
             self.spatial.get_pos_x() * u.cm,
@@ -244,7 +262,7 @@ class NCLoader(MetadataLoader):
             joined_params.update(**kwargs)
             cluster_extension = joined_params.get("cluster_extension", ".cut")
             clu_extension = joined_params.get("clu_extension", ".clu.X")
-            pos_extension = joined_params.get("pos_extension", ".pos")
+            pos_extension = joined_params.get("pos_extension", (".txt", ".pos"))
             lfp_extension = joined_params.get("lfp_extension", ".eeg")  # eeg or egf
             stm_extension = joined_params.get("stm_extension", ".stm")
             tet_groups = joined_params.get("unit_groups", None)
@@ -293,7 +311,7 @@ class NCLoader(MetadataLoader):
             # Extract the positional data
             output_list = [None, None]
             for i, ext in enumerate([pos_extension, stm_extension]):
-                if isinstance(ext, list):
+                if isinstance(ext, Iterable) and not isinstance(ext, str):
                     for ext_ in ext:
                         filename_ = self._grab_stim_pos_files(base, base_filename, ext_)
                         if filename_ is not None:

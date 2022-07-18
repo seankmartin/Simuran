@@ -32,6 +32,8 @@ class SimuranFigure(object):
         self.filename = filename
         self._output_filenames = {}
         self.kwargs = kwargs
+        if "fig" in self.kwargs:
+            self.figure = self.kwargs.pop("fig")
         self.done = done
         self.closed = False
 

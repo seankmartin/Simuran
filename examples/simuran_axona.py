@@ -15,6 +15,28 @@ addsitedir(lib_folder)
 from index_axona_files import clean_data
 
 
+def load_available_neurochat_units(self):
+        """
+        Load and return the available neurochat units.
+
+        Returns
+        -------
+        generator
+            generator of SingleUnit instances.
+
+        """
+        available_units = self.get_available_units()
+        non_zero_units = [(g, u) for (g, u) in available_units if len(u) != 0]
+        for group, units in non_zero_units:
+            print("Using tetrode {} unit {}".format(group, units[0]))
+            idx = self.units.group_by_property("group", group)[1][0]
+            unit = self.units[idx]
+            unit.load()
+            spike_obj = unit.underlying
+            spike_obj.set_unit_no(units[0])
+            yield spike_obj
+
+
 def analyse_container(rc, out_dir):
     # More simple
     for recording in rc:
