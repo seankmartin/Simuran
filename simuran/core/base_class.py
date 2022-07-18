@@ -129,3 +129,6 @@ class BaseSimuran(ABC):
 class NoLoader(BaseSimuran):
     def load(self):
         return
+
+    def is_loaded(self):
+        return True

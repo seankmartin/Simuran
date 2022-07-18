@@ -8,7 +8,7 @@ testpaths = [
     "simuran",
 ]
 norecursedirs="dist build .tox scripts"
-addopts = "--cov-report=xml --cov=simuran -r fEsP -v --disable-warnings"
+addopts = "--cov-report=xml --cov=simuran -r fEsP -v"
 
 [tool.coverage.report]
 exclude_lines = [

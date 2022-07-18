@@ -60,7 +60,7 @@ def test_inpsect():
 def test_no_loader():
     no_loader = NoLoader()
     no_loader.load()
-    assert not no_loader.is_loaded()
+    assert no_loader.is_loaded()
 
 
 if __name__ == "__main__":
