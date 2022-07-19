@@ -88,9 +88,11 @@ class EEG(BaseSignal):
 class EEGArray(GenericContainer):
     """Hold a set of EEG signals."""
 
-    def __init__(self):
+    def __init__(self, signals=None):
         """See help(EEGArray)"""
-        super().__init__(cls=EEG)
+        super().__init__()
+        if signals is not None:
+            self.extend([EEG(signal=s) for s in signals])
 
     def convert_signals_to_mne(self, ch_names=None, verbose=True, bad_chans=None):
         """

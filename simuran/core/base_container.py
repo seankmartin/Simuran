@@ -65,6 +65,10 @@ class GenericContainer:
         """
         self.container.append(item)
 
+    def extend(self, iterable):
+        """Extend self.container"""
+        self.container.extend(iterable)
+
     def group_by_property(self, prop, value):
         """
         Return all items in the container with item.prop == value.
