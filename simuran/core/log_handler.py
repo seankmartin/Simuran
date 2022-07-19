@@ -7,17 +7,13 @@ from pathlib import Path
 from typing import Optional, Union
 
 from skm_pyutils.log import (
-    FileLogger,
-    FileStdoutLogger,
     clear_handlers,
     convert_log_level,
     get_default_log_loc,
 )
 from skm_pyutils.path import make_path_if_not_exists
 
-# TODO remove these later in favour of built in logging
-log = FileLogger("simuran_cli")
-out = FileStdoutLogger()
+module_logger = logging.getLogger("simuran.log")
 
 
 def default_log_location():
@@ -44,7 +40,6 @@ def establish_main_logger(logger: "logging.Logger") -> None:
     """
     Set the handlers on the simuran logger and simuran.module loggers.
 
-    TODO check can remove logging
     """
     logger.setLevel(logging.DEBUG)
     formatter = default_formatter()
@@ -95,11 +90,10 @@ def log_exception(ex, more_info="", location=None):
     now = datetime.datetime.now()
     make_path_if_not_exists(default_loc)
     with open(default_loc, "a+") as f:
-        f.write("\n----------Caught Exception at {}----------\n".format(now))
+        f.write(f"\n----------Caught Exception at {now}----------\n")
         traceback.print_exc(file=f)
-    log.error(
-        "{} failed with caught exception.\nSee {} for more information.".format(
-            more_info, default_loc
-        ),
+    module_logger.error(
+        f"{more_info} failed with caught exception."
+        f"\nSee {default_loc} for more information.",
         exc_info=False,
     )

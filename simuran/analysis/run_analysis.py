@@ -240,12 +240,12 @@ def save_figures(figures, out_dir, figure_names=[], verbose=False, set_done=Fals
 
     if len(figures) != 0:
         if verbose:
-            print("Plotting figures to {}".format(Path(out_dir) / "plots"))
+            print(f'Plotting figures to {Path(out_dir) / "plots"}')
 
         if len(figure_names) != len(figures):
             for i, f in enumerate(figures):
                 if f.filename is None:
-                    f.filename = "fig{}.png".format(i)
+                    f.filename = f"fig{i}.png"
         else:
             for f, name in zip(figures, figure_names):
                 f.filename = name
@@ -253,7 +253,7 @@ def save_figures(figures, out_dir, figure_names=[], verbose=False, set_done=Fals
         for f in figures:
             if f.isdone():
                 if verbose:
-                    print("Plotting to {}".format(f.filename))
+                    print(f"Plotting to {f.filename}")
                 f.savefig(Path(out_dir) / "plots" / f.filename)
                 f.close()
 
@@ -263,12 +263,12 @@ def save_figures(figures, out_dir, figure_names=[], verbose=False, set_done=Fals
 def save_unclosed_figures(out_dir):
     """Save any figures which were not closed to out_dir and close them."""
     figs = list(map(plt.figure, plt.get_fignums()))
-    if len(figs) != 0:
-        print("Saving unclosed_plots to {}".format(out_dir))
+    if figs:
+        print(f"Saving unclosed_plots to {out_dir}")
     for i, f in enumerate(figs):
         output_plot_dir = Path(out_dir) / "unclosed_plots"
         output_plot_dir.mkdir(parents=True, exist_ok=True)
-        name = output_plot_dir / "fig_{}.png".format(i)
+        name = output_plot_dir / f"fig_{i}.png"
         f.savefig(name)
         plt.close(f)
 

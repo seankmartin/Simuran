@@ -16,7 +16,6 @@ from simuran.recording import Recording
 if TYPE_CHECKING:
     from simuran.loaders.base_loader import BaseLoader
 
-# TODO make this easier
 module_logger = logging.getLogger("simuran.recording_container")
 
 
@@ -205,32 +204,6 @@ class RecordingContainer(GenericContainer):
         return self.subsample(
             idx_list=indexes, interactive=False, prop="source_file", inplace=inplace
         )
-
-    def select_cells(self, cell_location, do_cell_picker=False, overwrite=False):
-        """
-        Select cells to use from a file or interactive prompt.
-
-        Parameters
-        ----------
-        cell_location : str
-            Path to a file to save choice to or read choice from.
-        do_cell_picker : bool, optional
-            Whether to launch an interactive prompt to pick cells, by default False.
-        overwrite : bool, optional
-            Whether to overwrite an existing file, by default False.
-
-        Returns
-        -------
-        None
-
-        """
-        if ((not os.path.isfile(cell_location)) or overwrite) and do_cell_picker:
-            print("Starting unit select helper")
-            units_to_use = self.pick_cells(cell_location)
-            self.set_chosen_cells(units_to_use, cell_location)
-        else:
-            print(f"Loading cells from {cell_location}")
-            self.load_cells(cell_location)
 
     def load_iter(self):
         """Iterator through the container that loads data on item retrieval."""

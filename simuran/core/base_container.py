@@ -1,15 +1,17 @@
 """This module holds containers to allow for batch processing."""
 
 import contextlib
-import copy
 import os
 from dataclasses import dataclass, field
 from typing import Any, Optional, overload
 
 import numpy as np
 import rich
-from simuran.core.base_class import BaseSimuran
-from skm_pyutils.save import save_dicts_to_csv, save_mixed_dict_to_csv
+from skm_pyutils.save import (
+    save_dicts_to_csv,
+    save_mixed_dict_to_csv,
+    data_dict_from_attr_list,
+)
 
 
 @dataclass
@@ -213,7 +215,7 @@ class GenericContainer:
             out_dir_list = [out_dir_list] * len(idx_list)
 
         for i in idx_list:
-            data = self.data_from_attr_list(
+            data = self._data_from_attr_list(
                 attr_list, idx=i, friendly_names=friendly_names
             )
             save_mixed_dict_to_csv(data, out_dir_list[i], name_list[i])
@@ -261,16 +263,29 @@ class GenericContainer:
             l2 = [None] * orig_attr_list_len
             friendly_names = l1 + l2
 
-        data_list = self.data_from_attr_list(
+        data_list = self._data_from_attr_list(
             attr_list, friendly_names=friendly_names, decimals=decimals
         )
         save_dicts_to_csv(location, data_list)
 
-    def data_from_attr_list(self, attr_list, friendly_names=None, idx=None, decimals=3):
+    def get_attrs(self) -> "dict[str, Any]":  # pragma no cover
+        return self.__dict__
+
+    def get_attrs_and_methods(self) -> "list[str]":  # pragma: no cover
+        class_dir = dir(self)
+        return [r for r in class_dir if not r.startswith("_")]
+
+    def inspect(self, methods: bool = False, **kwargs) -> None:  # pragma: no cover
+        """Note: could also try objexplore"""
+        rich.inspect(self, methods=methods, **kwargs)
+
+    def _data_from_attr_list(
+        self, attr_list, friendly_names=None, idx=None, decimals=3
+    ):
         """
         Retrieve attr_list from each item in the container.
 
-        See simuran.base_class.data_dict_from_attr_list for the
+        See data_dict_from_attr_list for the
         description of the attributes list to be provided.
 
         Parameters
@@ -305,11 +320,7 @@ class GenericContainer:
                 friendly_names = None
 
         def get_single(item, attr_list):
-            if not isinstance(item, BaseSimuran):
-                raise ValueError(
-                    "data_from_attr_list is only called on BaseSimuran objects"
-                )
-            data = item.data_dict_from_attr_list(attr_list, friendly_names)
+            data = data_dict_from_attr_list(item, attr_list, friendly_names)
             try:
                 round(data, decimals)
             except BaseException:
@@ -329,17 +340,6 @@ class GenericContainer:
         else:
             data_out = get_single(self[idx], attr_list)
         return data_out
-
-    def get_attrs(self) -> "dict[str, Any]":  # pragma no cover
-        return self.__dict__
-
-    def get_attrs_and_methods(self) -> "list[str]":  # pragma: no cover
-        class_dir = dir(self)
-        return [r for r in class_dir if not r.startswith("_")]
-
-    def inspect(self, methods: bool = False, **kwargs) -> None:  # pragma: no cover
-        """Note: could also try objexplore"""
-        rich.inspect(self, methods=methods, **kwargs)
 
     def __getitem__(self, idx):
         """Retrive the object at the specified index from the container."""
