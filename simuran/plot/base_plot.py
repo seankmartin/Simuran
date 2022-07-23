@@ -1,6 +1,7 @@
 """This module provides functions to interface with matplotlib."""
 
 import os
+from copy import copy
 
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -49,6 +50,7 @@ def setup_ax(ax, default, **kwargs):
     None
 
     """
+    default = copy(default)
     for key, value in kwargs.items():
         default[key] = value
     ax.set_xlabel(default.get("xlabel", None))
