@@ -1,6 +1,6 @@
 """Holds a custom figure class."""
-import os
 import logging
+import os
 
 import matplotlib.pyplot as plt
 from simuran.plot.base_plot import save_simuran_plot
@@ -36,6 +36,8 @@ class SimuranFigure(object):
         self.kwargs = kwargs
         if "fig" in self.kwargs:
             self.figure = self.kwargs.pop("fig")
+        if "name" in self.kwargs:
+            self.filename = self.kwargs.pop("name")
         self.done = done
         self.closed = False
 
