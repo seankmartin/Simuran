@@ -1,32 +1,27 @@
 """This module holds containers to allow for batch processing."""
 
 import contextlib
-import copy
 import os
-from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Optional, Type
+from typing import Any, Optional, overload
 
 import numpy as np
 import rich
-from simuran.core.base_class import BaseSimuran
-from skm_pyutils.save import save_dicts_to_csv, save_mixed_dict_to_csv
+from skm_pyutils.save import (
+    save_dicts_to_csv,
+    save_mixed_dict_to_csv,
+    data_dict_from_attr_list,
+)
 
 
-# TODO consider making this something that you can pass list like into
-# The current implementation is probably too coupled
 @dataclass
-class AbstractContainer(ABC):
+class GenericContainer:
     """
-    A abstract class container in SIMURAN, really a wrapper of a list.
+    A container in SIMURAN, a wrapper of a list.
 
     This has some extra functionality, such as retrieving
     information from each item in the container,
     or grouping items by property.
-
-    Any subclass must implement the _create_new method,
-    which just describes how a new item is added.
-    For example, it could simply be return params if nothing is done.
 
     Attributes
     ----------
@@ -37,23 +32,22 @@ class AbstractContainer(ABC):
 
     container: list = field(repr=False, default_factory=list)
 
-    @abstractmethod
-    def _create_new(self, params):
-        """
-        Create a new item to add to the container.
+    def load(self) -> None:
+        ...
+        """Load all items in the container."""
 
-        Parameters
-        ----------
-        params : obj
-            Anything needed for instantiating the object.
+    @overload
+    def load(self, idx: int) -> Any:
+        ...
+        """Load item at index idx and return it."""
 
-        """
-        pass
-
-    def load(self):
-        """Iterate and load each object in the container."""
-        for item in self:
-            item.load()
+    def load(self, idx: Optional[int] = None) -> Any:
+        if idx is None:
+            for item in self:
+                item.load()
+        else:
+            self[idx].load()
+            return self[idx]
 
     def append(self, item):
         """
@@ -71,26 +65,9 @@ class AbstractContainer(ABC):
         """
         self.container.append(item)
 
-    def append_new(self, params):
-        """
-        Append a new item to self.container using _create_new.
-
-        Parameters
-        ----------
-        params : object
-            Parameter object passed to _create_new.
-
-        Returns
-        -------
-        None
-
-        See Also
-        --------
-        simuran.base_container._create_new
-
-        """
-        to_add = self._create_new(params)
-        self.append(to_add)
+    def extend(self, iterable):
+        """Extend self.container"""
+        self.container.extend(iterable)
 
     def group_by_property(self, prop, value):
         """
@@ -122,6 +99,8 @@ class AbstractContainer(ABC):
     def split_into_groups(self, prop):
         """
         Split into groups based on property.
+
+        Does not support mutable values (list or dict) in the property list.
 
         Parameters
         ----------
@@ -170,18 +149,11 @@ class AbstractContainer(ABC):
 
         Returns
         -------
-        list
+        set
             All values of prop found in the container.
 
         """
-        used = set()
-        to_return = []
-        for val in self.container:
-            x = getattr(val, prop)
-            if x not in used:
-                to_return.append(x)
-                used.add(x)
-        return to_return
+        return set(self.get_property(prop))
 
     def save_single_data(
         self,
@@ -247,7 +219,7 @@ class AbstractContainer(ABC):
             out_dir_list = [out_dir_list] * len(idx_list)
 
         for i in idx_list:
-            data = self.data_from_attr_list(
+            data = self._data_from_attr_list(
                 attr_list, idx=i, friendly_names=friendly_names
             )
             save_mixed_dict_to_csv(data, out_dir_list[i], name_list[i])
@@ -295,16 +267,29 @@ class AbstractContainer(ABC):
             l2 = [None] * orig_attr_list_len
             friendly_names = l1 + l2
 
-        data_list = self.data_from_attr_list(
+        data_list = self._data_from_attr_list(
             attr_list, friendly_names=friendly_names, decimals=decimals
         )
         save_dicts_to_csv(location, data_list)
 
-    def data_from_attr_list(self, attr_list, friendly_names=None, idx=None, decimals=3):
+    def get_attrs(self) -> "dict[str, Any]":  # pragma no cover
+        return self.__dict__
+
+    def get_attrs_and_methods(self) -> "list[str]":  # pragma: no cover
+        class_dir = dir(self)
+        return [r for r in class_dir if not r.startswith("_")]
+
+    def inspect(self, methods: bool = False, **kwargs) -> None:  # pragma: no cover
+        """Note: could also try objexplore"""
+        rich.inspect(self, methods=methods, **kwargs)
+
+    def _data_from_attr_list(
+        self, attr_list, friendly_names=None, idx=None, decimals=3
+    ):
         """
         Retrieve attr_list from each item in the container.
 
-        See simuran.base_class.data_dict_from_attr_list for the
+        See data_dict_from_attr_list for the
         description of the attributes list to be provided.
 
         Parameters
@@ -339,11 +324,7 @@ class AbstractContainer(ABC):
                 friendly_names = None
 
         def get_single(item, attr_list):
-            if not isinstance(item, BaseSimuran):
-                raise ValueError(
-                    "data_from_attr_list is only called on BaseSimuran objects"
-                )
-            data = item.data_dict_from_attr_list(attr_list, friendly_names)
+            data = data_dict_from_attr_list(item, attr_list, friendly_names)
             try:
                 round(data, decimals)
             except BaseException:
@@ -364,80 +345,6 @@ class AbstractContainer(ABC):
             data_out = get_single(self[idx], attr_list)
         return data_out
 
-    def sort(self, key, reverse=False):
-        """
-        Sort the container in place.
-
-        Parameters
-        ----------
-        sort_fn : function
-            The function to use as the key in the sorted function
-        reverse : bool, optional
-            If the sorting should be applied in reverse, by default False
-
-        Returns
-        -------
-        None
-
-        """
-        self.container = sorted(self.container, key=key, reverse=reverse)
-
-    def subsample(self, idx_list=None, interactive=False, prop=None, inplace=False):
-        """
-        Subsample the container, optionally in place.
-
-        Parameters
-        ----------
-        idx_list : list of int, optional
-            The list to subsample, by default None.
-            Only pass None if interactive is set to True.
-        interactive : bool, optional
-            Whether to launch an interactive prompt for sub-sampling, by default False
-        prop : str, optional
-            An attribute of the the items in the container, by default None.
-            This can be used in the interactive mode to help identify the recordings.
-        inplace : bool, optional
-            Perform the subsampling in place, or return a copy, by default False
-
-        Returns
-        -------
-        list of int, or simuran.base_container.AbstractContainer
-            A container with the subsampled items if inplace is False.
-            The indices of the items subsampled from the container if inplace is True
-
-        """
-        if interactive:
-            full_list = self.container if prop is None else self.get_property(prop)
-            print("Items to sample from:")
-            for i, item in enumerate(full_list):
-                print(f"{i + 1}: {item}")
-            indices = input(
-                "Please enter the number of the items you want to "
-                + "keep seperated by spaces. Enter empty to keep all.\n"
-            )
-            if indices == "":
-                return list(range(len(self)))
-            indices = indices.strip().split(" ")
-            idx_list = [int(i) - 1 for i in indices]
-        if inplace:
-            self.container = [self.container[i] for i in idx_list]
-            return idx_list
-        else:
-            new_instance = copy.copy(self)
-            new_instance.container = [self.container[i] for i in idx_list]
-            return new_instance
-
-    def get_attrs(self) -> "dict[str, Any]":
-        return self.__dict__
-
-    def get_attrs_and_methods(self) -> "list[str]":
-        class_dir = dir(self)
-        return [r for r in class_dir if not r.startswith("_")]
-
-    def inspect(self, methods: bool = False, **kwargs) -> None:
-        """Note: could also try objexplore"""
-        rich.inspect(self, methods=methods, **kwargs)
-
     def __getitem__(self, idx):
         """Retrive the object at the specified index from the container."""
         return self.container[idx]
@@ -453,43 +360,3 @@ class AbstractContainer(ABC):
     def __iter__(self):
         """Iterate over the items in the container."""
         return iter(self.container)
-
-
-@dataclass
-class GenericContainer(AbstractContainer):
-    """
-    A subclass of AbstractContainer where each item in the container has the same type.
-
-    Attributes
-    ----------
-    cls : class
-        The class of each item in the container.
-
-    """
-
-    cls: Optional[Type[object]] = None
-
-    def _create_new(self, params):
-        """
-        Create a new entry to be placed in the container.
-
-        Parameters
-        ----------
-        params : object
-            The parameters to use if class has a setup function,
-            otherwise self.cls(*params) is called.
-
-        Returns
-        -------
-        object
-            The created object, has type self.cls
-
-        """
-        try:
-            new = self.cls()
-        except BaseException:
-            new = self.cls(*params)
-
-        if hasattr(new, "setup"):
-            new.setup(params)
-        return new

@@ -3,9 +3,10 @@ import os
 import dearpygui.dearpygui as dpg
 
 from simuran.ui.node import BaseNode, NodeFactory
-from simuran.analysis.custom.lfp_clean import LFPClean
 from simuran.recording import Recording
 from simuran.plot.figure import SimuranFigure
+from simuran.eeg import EEGArray, EEG
+from simuran.loaders.loader_list import loader_from_string
 
 ## TODO add run button, and then test
 
@@ -98,22 +99,26 @@ class RecordingNode(BaseNode):
     def load_setup(self):
         if self.debug:
             print(f"Loading {self.source_file} with params {self.param_file}")
-        self.recording.source_file = self.source_file
-        self.recording.setup_from_file(self.param_file, load=True)
+        self.recording.attrs["source_file"] = self.source_file
+        self.recording.attrs["mapping_file"] = self.param_file
+        # TODO add as UI parameter
+        self.recording.loader = loader_from_string("neurochat")
+        self.recording.parse_metadata()
+
+        self.recording.load()
         self.last_loaded_param_file = self.param_file
         self.last_loaded_source_file = self.source_file
         if self.debug:
             print(f"Loaded {self.source_file} with params {self.param_file}")
 
 
-class LFPCleanNodeFactory(NodeFactory):
+class LFPViewFactory(NodeFactory):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.label = kwargs.get("label", "LFP signal cleaning")
-        self.node_class = LFPCleanNode
+        self.node_class = LFPViewNode
         self.category = "Processing"
 
-        # TODO make this match input
         contents1 = [
             dict(
                 type="TEXT",
@@ -152,19 +157,18 @@ class LFPCleanNodeFactory(NodeFactory):
         ]
 
 
-class LFPCleanNode(BaseNode):
+class LFPViewNode(BaseNode):
     def __init__(self, parent, label="Node", tag=None, debug=False):
         super().__init__(parent, label=label, tag=tag, debug=debug)
-        self.lfp_clean = LFPClean(visualise=True, show_vis=False)
 
     def process(self, nodes):
         super().process(nodes)
 
         # Use set parameters
-        method = self.get_value_of_label(label="Clean method")
-        self.lfp_clean.method = method
-        if method == "" or method.startswith(" "):
-            method = "avg"
+        # method = self.get_value_of_label(label="Clean method")
+        # self.lfp_clean.method = method
+        # if method == "" or method.startswith(" "):
+        #     method = "avg"
 
         # Use the input data
         for key, _ in self.input_attributes.items():
@@ -183,33 +187,20 @@ class LFPCleanNode(BaseNode):
                 input_recording = node.recording
                 break
 
-        # TODO need to figure out method kwargs
-        results = self.lfp_clean.clean(input_recording, min_f=1, max_f=100)
-
-        # TODO work on naming
-        clean_fig = results["fig"]
-
         # TODO include config for things like a base dir / output dir
-        BASE_DIR = r"D:\SubRet_recordings_imaging"
-        OUTPUT_DIR = r"E:\Repos\SIMURAN\examples\Results"
+        BASE_DIR = None
+        OUTPUT_DIR = os.getcwd()
 
         name_for_save = input_recording.get_name_for_save(BASE_DIR)
-        all_figs = [
-            (clean_fig, f"_cleaned_signals_{method}"),
-        ]
+        # TODO clean up
+        eeg_array = EEGArray(input_recording.data["signals"])
+        fig = eeg_array.plot(title=name_for_save, show=False)
+        all_figs = [(fig, "all")]
 
         bitmap_fnames = []
-
-        if "ica_figs" in results.keys():
-            ica_figs = [
-                (results["ica_figs"][0], f"ica_excluded_{method}"),
-                (results["ica_figs"][1], f"ica_reconstructed_{method}"),
-            ]
-            all_figs += ica_figs
-
         for f in all_figs:
             figure, name = f
-            fname = os.path.join(OUTPUT_DIR, "lfp_clean", name_for_save + name)
+            fname = os.path.join(OUTPUT_DIR, "lfp_signals", name_for_save + name)
             fig = SimuranFigure(
                 figure=figure, filename=fname, done=True, verbose=self.debug
             )
@@ -222,7 +213,7 @@ class LFPCleanNode(BaseNode):
 
 
 def create_example_nodes():
-    node1 = LFPCleanNodeFactory()
+    node1 = LFPViewFactory()
 
     node2 = RecordingNodeFactory()
 

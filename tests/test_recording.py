@@ -6,7 +6,7 @@ from simuran.core.param_handler import ParamHandler
 from simuran.loaders.base_loader import MetadataLoader
 from simuran.recording import Recording
 
-main_dir = os.path.dirname(__file__)[: -len(os.sep + "tests")]
+main_dir = os.path.dirname(__file__)[: -len(f"{os.sep}tests")]
 
 
 def test_param_load():
@@ -23,7 +23,9 @@ def test_param_load():
 
 def test_recording_setup():
     metadata = ParamHandler(
-        source_file=os.path.join(main_dir, "tests", "resources", "params", "simuran_base_params.py"),
+        source_file=os.path.join(
+            main_dir, "tests", "resources", "params", "simuran_base_params.py"
+        ),
         name="mapping",
     )
     loader = MetadataLoader()

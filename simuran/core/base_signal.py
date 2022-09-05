@@ -53,11 +53,8 @@ class BaseSignal(BaseSimuran):
         self.channel_type = "eeg"
         self.conversion = 1.0  # To convert to Volts
 
-    ## TODO design thoughts!
-    ## Passing source_file vs full recording??
     def load(self, *args, **kwargs):
         """Load the signal."""
-        ## TODO is this needed? If yes, add to other classes
         res = super().load()
         if res == "skip":
             return

@@ -52,6 +52,23 @@ pip install GitPython
 pip install doit
 ```
 
+## Core functionality
+
+### API
+
+Here, the main object is to setup Recordings (containing all information relevant to an experiment, or part of an experiment) and RecordingContainers, which are a series of Recordings.
+
+For instance, RecordingContainer could represent all t-maze running speed, spikes, etc. and associated metadata, while a Recording is an individual t-maze session.
+This can then support easy extraction of subcontainers, such as, all trials which were successful in mice expressing a particular gene - in a simple filtering method with Pandas style.
+
+Finally, these RecordingContainers can be used to facilitate batch processing of data, and establishing workflows for processing the data.
+
+### GUI
+
+Here, the focus is mostly on the Recording level, but multiple recordings can be bundled as blocks.
+
+Recordings are loaded and processed via Nodes which are established through the UI and run in a digraph fashion.
+
 ## Quick start
 
 To start the UI demo just type`simuran-ui`

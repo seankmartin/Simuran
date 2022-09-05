@@ -1,7 +1,7 @@
 """Test BaseSimuran"""
 
 import pytest
-from simuran.core.base_class import BaseSimuran
+from simuran.core.base_class import BaseSimuran, NoLoader
 from simuran.loaders.base_loader import MetadataLoader
 
 
@@ -13,6 +13,11 @@ class BaseClassToTest(BaseSimuran):
         self.loader.load_recording(self)
 
 
+def create_test_obj(meta_dict):
+    loader = MetadataLoader()
+    return BaseClassToTest(attrs=meta_dict, loader=loader)
+
+
 def test_raises_loading_exception():
     base_obj = BaseClassToTest()
     with pytest.raises(ValueError):
@@ -22,10 +27,7 @@ def test_raises_loading_exception():
 def test_parameter_load():
     meta_dict = dict((["a", 1], [55, "test_str"]))
     new_dict = dict((["test / test", 551], ["test_again", [1, 1, "b"]]))
-
-    # Make sure not load on creation
-    loader = MetadataLoader()
-    base_obj = BaseClassToTest(attrs=meta_dict, loader=loader)
+    base_obj = create_test_obj(meta_dict)
     assert not base_obj.is_loaded()
 
     # Loading first time
@@ -44,3 +46,22 @@ def test_parameter_load():
 
     base_obj.load()
     assert new_dict == base_obj.attrs
+
+
+def test_inpsect():
+    d = {"test": "banana"}
+    obj = create_test_obj(d)
+    attrs = obj.get_attrs()
+    assert "attrs" in attrs
+    attrs_and_methods = obj.get_attrs_and_methods()
+    assert "get_attrs_and_methods" in attrs_and_methods
+
+
+def test_no_loader():
+    no_loader = NoLoader()
+    no_loader.load()
+    assert no_loader.is_loaded()
+
+
+if __name__ == "__main__":
+    test_inpsect()

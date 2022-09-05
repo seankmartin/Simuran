@@ -64,7 +64,6 @@ class AllenOphysLoader(MetadataLoader):
         None
 
         """
-        # TODO expand this
         recording.available_data = ["ophys", "spatial", "licks"]
         recording.source_file = self.path_to_nwb(recording)
         recording.attrs["downloaded"] = isfile(recording.source_file)
@@ -78,7 +77,6 @@ class AllenOphysLoader(MetadataLoader):
             print(f"Please download {fpath} before trying to load it.")
             return recording
         recording.data = experiment
-        # TODO is this needed?
         recording.spatial = NoLoader()
         recording.spatial.data = experiment.running_speed
         return recording

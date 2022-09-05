@@ -1,7 +1,6 @@
 """This module provides a container for multiple recording objects."""
 from __future__ import annotations
 
-import csv
 import copy
 import os
 from collections.abc import Iterable as abcIterable
@@ -10,19 +9,18 @@ import logging
 from typing import TYPE_CHECKING, Iterable, Optional, Union, overload
 
 import pandas as pd
-from skm_pyutils.path import get_all_files_in_dir, get_dirs_matching_regex
 
-from simuran.core.base_container import AbstractContainer
+from simuran.core.base_container import GenericContainer
 from simuran.recording import Recording
 
 if TYPE_CHECKING:
     from simuran.loaders.base_loader import BaseLoader
 
-# TODO make this easier
 module_logger = logging.getLogger("simuran.recording_container")
 
+
 @dataclass
-class RecordingContainer(AbstractContainer):
+class RecordingContainer(GenericContainer):
     """
     A class to hold recording objects.
 
@@ -150,32 +148,6 @@ class RecordingContainer(AbstractContainer):
         """
         return self.data_from_attr_list([("results", None)], idx=idx)
 
-    def subsample(self, idx_list=None, interactive=False, prop=None, inplace=False):
-        """
-        Subsample the recording container, optionally in place.
-
-        Parameters
-        ----------
-        idx_list : list of int, optional
-            The indices to subsample, by default None
-        interactive : bool, optional
-            Launch an interactive prompt to subsample, by default False
-        prop : str, optional
-            An attribute to display in the interactive prompt, by default None
-        inplace : bool, optional
-            Whether the sampling should be performed in place, by default False
-
-        Returns
-        -------
-        list of int, or simuran.recording_container.RecordingContainer
-            A container with the subsampled items if inplace is False.
-            The indices of the items subsampled from the container if inplace is True
-
-        """
-        if prop is None:
-            prop = "source_file"
-        return super().subsample(idx_list, interactive, prop, inplace)
-
     def find_recording_with_source(self, source_file):
         """
         Return the index of the recording in the container with the given source file.
@@ -233,56 +205,9 @@ class RecordingContainer(AbstractContainer):
             idx_list=indexes, interactive=False, prop="source_file", inplace=inplace
         )
 
-    def select_cells(self, cell_location, do_cell_picker=False, overwrite=False):
-        """
-        Select cells to use from a file or interactive prompt.
-
-        Parameters
-        ----------
-        cell_location : str
-            Path to a file to save choice to or read choice from.
-        do_cell_picker : bool, optional
-            Whether to launch an interactive prompt to pick cells, by default False.
-        overwrite : bool, optional
-            Whether to overwrite an existing file, by default False.
-
-        Returns
-        -------
-        None
-
-        """
-        if ((not os.path.isfile(cell_location)) or overwrite) and do_cell_picker:
-            print("Starting unit select helper")
-            units_to_use = self.pick_cells(cell_location)
-            self.set_chosen_cells(units_to_use, cell_location)
-        else:
-            print(f"Loading cells from {cell_location}")
-            self.load_cells(cell_location)
-
     def load_iter(self):
         """Iterator through the container that loads data on item retrieval."""
         return RecordingContainerLoadIterator(self)
-
-    def _create_new(self, params):
-        """
-        Create a new recording with the given parameters.
-
-        Parameters
-        ----------
-        params : str or dict
-            Either a set of parameters or a path to a file listing the parameters.
-
-        Returns
-        -------
-        simuran.recording.Recording
-            The created recording
-
-        """
-        return (
-            Recording(param_file=params)
-            if isinstance(params, str)
-            else Recording(params=params)
-        )
 
 
 class RecordingContainerLoadIterator(object):

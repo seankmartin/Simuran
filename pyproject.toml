@@ -1,3 +1,21 @@
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests",
+    "simuran",
+]
+norecursedirs="dist build .tox scripts"
+addopts = "--cov-report=xml --cov=simuran -r fEsP -v"
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError()",
+    "def __repr__",
+    "if __name__ == .__main__.:",
+    "@(abc\\.)?abstractmethod",
+]

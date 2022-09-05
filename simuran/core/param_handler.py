@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional, Union
 
-from skm_pyutils.config import read_json, read_python, read_yaml
+from skm_pyutils.config import read_json, read_python, read_yaml, convert_dict_to_string
 
 DEFAULT = object()
 
@@ -14,11 +14,6 @@ class ParamHandler(object):
     A wrapper around a dictionary describing parameters.
 
     Provides loaders for this and helper functions.
-
-    TODO
-    ----
-    consider replacing by a function which returns dict
-    and moving some functionality to a utils.
 
     Attributes
     ----------
@@ -94,45 +89,7 @@ class ParamHandler(object):
             The string representation of the dict.
 
         """
-        out_str = ""
-        out_str += f"{self.name}" + " = {\n"
-        for k, v in self.attrs.items():
-            out_str += "\t{}:".format(self._val_to_str(str(k)))
-            if isinstance(v, dict):
-                out_str += "\n\t\t{\n"
-                for k2, v2 in v.items():
-                    out_str += "\t\t {}: {},\n".format(
-                        self._val_to_str(str(k2)), self._val_to_str(v2)
-                    )
-                out_str += "\t\t},\n"
-            else:
-                out_str += " {},\n".format(self._val_to_str(v))
-        out_str += "\t}"
-        return out_str
-
-    @staticmethod
-    def _val_to_str(val):
-        """
-        Convert a value to a string.
-
-        One caveat, if a string is passed, it returns
-        the original string wrapped in quotes.
-
-        Parameters
-        ----------
-        val : object
-            The value to convert
-
-        Returns
-        -------
-        str
-            The value as a string.
-
-        """
-        return f"'{val}'" if isinstance(val, str) else val
-
-    ## Below this point mimics regular dictionary operations
-    ## Equivalent to self.dictionary.blah() = self.blah()
+        return convert_dict_to_string(self.attrs, self.name)
 
     def keys(self):
         """Return all keys in the parameters."""

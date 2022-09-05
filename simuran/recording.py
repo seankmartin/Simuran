@@ -100,10 +100,6 @@ class Recording(BaseSimuran):
         name_up_to_rel = path_sf.relative_to(rel_dir).with_suffix("")
         return "--".join(name_up_to_rel.parts)
 
-    def get_np_signals(self):
-        """Return a 2D array of signals as a numpy array."""
-        return np.array([s.samples for s in self.signals], float)
-
     def __del__(self):
         if self.loader is not None and hasattr(self.loader, "unload"):
             self.loader.unload(self)

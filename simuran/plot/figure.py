@@ -1,9 +1,11 @@
 """Holds a custom figure class."""
+import logging
 import os
 
 import matplotlib.pyplot as plt
-from simuran.core.log_handler import log
 from simuran.plot.base_plot import save_simuran_plot
+
+module_logger = logging.getLogger("simuran.plot.figure")
 
 
 class SimuranFigure(object):
@@ -34,6 +36,8 @@ class SimuranFigure(object):
         self.kwargs = kwargs
         if "fig" in self.kwargs:
             self.figure = self.kwargs.pop("fig")
+        if "name" in self.kwargs:
+            self.filename = self.kwargs.pop("name")
         self.done = done
         self.closed = False
 
@@ -115,9 +119,9 @@ class SimuranFigure(object):
                 self.figure._close(None)
             else:
                 if self.filename is None:
-                    log.warning("Unable to close figure")
+                    module_logger.warning("Unable to close figure")
                 else:
-                    log.warning(f"Unable to close {self.filename}")
+                    module_logger.warning(f"Unable to close {self.filename}")
                 self.closed = False
 
     def isdone(self):

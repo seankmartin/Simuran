@@ -15,7 +15,7 @@ with click_spinner.spinner():
     import PIL
     import numpy as np
 
-    from simuran.ui.example_node import create_example_nodes
+    from simuran.ui.custom.example_node import create_example_nodes
 
 
 class SimuranUI(object):
