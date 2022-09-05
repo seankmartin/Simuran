@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [tool.pytest.ini_options]
 testpaths = [
     "tests",
-    "src/simuran",
+    "simuran",
 ]
 norecursedirs="dist build .tox scripts"
 addopts = "--cov-report=xml --cov=simuran -r fEsP -v"
