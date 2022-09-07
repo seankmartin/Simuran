@@ -1,5 +1,3 @@
-import copy
-import numpy as np
 import pytest
 
 from simuran.core.base_class import BaseSimuran

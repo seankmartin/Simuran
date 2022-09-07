@@ -15,23 +15,10 @@ class EEG(BaseSignal):
         super().__init__()
         ## TODO also use copy method here
         if signal is not None:
-            self.samples = signal.samples
-            self.sampling_rate = signal.sampling_rate
-            self.timestamps = signal.timestamps
-            self.region = signal.region
-            self.group = signal.group
-            self.channel = signal.channel
-            self.channel_type = signal.channel_type
-            self.attrs = signal.attrs
-            self.datetime = signal.datetime
-            self.tag = signal.tag
-            self.loader = signal.loader
-            self.source_file = signal.source_file
-            self.last_loaded_source = signal.last_loaded_source
-            self.data = signal.data
-            self.results = signal.results
+            self.__dict__.update(signal.__dict__)
         if samples is not None and sampling_rate is not None:
             self.from_numpy(samples, sampling_rate)
+        self.channel_type = "eeg"
 
     def default_name(self):
         """Get the default name for this signal based on region."""
