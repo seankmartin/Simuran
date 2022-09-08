@@ -14,6 +14,7 @@ def signal_to_neurochat(signal: "BaseSignal"):
 
     lfp = NLfp()
     lfp.set_channel_id(signal.channel)
+    signal.fill_timestamps()
     lfp._timestamp = np.array(signal.timestamps)
     # Neurochat assumes mV signal
     lfp._samples = np.array(signal.samples) * signal.conversion * 1000
