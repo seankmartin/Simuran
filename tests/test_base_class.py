@@ -61,7 +61,3 @@ def test_no_loader():
     no_loader = NoLoader()
     no_loader.load()
     assert no_loader.is_loaded()
-
-
-if __name__ == "__main__":
-    test_inpsect()

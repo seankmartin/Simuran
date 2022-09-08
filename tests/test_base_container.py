@@ -54,7 +54,3 @@ class TestContainerSetup:
 
         data = container.get_possible_values("data")
         assert data == set(values)
-
-
-if __name__ == "__main__":
-    test_numpy_container()
