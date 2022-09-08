@@ -6,7 +6,10 @@ import os
 from collections.abc import Iterable as abcIterable
 from dataclasses import dataclass, field
 import logging
+from pathlib import Path
+import pickle
 from typing import TYPE_CHECKING, Iterable, Optional, Union, overload
+from skm_pyutils.table import df_to_file
 
 import pandas as pd
 
@@ -146,7 +149,7 @@ class RecordingContainer(GenericContainer):
             If idx is None, a list of dictionaries, else a single dictionary.
 
         """
-        return self.data_from_attr_list([("results", None)], idx=idx)
+        return [item.results for item in self] if idx is None else self[idx].results
 
     def find_recording_with_source(self, source_file):
         """
@@ -208,6 +211,57 @@ class RecordingContainer(GenericContainer):
     def load_iter(self):
         """Iterator through the container that loads data on item retrieval."""
         return RecordingContainerLoadIterator(self)
+
+    def dump(self, filename, results_only=True):
+        """
+        Dump recording_container to file with pickle.
+
+        Parameters
+        ----------
+        filename : str or Path
+            The output path.
+        results_only : bool, optional
+            Only save the results
+
+        Returns
+        -------
+        None
+
+        """
+        to_dump = self.get_results() if results_only else self
+        with open(filename, "wb") as outfile:
+            pickle.dump(to_dump, outfile)
+
+    def save_results_to_table(self, filename=None):
+        """
+        Dump recording_container to file with pickle.
+
+        Parameters
+        ----------
+        filename : str or Path
+            The output path.
+        results_only : bool, optional
+            Only save the results
+
+        Returns
+        -------
+        Dataframe
+            The resulting dataframe
+
+        """
+        results = self.get_results()
+        for res_dict, item in zip(results, self):
+            sfile = item.source_file
+            if sfile is not None:
+                sfile = Path(sfile)
+                res_dict.setdefault("Directory", sfile.parent)
+                res_dict.setdefault("Filename", sfile.name)
+        df = pd.DataFrame.from_dict(results)
+
+        if filename is not None:
+            df_to_file(df, filename)
+
+        return df
 
 
 class RecordingContainerLoadIterator(object):
