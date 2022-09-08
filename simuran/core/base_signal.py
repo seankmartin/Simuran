@@ -83,13 +83,26 @@ class BaseSignal(BaseSimuran):
         signal = cls()
         signal.samples = np_array
         signal.sampling_rate = sampling_rate
-        signal.timestamps = np.array([i / sampling_rate for i in range(len(np_array))])
+        signal.fill_timestamps()
         signal.conversion = 0.001
         return signal
 
-    def default_name(self):
-        """Get the default name for this signal based on region."""
-        name = self.channel_type
+    def default_name(self, starting_name=None):
+        """
+        Get the default name for this signal based on region.
+
+        Parameters
+        ----------
+        starting_name : str, optional
+            By default None, which starts with the chan type.
+
+        Returns
+        -------
+        str
+            The name of the channel as {region} - {starting_name} {channel}
+        """
+        if starting_name is None:
+            name = self.channel_type
         if self.channel is not None:
             name += f" {self.channel}"
         if self.region is not None:
@@ -182,3 +195,12 @@ class BaseSignal(BaseSimuran):
 
     def get_samples_in_volts(self):
         return np.array(self.samples) * self.conversion
+
+    def fill_timestamps(self):
+        if self.timestamps is not None:
+            return
+        if self.sampling_rate is None:
+            raise ValueError("Must set a sampling rate before setting time stamps")
+        self.timestamps = np.array(
+            [i / self.sampling_rate for i in range(len(self.samples))]
+        )

@@ -7,7 +7,6 @@ if TYPE_CHECKING:
 
 from .analysis.analysis_handler import AnalysisHandler
 from .core.base_container import GenericContainer
-from .eeg import EEG, EEGArray
 from .core.log_handler import log_exception, set_only_log_to_file
 from .core.param_handler import ParamHandler
 from .loaders.loader_list import loader_from_string

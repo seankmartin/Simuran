@@ -3,10 +3,9 @@ import numpy as np
 
 import mne
 from simuran.core.base_signal import BaseSignal
-from simuran.converters.neurochat_converter import signal_to_neurochat
-from simuran.converters.mne_converter import convert_signals_to_mne
+from simuran.bridges.neurochat_bridge import signal_to_neurochat
+from simuran.bridges.mne_bridge import convert_signals_to_mne, plot_signals
 
-from simuran.eeg import EEG
 from copy import copy
 
 
@@ -53,10 +52,15 @@ class TestBaseSignal:
     def test_convert_to_mne(self, signal):
         signals = [copy(signal) for _ in range(10)]
         for i in range(len(signals)):
-            signals
             signals[i].channel = i
-        ch_names = [sig.default_name() for sig in signals]
         mne_signals = convert_signals_to_mne(signals, ch_names=None, verbose=False)
         assert np.all(
             np.isclose(mne_signals.get_data()[0], signal.get_samples_in_volts())
         )
+
+    def test_plot(self, signal):
+        signals = [copy(signal) for _ in range(10)]
+        for signal_ in signals:
+            signal_.channel_type = "eeg"
+        fig = plot_signals(signals, show=False)
+        assert fig != None
