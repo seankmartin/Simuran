@@ -1,9 +1,12 @@
 """This module holds containers to allow for batch processing."""
 
 from dataclasses import dataclass, field
+import logging
 from typing import Any, Optional, overload
 
 import rich
+
+module_logger = logging.getLogger("simuran.core.base_container")
 
 
 @dataclass
@@ -24,6 +27,7 @@ class GenericContainer:
 
     container: list = field(repr=False, default_factory=list)
 
+    @overload
     def load(self) -> None:
         ...
         """Load all items in the container."""
@@ -125,10 +129,14 @@ class GenericContainer:
             The value of the property for each item in the container.
 
         """
-        try:
-            return [getattr(val, prop) for val in self.container]
-        except BaseException:
-            return []
+        results = []
+        for val in self.container:
+            if hasattr(val, prop):
+                results.append(getattr(val, prop))
+            else:
+                module_logger.warning(f"Could not find {prop} in {val}")
+                results.append(None)
+        return results
 
     def get_possible_values(self, prop):
         """
@@ -147,7 +155,7 @@ class GenericContainer:
         """
         return set(self.get_property(prop))
 
-    def get_attrs(self) -> "dict[str, Any]":  # pragma no cover
+    def get_attrs(self) -> "dict[str, Any]":  # pragma: no cover
         return self.__dict__
 
     def get_attrs_and_methods(self) -> "list[str]":  # pragma: no cover

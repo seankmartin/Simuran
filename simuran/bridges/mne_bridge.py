@@ -16,7 +16,7 @@ def convert_signals_to_mne(signals, ch_names=None, verbose=True, bad_chans=None)
         Channel names, by default None
     verbose : bool
         Whether to print verbose messages, default True
-    bad_chans : list of object, optional
+    bad_chans : list of int, optional
         A list of SIMURAN channels that are bad / noisy by index.
 
     Returns

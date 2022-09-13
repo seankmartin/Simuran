@@ -54,3 +54,11 @@ class TestContainerSetup:
 
         data = container.get_possible_values("data")
         assert data == set(values)
+
+    def test_container_extend(self, num_items, values, container):
+        container.extend([1, 2, 3])
+        assert len(container) == num_items + 3
+        assert container[-1] == 3
+
+        container[1] = 2
+        assert container[1] == 2

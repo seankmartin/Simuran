@@ -2,6 +2,7 @@ import os
 
 import pytest
 from simuran.core.param_handler import ParamHandler
+from simuran import config_from_file
 
 
 @pytest.mark.parametrize("file_type", [(".yaml"), (".json"), (".py")])
@@ -9,7 +10,7 @@ def test_read_write(file_type):
     params = {"hello_world": "banana", 0: [1, 10, 14.1], "chans": {"1": "b"}}
     ph_write = ParamHandler(attrs=params)
     ph_write.write(f"test_simuran_temp{file_type}")
-    ph_read = ParamHandler(source_file=f"test_simuran_temp{file_type}")
+    ph_read = config_from_file(f"test_simuran_temp{file_type}")
     assert ph_read.attrs["hello_world"] == "banana"
     if file_type == ".yaml":
         assert ph_read[0] == [1, 10, 14.1]

@@ -133,19 +133,19 @@ class BaseSignal(BaseSimuran):
         stop = int(math.ceil(stop * self.sampling_rate))
         if step is None:
             return self.samples[start:stop]
-        step = int(math.round(self.step * self.sampling_rate))
+        step = int(step * self.sampling_rate)
         return self.samples[start:stop:step]
 
-    def filter(self, low, high, inplace=False, **kwargs):
+    def filter(self, low=None, high=None, inplace=False, **kwargs):
         """
         Filter the signal.
 
         Parameters
         ----------
-        low : float
-            The low frequency for filtering.
-        high : float
-            The high frequency for filtering.
+        low : float, optional
+            The low frequency for filtering. Default None.
+        high : float, optional
+            The high frequency for filtering. Default None.
         inplace : bool, optional
             Whether to perform the operation in place, by default False
 
@@ -160,7 +160,7 @@ class BaseSignal(BaseSimuran):
 
         """
         kwargs["copy"] = not inplace
-        if (low is None) or (high is None):
+        if (low is None) and (high is None):
             logging.warning("Invalid filter frequencies")
             return self
         filtered_data = (

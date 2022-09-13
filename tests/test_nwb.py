@@ -26,12 +26,13 @@ def test_nwb_loader():
         io.write(nwbfile)
 
     # 3. Set up a recording with metadata
-    r = Recording(source_file="ecephys_tutorial.nwb")
+    r = Recording(attrs=dict(source_file="ecephys_tutorial.nwb"))
 
     # 4. Load that NWB
     r.loader = NWBLoader()
 
     # 5. Check data is as expected
+    r.parse_metadata()
     r.load()
     assert r.data.identifier == "EXAMPLE_ID"
 
