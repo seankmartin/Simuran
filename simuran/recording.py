@@ -101,5 +101,4 @@ class Recording(BaseSimuran):
         return "--".join(name_up_to_rel.parts)
 
     def __del__(self):
-        if self.loader is not None and hasattr(self.loader, "unload"):
-            self.loader.unload(self)
+        self.unload() 

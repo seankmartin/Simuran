@@ -122,41 +122,29 @@ def save_simuran_plot(fig, save_location, **kwargs):
     bbox_inches = kwargs.get("bbox_inches", "tight")
     pad_inches = kwargs.get("pad_inches", 0.1)
     verbose = kwargs.get("verbose", False)
-
-    # Save bitmap
-    out_format = kwargs.get("format", "png")
     save_locations = []
-    if out_format is not None:
-        save_location = f"{os.path.splitext(save_location)[0]}.{out_format}"
-        dirname, basename = os.path.split(save_location)
-        final_path = os.path.join(dirname, out_format, basename)
 
+    raster_info = ["raster", "format", "png"]
+    vector_info = ["vector", "vector_format", "pdf"]
+
+    for info in [raster_info, vector_info]:
+        name, key, default = info
+        final_path = get_plot_location(save_location, kwargs.get(key, default))
         if verbose:
-            print(f"Saving raster image to {final_path}")
+            print(f"Saving {name} image to {final_path}")
 
         skm_pyutils.path.make_path_if_not_exists(final_path)
-        fig.savefig(
-            final_path, dpi=dpi, bbox_inches=bbox_inches, pad_inches=pad_inches
-        )
-        save_locations.append(final_path)
-
-    # Save vector
-    out_format = kwargs.get("vector_format", "pdf")
-    if out_format is not None:
-        save_location = f"{os.path.splitext(save_location)[0]}.{out_format}"
-        dirname, basename = os.path.split(save_location)
-        final_path = os.path.join(dirname, out_format, basename)
-
-        if verbose:
-            print(f"Saving vector image to {final_path}")
-
-        skm_pyutils.path.make_path_if_not_exists(final_path)
-        fig.savefig(
-            final_path, dpi=dpi, bbox_inches=bbox_inches, pad_inches=pad_inches
-        )
+        fig.savefig(final_path, dpi=dpi, bbox_inches=bbox_inches, pad_inches=pad_inches)
         save_locations.append(final_path)
 
     return save_locations
+
+
+def get_plot_location(save_location, out_format):
+    if out_format is not None:
+        save_location = f"{os.path.splitext(save_location)[0]}.{out_format}"
+        dirname, basename = os.path.split(save_location)
+        return os.path.join(dirname, out_format, basename)
 
 
 def despine():

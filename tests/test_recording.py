@@ -26,3 +26,14 @@ def test_recording_setup():
         "loader",
         "loader_kwargs",
     }
+
+
+def test_recording_save_name():
+    source_file = "fake_dir/fake_dir2/fake_name.txt"
+    r = Recording(source_file=source_file)
+
+    name = r.get_name_for_save()
+    assert name == "fake_dir--fake_dir2--fake_name.txt"
+
+    name2 = r.get_name_for_save(rel_dir="fake_dir")
+    assert name2 == "fake_dir2--fake_dir2--fake_name.txt"

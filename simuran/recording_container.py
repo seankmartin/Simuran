@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 import logging
 from pathlib import Path
 import pickle
+import re
 from typing import TYPE_CHECKING, Iterable, Optional, Union, overload
 from skm_pyutils.table import df_to_file
 
@@ -48,7 +49,6 @@ class RecordingContainer(GenericContainer):
 
     load_on_fly: bool = True
     last_loaded: "Recording" = field(default_factory=Recording)
-    loader: Optional["BaseLoader"] = field(default=None)
     attrs: dict = field(default_factory=dict)
     invalid_recording_locations: list = field(default_factory=list)
     table: "pd.DataFrame" = field(default_factory=pd.DataFrame)
@@ -68,7 +68,9 @@ class RecordingContainer(GenericContainer):
         ----------
         df : pandas.DataFrame
             The dataframe to load from.
-        loader :
+        loader : BaseLoader or iterable of BaseLoader
+            The loader to use for all recordings if one passed
+            Otherwise a different loader to use for each recording.
         param_dir : str
             A path to the directory containing parameter files
         load_on_fly : bool, optional
@@ -81,15 +83,14 @@ class RecordingContainer(GenericContainer):
 
         """
         rc = cls(load_on_fly=load_on_fly)
-        rc.loader = loader
         rc.table = table
 
         for i in range(len(table)):
-            if isinstance(rc.loader, abcIterable):
-                loader = rc.loader[i]
+            if isinstance(loader, abcIterable):
+                loader_ = loader[i]
             recording = Recording()
             module_logger.debug(f"Parsing information from table for row {i}")
-            loader.parse_table_row(table, i, recording)
+            loader_.parse_table_row(table, i, recording)
             rc.append(recording)
 
         return rc
@@ -162,51 +163,21 @@ class RecordingContainer(GenericContainer):
 
         Returns
         -------
-        int
+        int, list, or None
             The index of the recording in the container.
-
-        Raises
-        ------
-        ValueError
-            If two recordings with the same source file are found.
-        LookupError
-            If no recordings in the container have that source file.
+            or a list of indices of the recordings if multiple
+            matches are found.
+            or None if the source file is not found.
 
         """
-        found = False
+        locations = []
         for i, recording in enumerate(self):
             compare = recording.source_file[-len(source_file) :]
             if os.path.normpath(source_file) == os.path.normpath(compare):
-                if found:
-                    raise ValueError("Found two recordings with the same source")
-                found = True
-                location = i
-        if found:
-            return location
-        raise LookupError(f"Could not find a recording with the source {source_file}")
-
-    def subsample_by_name(self, source_files, inplace=False):
-        """
-        Subsample recordings in the container by a set of source filenames.
-
-        Parameters
-        ----------
-        source_files : list of str
-            The source files to subsample to.
-        inplace : bool, optional
-            Whether to perform the subsampling in place, by default False
-
-        Returns
-        -------
-        list of int, or simuran.recording_container.RecordingContainer
-            A container with the subsampled items if inplace is False.
-            The indices of the items subsampled from the container if inplace is True
-
-        """
-        indexes = [self.find_recording_with_source(s) for s in source_files]
-        return self.subsample(
-            idx_list=indexes, interactive=False, prop="source_file", inplace=inplace
-        )
+                locations.append(i)
+        if not locations:
+            return None
+        return locations[0] if len(locations) == 1 else locations
 
     def load_iter(self):
         """Iterator through the container that loads data on item retrieval."""

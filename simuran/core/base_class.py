@@ -14,6 +14,8 @@ if TYPE_CHECKING:
 
     from simuran.loaders.base_loader import BaseLoader
 
+DEFAULT = object()
+
 
 @dataclass
 class BaseSimuran(ABC):
@@ -57,7 +59,7 @@ class BaseSimuran(ABC):
     tag: Optional[str] = None
     loader: Optional["BaseLoader"] = field(default=None)
     source_file: Optional[Union[str, "Path"]] = None
-    last_loaded_source: Optional[Union[str, "Path"]] = None
+    last_loaded_source: Optional[Union[str, "Path"]] = DEFAULT
     data: Any = None
     results: dict = field(default_factory=dict)
 
@@ -80,6 +82,12 @@ class BaseSimuran(ABC):
             raise ValueError(
                 f"Set a loader in {self.__class__.__name__} before calling load."
             )
+        self.last_loaded_source = self.source_file
+    
+    def unload(self):
+        """Unload / close related open files."""
+        if self.loader is not None and hasattr(self.loader, "unload"):
+            self.loader.unload(self)
 
     def is_loaded(self) -> bool:
         """
@@ -91,7 +99,7 @@ class BaseSimuran(ABC):
             True if the source file has been loaded.
 
         """
-        return (self.last_loaded_source is not None) and (
+        return (self.last_loaded_source is not DEFAULT) and (
             self.last_loaded_source == self.source_file
         )
 
