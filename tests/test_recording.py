@@ -33,7 +33,7 @@ def test_recording_save_name():
     r = Recording(source_file=source_file)
 
     name = r.get_name_for_save()
-    assert name == "fake_dir--fake_dir2--fake_name.txt"
+    assert name == "fake_dir--fake_dir2--fake_name"
 
     name2 = r.get_name_for_save(rel_dir="fake_dir")
-    assert name2 == "fake_dir2--fake_dir2--fake_name.txt"
+    assert name2 == "fake_dir2--fake_name"
