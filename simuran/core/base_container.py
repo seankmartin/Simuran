@@ -1,17 +1,12 @@
 """This module holds containers to allow for batch processing."""
 
-import contextlib
-import os
 from dataclasses import dataclass, field
+import logging
 from typing import Any, Optional, overload
 
-import numpy as np
 import rich
-from skm_pyutils.save import (
-    save_dicts_to_csv,
-    save_mixed_dict_to_csv,
-    data_dict_from_attr_list,
-)
+
+module_logger = logging.getLogger("simuran.core.base_container")
 
 
 @dataclass
@@ -32,6 +27,7 @@ class GenericContainer:
 
     container: list = field(repr=False, default_factory=list)
 
+    @overload
     def load(self) -> None:
         ...
         """Load all items in the container."""
@@ -133,10 +129,14 @@ class GenericContainer:
             The value of the property for each item in the container.
 
         """
-        try:
-            return [getattr(val, prop) for val in self.container]
-        except BaseException:
-            return []
+        results = []
+        for val in self.container:
+            if hasattr(val, prop):
+                results.append(getattr(val, prop))
+            else:
+                module_logger.warning(f"Could not find {prop} in {val}")
+                results.append(None)
+        return results
 
     def get_possible_values(self, prop):
         """
@@ -155,124 +155,7 @@ class GenericContainer:
         """
         return set(self.get_property(prop))
 
-    def save_single_data(
-        self,
-        attr_list,
-        friendly_names=None,
-        idx_list=None,
-        out_dir_list=None,
-        name_list=None,
-    ):
-        """
-        Save attributes to one file per object in the container.
-
-        Currently dict, np.ndarray, and list are supported outputs.
-        save_summary_data should be preferred if all the data could fit in
-        a single row for each item in the container.
-
-        Parameters
-        ----------
-        attr_list : list of tuples
-            The list of attributes to obtain for each object in the container
-        friendly_names : list of str, optional
-            What to name the values retrieved from attr_list, by default None
-        idx_list : list of int, optional
-            A subset of indices to get data for in the container, by default uses all
-        out_dir_list : list of str, optional
-            Paths to directories to save results to, by default cwd + "sim_results"
-        name_list : list of str, optional
-            Names of the files to save, by default "sim_results{}.csv".format(i)
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        ValueError
-            If name_list or out_dir_list is provided but not the same size as idx_list.
-
-        See also
-        --------
-        simuran.base_container.data_from_attr_list
-
-        """
-        if idx_list is None:
-            idx_list = list(range(len(self)))
-
-        if name_list is None:
-            name_list = [f"sim_results{i}.csv" for i in idx_list]
-        elif len(name_list) != len(idx_list):
-            raise ValueError("Number of names must match number of items")
-
-        if out_dir_list is None:
-            out_dir_list = [
-                os.path.join(os.getcwd(), "sim_results") for _ in range(len(idx_list))
-            ]
-
-        elif len(out_dir_list) != len(idx_list):
-            raise ValueError(
-                "Number of output directories must match the number of items"
-            )
-
-        elif isinstance(out_dir_list, "str"):
-            out_dir_list = [out_dir_list] * len(idx_list)
-
-        for i in idx_list:
-            data = self._data_from_attr_list(
-                attr_list, idx=i, friendly_names=friendly_names
-            )
-            save_mixed_dict_to_csv(data, out_dir_list[i], name_list[i])
-
-    def save_summary_data(self, location, attr_list, friendly_names=None, decimals=3):
-        """
-        Save attributes to one file for the whole container, each row is an object.
-
-        Parameters
-        ----------
-        location : str
-            Path to the location to save the data to
-        attr_list : list of tuples
-            Attributes to save.
-        friendly_names : list of str, optional
-            The names of the attributes to save, by default None
-        decimals : int, optional
-            The number of decimal places to save outputs with, by default 3
-
-        Returns
-        -------
-        None
-
-        See also
-        --------
-        simuran.base_container.data_from_attr_list
-
-        """
-        if len(friendly_names) == 0:
-            friendly_names = None
-
-        orig_attr_list_len = len(attr_list)
-        attr_list = [("source_dir",), ("source_name",)] + attr_list
-        for i in range(len(self)):
-            if self[i].source_file is not None:
-                self[i].source_dir = os.path.dirname(self[i].source_file)
-                self[i].source_name = os.path.basename(self[i].source_file)
-            else:
-                self[i].source_dir = None
-                self[i].source_name = None
-        if friendly_names is not None:
-            friendly_names = ["Recording directory", "Recording name"] + friendly_names
-        else:
-            l1 = ["Recording directory", "Recording name"]
-            l2 = [None] * orig_attr_list_len
-            friendly_names = l1 + l2
-
-        data_list = self._data_from_attr_list(
-            attr_list, friendly_names=friendly_names, decimals=decimals
-        )
-        save_dicts_to_csv(location, data_list)
-
-    def get_attrs(self) -> "dict[str, Any]":  # pragma no cover
+    def get_attrs(self) -> "dict[str, Any]":  # pragma: no cover
         return self.__dict__
 
     def get_attrs_and_methods(self) -> "list[str]":  # pragma: no cover
@@ -282,68 +165,6 @@ class GenericContainer:
     def inspect(self, methods: bool = False, **kwargs) -> None:  # pragma: no cover
         """Note: could also try objexplore"""
         rich.inspect(self, methods=methods, **kwargs)
-
-    def _data_from_attr_list(
-        self, attr_list, friendly_names=None, idx=None, decimals=3
-    ):
-        """
-        Retrieve attr_list from each item in the container.
-
-        See data_dict_from_attr_list for the
-        description of the attributes list to be provided.
-
-        Parameters
-        ----------
-        attr_list : list of tuples
-            The attributes to retrieve.
-        friendly_names : list of str, optional
-            The names for the attributes, by default None
-        idx : [type], optional
-            A specific index to retrieve data for, by default retrieves all
-        decimals : int, optional
-            The number of decimal places to save outputs with, by default 3
-
-        Returns
-        -------
-        list of dict or dict
-            A dict is returned if idx is not None, otherwise list of dict.
-            This contains the data retrieved from the attributes list.
-
-        Raises
-        ------
-        ValueError
-            If friendly names is provided but not the same size as attr_list.
-
-        See also
-        --------
-        simuran.base_class.data_dict_from_attr_list
-
-        """
-        if friendly_names is not None:
-            if len(friendly_names) != len(attr_list):
-                friendly_names = None
-
-        def get_single(item, attr_list):
-            data = data_dict_from_attr_list(item, attr_list, friendly_names)
-            try:
-                round(data, decimals)
-            except BaseException:
-                try:
-                    data = np.round(data, decimals)
-                except BaseException:
-                    with contextlib.suppress(BaseException):
-                        for key, value in data.items():
-                            with contextlib.suppress(BaseException):
-                                data[key] = round(value, decimals)
-            return data
-
-        if idx is None:
-            data_out = []
-            for item in self:
-                data_out.append(get_single(item, attr_list))
-        else:
-            data_out = get_single(self[idx], attr_list)
-        return data_out
 
     def __getitem__(self, idx):
         """Retrive the object at the specified index from the container."""

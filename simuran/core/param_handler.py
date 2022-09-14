@@ -4,6 +4,8 @@ from pathlib import Path
 from typing import Optional, Union
 
 from skm_pyutils.config import read_json, read_python, read_yaml, convert_dict_to_string
+import yaml
+import json
 
 DEFAULT = object()
 
@@ -54,9 +56,15 @@ class ParamHandler(object):
         None
 
         """
+        ext = Path(out_loc).suffix
         with open(out_loc, "w") as f:
-            out_str = self.to_str()
-            f.write(out_str)
+            if ext == ".py":
+                out_str = self.to_str()
+                f.write(out_str)
+            elif ext in (".yml", ".yaml"):
+                yaml.dump(self.attrs, f)
+            elif ext == ".json":
+                json.dump(self.attrs, f)
 
     def read(self):
         """
@@ -91,13 +99,17 @@ class ParamHandler(object):
         """
         return convert_dict_to_string(self.attrs, self.name)
 
+    def clear(self):
+        """Remove all items from the dictionary."""
+        self.attrs.clear()
+
     def keys(self):
         """Return all keys in the parameters."""
         return self.attrs.keys()
 
-    def vals(self):
+    def values(self):
         """Return all values in the parameters."""
-        return self.attrs.vals()
+        return self.attrs.values()
 
     def items(self):
         """Return key, value pairs in the parameters."""
@@ -124,6 +136,66 @@ class ParamHandler(object):
         """
         return self.attrs.get(key, default)
 
+    def update(self, dict_):
+        """
+        Update attrs with dict_
+
+        Parameters
+        ----------
+        dict_ : dict
+            The dictionary to update with
+
+        Returns
+        -------
+        None
+
+        """
+        self.attrs.update(dict_)
+
+    def pop(self, key, default=DEFAULT):
+        """
+        Pop key from dictionary, optionally with default value
+
+        Parameters
+        ----------
+        key : Any
+            The key to pop
+        default : Any
+            If provided, the default value to get
+
+        Returns
+        -------
+        Any
+            The value of the key
+
+        """
+        if default is DEFAULT:
+            self.attrs.pop(key)
+        else:
+            self.attrs.pop(key, default)
+
+    def setdefault(self, key, value=DEFAULT):
+        """
+        Return the value of the key. If the key does not exist, set it to value.
+
+        Parameters
+        ----------
+        key : Any
+            The key to pop
+        value : Any
+            If provided, the default value to set
+
+        Returns
+        -------
+        Any
+            The value of the key
+
+        """
+        if value is DEFAULT:
+            return self.attrs.setdefault(key)
+        else:
+            return self.attrs.setdefault(key, value)
+
     def __getitem__(self, key):
         """Return the value of key."""
         return self.attrs[key]
@@ -136,12 +208,3 @@ class ParamHandler(object):
 
     def __len__(self):
         return len(self.attrs)
-
-    def update(self, dict_):
-        self.attrs.update(dict_)
-
-    def pop(self, key, default=DEFAULT):
-        if default is DEFAULT:
-            self.attrs.pop(key)
-        else:
-            self.attrs.pop(key, default)

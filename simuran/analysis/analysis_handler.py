@@ -1,14 +1,17 @@
 """This module provides functionality for performing large batch analysis."""
 
+from dataclasses import dataclass, field
 import logging
 
 from indexed import IndexedOrderedDict
 from simuran.core.log_handler import log_exception
-from skm_pyutils.save import save_mixed_dict_to_csv
 from tqdm import tqdm
 from tqdm.notebook import tqdm as tqdm_notebook
+import pandas as pd
+from skm_pyutils.table import df_to_file
 
 
+@dataclass
 class AnalysisHandler(object):
     """
     Hold functions to run and the parameters to use for them.
@@ -39,31 +42,17 @@ class AnalysisHandler(object):
 
     """
 
-    def __init__(self, verbose=False, handle_errors=False):
-        """See help(AnalysisHandler)."""
-        self.fns_to_run = []
-        self.fn_params_list = []
-        self.fn_kwargs_list = []
-        self.results = IndexedOrderedDict()
-        self.verbose = verbose
-        self.handle_errors = handle_errors
-        self._was_error = False
+    fns_to_run: list = field(default_factory=list)
+    fn_params_list: list = field(default_factory=list)
+    fn_kwargs_list: list = field(default_factory=list)
+    results: IndexedOrderedDict = field(default_factory=IndexedOrderedDict)
+    verbose: bool = False
+    handle_errors: bool = False
+    _was_error: bool = field(repr=False, default=False)
 
-    def set_handle_errors(self, handle_errors):
-        """Set the value of self.handle_errors."""
-        self.handle_errors = handle_errors
-
-    def set_verbose(self, verbose):
-        """Set the value of self.verbose."""
-        self.verbose = verbose
-
-    def get_results(self):
-        """Return the results."""
-        return self.results
-
-    def run_all(self):
+    def run_all(self, pbar=False):
         """Alias for run_all_fns."""
-        self.run_all_fns()
+        self.run_all_fns(pbar)
 
     def run_all_fns(self, pbar=False):
         """
@@ -87,7 +76,7 @@ class AnalysisHandler(object):
         if pbar is True:
             pbar_ = tqdm(range(len(self.fns_to_run)))
         elif pbar == "notebook":
-            pbar_ = tqdm_notebook(range(len(self.fns_to_run)))
+            pbar_ = tqdm_notebook(range(len(self.fns_to_run)))  # pragma no cover
 
         if pbar_ is not None:
             for i in pbar_:
@@ -105,17 +94,9 @@ class AnalysisHandler(object):
 
     def reset(self):
         """Reset this object, clearing results and function list."""
-        self.reset_func_list()
-        self.reset_results()
-
-    def reset_func_list(self):
-        """Reset all functions and parameters."""
         self.fns_to_run = []
         self.fn_params_list = []
         self.fn_kwargs_list = []
-
-    def reset_results(self):
-        """Reset the results."""
         self.results = IndexedOrderedDict()
 
     def add_fn(self, fn, *args, **kwargs):
@@ -136,31 +117,31 @@ class AnalysisHandler(object):
         None
 
         """
-        # TODO should this support per iter args/kwargs.
         self.fns_to_run.append(fn)
         self.fn_params_list.append(args)
         self.fn_kwargs_list.append(kwargs)
 
-    def save_results(self, output_location):
+    def save_results_to_table(self, filename=None):
         """
-        Save the results of analysis to the given output location.
+        Dump analysis results to file with pickle.
 
         Parameters
         ----------
-        output_location : string
-            Path to a csv to save results to.
+        filename : str or Path
+            The output path.
 
         Returns
         -------
-        None
+        Dataframe
+            The resulting dataframe
 
         """
-        with open(output_location, "w") as f:
-            print(f"Saving results to {output_location}")
-            for k, v in self.results.items():
-                f.write(k.replace(" ", "_").replace(",", "_") + "\n")
-                o_str = save_mixed_dict_to_csv(v, None, save=False)
-                f.write(o_str)
+        df = pd.DataFrame.from_dict(self.results, orient="index")
+
+        if filename is not None:
+            df_to_file(df, filename)
+
+        return df
 
     def _run_fn(self, fn, *args, **kwargs):
         """
@@ -181,7 +162,7 @@ class AnalysisHandler(object):
 
         """
         if self.verbose:
-            print("Running {} with params {} kwargs {}".format(fn, *args, **kwargs))
+            print(f"Running {fn} with params {args} kwargs {kwargs}")
         if self.handle_errors:
             try:
                 result = fn(*args, **kwargs)
@@ -193,7 +174,6 @@ class AnalysisHandler(object):
                 result = "SIMURAN-ERROR"
         else:
             result = fn(*args, **kwargs)
-
         ctr = 1
         save_result = kwargs.get("simuran_save_result", True)
         save_name = str(fn.__name__)
@@ -202,14 +182,4 @@ class AnalysisHandler(object):
                 save_name = f"{str(fn.__name__)}_{ctr}"
                 ctr = ctr + 1
             self.results[save_name] = result
-
         return result
-
-    def __str__(self):
-        """String representation of this class."""
-        return "{} with functions:\n {}, args:\n {}, kwargs:\n {}".format(
-            self.__class__.__name__,
-            self.fns_to_run,
-            self.fn_params_list,
-            self.fn_kwargs_list,
-        )

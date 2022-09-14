@@ -80,8 +80,3 @@ class AllenOphysLoader(MetadataLoader):
         recording.spatial = NoLoader()
         recording.spatial.data = experiment.running_speed
         return recording
-
-    def load_signal(self, recording):
-        return self.cache.get_behavior_ophys_experiment(
-            ophys_experiment_id=recording.ophys_experiment_id
-        )

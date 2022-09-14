@@ -13,7 +13,7 @@ from skm_pyutils.log import (
 )
 from skm_pyutils.path import make_path_if_not_exists
 
-module_logger = logging.getLogger("simuran.log")
+module_logger = logging.getLogger("simuran.core.log_handler")
 
 
 def default_log_location():

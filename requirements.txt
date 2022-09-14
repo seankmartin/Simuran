@@ -12,7 +12,6 @@ pytest
 astropy
 rich
 dearpygui
-pillow
 typer
 click-spinner
 -e git+https://github.com/seankmartin/sumatra.git#egg=sumatra

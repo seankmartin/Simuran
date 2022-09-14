@@ -1,14 +1,16 @@
 """Module to hold the abstract class setting up information held in a signal."""
 import logging
+from dataclasses import dataclass
 import math
 from copy import deepcopy
+from typing import Optional, Iterable, Any
 
 import mne
 import numpy as np
-from astropy import units as u
 from simuran.core.base_class import BaseSimuran
 
 
+@dataclass
 class BaseSignal(BaseSimuran):
     """
     Describes the base information for a regularly sampled signal.
@@ -18,7 +20,7 @@ class BaseSignal(BaseSimuran):
     Attributes
     ----------
     timestamps : array style object
-        The timestamps of the signal sampling
+        The timestamps of the signal sampling in seconds
     samples : array style object
         The value of the signal at sample points.
         By default, this is assumed to be stored in mV.
@@ -34,32 +36,31 @@ class BaseSignal(BaseSimuran):
     channel_type : str
         The type of the signal channel, e.g. eeg.
         Default is "eeg".
-    unit : astropy.unit.Unit
-        An SI unit measure of the signal. This is set at load time.
-    source_file : str
-        The path to a source file containing the signal data.
+    conversion : float
+        The conversion rate to Volts for samples
+        self.samples * self.conversion is in Volts
+
+    See also
+    --------
+    simuran.core.base_class.BaseSimuran
 
     """
 
-    def __init__(self):
-        """See help(BaseSignal)."""
-        super().__init__()
-        self.timestamps = None
-        self.samples = None
-        self.sampling_rate = None
-        self.region = None
-        self.group = None
-        self.channel = None
-        self.channel_type = "eeg"
-        self.conversion = 1.0  # To convert to Volts
+    timestamps: Optional[Iterable[float]] = None
+    samples: Optional[Iterable[float]] = None
+    sampling_rate: Optional[float] = None
+    region: Optional[str] = None
+    group: Any = None
+    channel: Any = None
+    channel_type: str = "misc"
+    conversion: int = 1.0
 
     def load(self, *args, **kwargs):
         """Load the signal."""
-        res = super().load()
-        if res == "skip":
+        if super().load() == "skip":
             return
-        load_result = self.loader.load_signal(self.source_file, **kwargs)
-        self.save_attrs(load_result)
+        load_result = self.loader.load_signal(self.source_file, *args, **kwargs)
+        self.__dict__.update(load_result.__dict__)
         self.last_loaded_source = self.source_file
 
     @classmethod
@@ -82,32 +83,32 @@ class BaseSignal(BaseSimuran):
         signal = cls()
         signal.samples = np_array
         signal.sampling_rate = sampling_rate
-        signal.timestamps = [i / sampling_rate for i in range(len(signal.samples))]
+        signal.fill_timestamps()
+        signal.conversion = 0.001
         return signal
 
-    def default_name(self):
-        """Get the default name for this signal based on region."""
-        name = self.channel_type
+    def default_name(self, starting_name=None):
+        """
+        Get the default name for this signal based on region.
+
+        Parameters
+        ----------
+        starting_name : str, optional
+            By default None, which starts with the chan type.
+
+        Returns
+        -------
+        str
+            The name of the channel as {region} - {starting_name} {channel}
+        """
+        if starting_name is None:
+            name = self.channel_type
         if self.channel is not None:
             name += f" {self.channel}"
         if self.region is not None:
             name = f"{self.region} - {name}"
 
         return name
-
-    def to_neurochat(self):
-        """Convert to NeuroChaT NLfp object."""
-        from neurochat.nc_lfp import NLfp
-
-        if self.data is not None and type(self.data) == NLfp:
-            return self.data
-
-        lfp = NLfp()
-        lfp.set_channel_id(self.channel)
-        lfp._timestamp = np.array(self.timestamps * u.mV)
-        lfp._samples = np.array(self.samples * u.s)
-        lfp._record_info["Sampling rate"] = self.sampling_rate
-        return lfp
 
     def in_range(self, start, stop, step=None):
         """
@@ -132,19 +133,19 @@ class BaseSignal(BaseSimuran):
         stop = int(math.ceil(stop * self.sampling_rate))
         if step is None:
             return self.samples[start:stop]
-        step = int(math.round(self.step * self.sampling_rate))
+        step = int(step * self.sampling_rate)
         return self.samples[start:stop:step]
 
-    def filter(self, low, high, inplace=False, **kwargs):
+    def filter(self, low=None, high=None, inplace=False, **kwargs):
         """
         Filter the signal.
 
         Parameters
         ----------
-        low : float
-            The low frequency for filtering.
-        high : float
-            The high frequency for filtering.
+        low : float, optional
+            The low frequency for filtering. Default None.
+        high : float, optional
+            The high frequency for filtering. Default None.
         inplace : bool, optional
             Whether to perform the operation in place, by default False
 
@@ -159,18 +160,25 @@ class BaseSignal(BaseSimuran):
 
         """
         kwargs["copy"] = not inplace
-        if (low is None) or (high is None):
+        if (low is None) and (high is None):
             logging.warning("Invalid filter frequencies")
             return self
-        filtered_data = mne.filter.filter_data(
-            np.array(self.samples.to(u.V)), self.sampling_rate, low, high, **kwargs
+        filtered_data = (
+            mne.filter.filter_data(
+                np.array(self.get_samples_in_volts()),
+                self.sampling_rate,
+                low,
+                high,
+                **kwargs,
+            )
+            / self.conversion
         )
         if not inplace:
             eeg = deepcopy(self)
-            eeg.samples = (filtered_data * u.V).to(u.mV)
+            eeg.samples = filtered_data
             return eeg
         else:
-            self.samples = (filtered_data * u.V).to(u.mV)
+            self.samples = filtered_data
             return self
 
     def get_duration(self):
@@ -185,33 +193,14 @@ class BaseSignal(BaseSimuran):
         """Get the last time recorded"""
         return self.timestamps[-1]
 
+    def get_samples_in_volts(self):
+        return np.array(self.samples) * self.conversion
 
-def convert_signals_to_mne(signals, ch_names=None, verbose=True):
-    """
-    Convert an iterable of signals to MNE raw array.
-
-    Parameters
-    ----------
-    signals : Iterable of simuran.base_signal.BaseSignal
-        The signals to convert
-    ch_names : Iterable of str, optional
-        Channel names, by default None
-
-    Returns
-    -------
-    mne.io.RawArray
-        The data converted to MNE format
-
-    """
-    verbose = None if verbose else "WARNING"
-    
-    if ch_names is None:
-        ch_names = [sig.default_name() for sig in signals]
-    raw_data = np.array([sig.samples * sig.conversion for sig in signals], float)
-
-    sfreq = signals[0].sampling_rate
-
-    ch_types = [sig.channel_type for sig in signals]
-
-    info = mne.create_info(ch_names=ch_names, sfreq=sfreq, ch_types=ch_types)
-    return mne.io.RawArray(raw_data, info=info, verbose=verbose)
+    def fill_timestamps(self):
+        if self.timestamps is not None:
+            return
+        if self.sampling_rate is None:
+            raise ValueError("Must set a sampling rate before setting time stamps")
+        self.timestamps = np.array(
+            [i / self.sampling_rate for i in range(len(self.samples))]
+        )

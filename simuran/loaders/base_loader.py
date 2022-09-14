@@ -13,9 +13,9 @@ class BaseLoader(ABC):
     """
     This abstract class defines the layout of a SIMURAN loader.
 
-    The abstract methods load_signal, load_single_unit,
-    load_spatial, and auto_fname_extraction
-    must be defined by subclasses.
+    A superclass may also define methods for loading individual
+    records, as well as a full recording - such as load_spikes
+    or load_signal, or load_stimulation.
 
     """
 

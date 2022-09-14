@@ -1,24 +1,10 @@
 import os
-from pathlib import Path
-from pprint import pformat
 
 from simuran.core.param_handler import ParamHandler
 from simuran.loaders.base_loader import MetadataLoader
 from simuran.recording import Recording
 
 main_dir = os.path.dirname(__file__)[: -len(f"{os.sep}tests")]
-
-
-def test_param_load():
-    params = {"hello_world": "banana", 0: [1, 10, 14.1], "chans": {"1": "b"}}
-    ph_write = ParamHandler(attrs=params)
-    ph_write.write("test_simuran_temp.py")
-    ph_read = ParamHandler(source_file=Path("test_simuran_temp.py"))
-    ph_read.read()
-    assert ph_read.attrs["hello_world"] == "banana"
-    assert ph_read["0"] == [1, 10, 14.1]
-    assert ph_read["chans"]["1"] == "b"
-    os.remove("test_simuran_temp.py")
 
 
 def test_recording_setup():
@@ -28,21 +14,26 @@ def test_recording_setup():
         ),
         name="mapping",
     )
+
     loader = MetadataLoader()
     ex = Recording(attrs=metadata, loader=loader)
     loader.parse_metadata(ex)
     assert ex.attrs["signals"]["region"][0] == "ACC"
-    assert set(ex.available_data) == set(
-        ("signals", "units", "spatial", "loader", "loader_kwargs")
-    )
+    assert set(ex.available_data) == {
+        "signals",
+        "units",
+        "spatial",
+        "loader",
+        "loader_kwargs",
+    }
 
 
-if __name__ == "__main__":
-    test_param_load()
-    metadata = ParamHandler(
-        source_file=os.path.join(main_dir, "tests", "params", "simuran_base_params.py")
-    )
-    str_1 = pformat(str(metadata.attrs))
-    str_2 = metadata.to_str()
-    print(metadata)
-    test_recording_setup()
+def test_recording_save_name():
+    source_file = "fake_dir/fake_dir2/fake_name.txt"
+    r = Recording(source_file=source_file)
+
+    name = r.get_name_for_save()
+    assert name == "fake_dir--fake_dir2--fake_name"
+
+    name2 = r.get_name_for_save(rel_dir="fake_dir")
+    assert name2 == "fake_dir2--fake_name"

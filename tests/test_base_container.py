@@ -1,5 +1,3 @@
-import copy
-import numpy as np
 import pytest
 
 from simuran.core.base_class import BaseSimuran
@@ -57,6 +55,10 @@ class TestContainerSetup:
         data = container.get_possible_values("data")
         assert data == set(values)
 
+    def test_container_extend(self, num_items, values, container):
+        container.extend([1, 2, 3])
+        assert len(container) == num_items + 3
+        assert container[-1] == 3
 
-if __name__ == "__main__":
-    test_numpy_container()
+        container[1] = 2
+        assert container[1] == 2

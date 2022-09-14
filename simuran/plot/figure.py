@@ -3,7 +3,7 @@ import logging
 import os
 
 import matplotlib.pyplot as plt
-from simuran.plot.base_plot import save_simuran_plot
+from simuran.plot.base_plot import save_simuran_plot, get_plot_location
 
 module_logger = logging.getLogger("simuran.plot.figure")
 
@@ -50,17 +50,12 @@ class SimuranFigure(object):
         """Get the filenames that will be saved to."""
         self._output_filenames = {}
 
-        # raster image
-        out_format = self.kwargs.get("format", "png")
-        if out_format is not None:
-            filename = f"{os.path.splitext(self.filename)[0]}.{out_format}"
-            self._output_filenames["raster"] = filename
-
-        # vector image
-        out_format = self.kwargs.get("vector_format", "pdf")
-        if out_format is not None:
-            filename = f"{os.path.splitext(self.filename)[0]}.{out_format}"
-            self._output_filenames["vector"] = filename
+        self._output_filenames["raster"] = get_plot_location(
+            self.filename, self.kwargs.get("format", "png")
+        )
+        self._output_filenames["vector"] = get_plot_location(
+            self.filename, self.kwargs.get("vector_format", "pdf")
+        )
 
         return self._output_filenames
 
