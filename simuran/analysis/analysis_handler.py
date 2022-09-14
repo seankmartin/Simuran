@@ -7,6 +7,8 @@ from indexed import IndexedOrderedDict
 from simuran.core.log_handler import log_exception
 from tqdm import tqdm
 from tqdm.notebook import tqdm as tqdm_notebook
+import pandas as pd
+from skm_pyutils.table import df_to_file
 
 
 @dataclass
@@ -119,6 +121,28 @@ class AnalysisHandler(object):
         self.fn_params_list.append(args)
         self.fn_kwargs_list.append(kwargs)
 
+    def save_results_to_table(self, filename=None):
+        """
+        Dump analysis results to file with pickle.
+
+        Parameters
+        ----------
+        filename : str or Path
+            The output path.
+
+        Returns
+        -------
+        Dataframe
+            The resulting dataframe
+
+        """
+        df = pd.DataFrame.from_dict(self.results, orient="index")
+
+        if filename is not None:
+            df_to_file(df, filename)
+
+        return df
+
     def _run_fn(self, fn, *args, **kwargs):
         """
         Run the function with *args and **kwargs, not usually publicly called.
@@ -138,7 +162,7 @@ class AnalysisHandler(object):
 
         """
         if self.verbose:
-            print("Running {} with params {} kwargs {}".format(fn, *args, **kwargs))
+            print(f"Running {fn} with params {args} kwargs {kwargs}")
         if self.handle_errors:
             try:
                 result = fn(*args, **kwargs)
@@ -150,7 +174,6 @@ class AnalysisHandler(object):
                 result = "SIMURAN-ERROR"
         else:
             result = fn(*args, **kwargs)
-
         ctr = 1
         save_result = kwargs.get("simuran_save_result", True)
         save_name = str(fn.__name__)
@@ -159,5 +182,4 @@ class AnalysisHandler(object):
                 save_name = f"{str(fn.__name__)}_{ctr}"
                 ctr = ctr + 1
             self.results[save_name] = result
-
         return result
