@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 
 module_logger = logging.getLogger("simuran.loaders")
 
-# TODO clean up a little
+
 class NCLoader(MetadataLoader):
     """
     Load data compatible with the NeuroChaT package.
@@ -225,10 +225,6 @@ class NCLoader(MetadataLoader):
         base : str
             The base file name, in Axona this is a .set file.
 
-        TODO
-        ----
-        Expand to support nwb and neuralynx as well as Axona.
-
         """
         # Currently only implemented for Axona systems
         error_on_missing = kwargs.get("enforce_data", True)
@@ -251,7 +247,6 @@ class NCLoader(MetadataLoader):
             elif not os.path.isfile(base):
                 raise ValueError("{} is not a file or directory".format(base))
 
-            # TODO this behaviour is confusing
             joined_params = {
                 "system": self.system,
             }

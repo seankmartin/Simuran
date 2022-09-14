@@ -211,8 +211,6 @@ class RecordingContainer(GenericContainer):
         ----------
         filename : str or Path
             The output path.
-        results_only : bool, optional
-            Only save the results
 
         Returns
         -------
