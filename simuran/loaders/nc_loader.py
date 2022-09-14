@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING
 from collections.abc import Iterable
 
 import numpy as np
-from astropy import units as u
 from dateutil.tz import tzlocal
 from neurochat.nc_lfp import NLfp
 from neurochat.nc_spatial import NSpatial
@@ -145,8 +144,9 @@ class NCLoader(MetadataLoader):
         self.signal.load(*args, self.system)
         obj = BaseSignal()
         obj.data = self.signal
-        obj.timestamps = self.signal.get_timestamp() * u.s
-        obj.samples = self.signal.get_samples() * u.mV
+        obj.timestamps = self.signal.get_timestamp()
+        obj.samples = self.signal.get_samples()
+        obj.conversion = 0.001
         obj.date = self.signal.get_date()
         obj.time = self.signal.get_time()
         obj.channel = self.signal.get_channel_id()
@@ -170,13 +170,10 @@ class NCLoader(MetadataLoader):
         obj = NoLoader()
         obj.data = self.spatial
         obj.date = self.spatial.get_date()
-        obj.timestamps = self.spatial.get_time() * u.s
-        obj.speed = self.spatial.get_speed() * (u.cm / u.s)
-        obj.position = (
-            self.spatial.get_pos_x() * u.cm,
-            self.spatial.get_pos_y() * u.cm,
-        )
-        obj.direction = self.spatial.get_direction() * u.deg
+        obj.timestamps = self.spatial.get_time()
+        obj.speed = self.spatial.get_speed()
+        obj.position = (self.spatial.get_pos_x(), self.spatial.get_pos_y())
+        obj.direction = self.spatial.get_direction()
         obj.source_file = args[0]
         obj.last_loaded_source = args[0]
         return obj
@@ -197,9 +194,9 @@ class NCLoader(MetadataLoader):
         obj = NoLoader()
         waveforms = deepcopy(self.single_unit.get_waveform())
         for chan, val in waveforms.items():
-            waveforms[chan] = val * u.uV
+            waveforms[chan] = val
         obj.data = self.single_unit
-        obj.timestamps = self.single_unit.get_timestamp() * u.s
+        obj.timestamps = self.single_unit.get_timestamp()
         obj.unit_tags = self.single_unit.get_unit_tags()
         obj.waveforms = waveforms
         obj.date = self.single_unit.get_date()
