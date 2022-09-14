@@ -91,5 +91,6 @@ class TestBaseSignal:
         signal = BaseSignal()
         signal.loader = FakeLoader()
         signal.source_file = "text.txt"
+        signal.load()
         assert signal.fake_data == "text.txt"
         assert signal.is_loaded()
