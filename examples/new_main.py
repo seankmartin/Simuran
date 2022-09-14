@@ -1,8 +1,7 @@
 """This may be a temp, lets see"""
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal, Union
+from typing import TYPE_CHECKING, Union
 
-import dtale
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -10,29 +9,15 @@ import seaborn as sns
 from allensdk.brain_observatory.behavior.behavior_project_cache import (
     VisualBehaviorOphysProjectCache,
 )
-from icecream import ic
 from simuran.analysis.analysis_handler import AnalysisHandler
 from simuran.recording import Recording
-
-# TODO should this be one level down
-from simuran.recording_container import RecordingContainer
-from skm_pyutils.plot import GridFig
-from skm_pyutils.table import df_from_file
-
-# Pseudo of idea
-input_file_dir = Path(r"D:\AllenBrainObservatory\ophys_data")
-output_dir = Path(r"D:\AllenBrainObservatory\ophys_data\results")
-
-# TODO maybe not the nicest way to select a loader
-from simuran.loaders.loader_list import loaders_dict
-
-params = {"loader": "allen_ophys"}
-
-# This might be just nicer
 from simuran.loaders.allen_loader import AllenOphysLoader
 
-if TYPE_CHECKING:
-    from simuran.loaders.base_loader import BaseLoader
+from skm_pyutils.plot import GridFig
+
+input_file_dir = Path(r"D:\AllenBrainObservatory\ophys_data")
+output_dir = Path(r"D:\AllenBrainObservatory\ophys_data\results")
+params = {"loader": "allen_ophys"}
 
 # Step 1a (optional) - Help to set up table - maybe see table.py
 def setup_table(input_file_dir: Union[str, Path]) -> pd.DataFrame:
@@ -144,14 +129,14 @@ def plot_stimuli(ax, dataset, initial_time, final_time):
         )
 
 
-def summarise_single_session(allen_dataset):
-
+def summarise_single_session(recording):
+    allen_dataset = recording.data
     ## Summary in print
     print(
         f"\n-----------Working on image plane {allen_dataset.ophys_experiment_id} "
         f"session {allen_dataset.ophys_session_id}------------"
     )
-    print(f"This experiment has metadata {allen_dataset.attrs}")
+    print(f"This experiment has metadata {recording.attrs}")
     cell_specimen_table = allen_dataset.cell_specimen_table
     print(cell_specimen_table)
     print(
@@ -270,14 +255,13 @@ def establish_analysis(rec):
         return vars(recording)
 
     ah = AnalysisHandler()
-    ah.add_fn(summarise_single_session, rec.signals)
+    ah.add_fn(summarise_single_session, rec)
     ah.add_fn(print_info, rec)
 
     return ah
 
 
 def main():
-    # TODO TEMP ?
     cache = VisualBehaviorOphysProjectCache.from_s3_cache(cache_dir=input_file_dir)
 
     # Should support params in multiple formats of metadata
@@ -285,12 +269,7 @@ def main():
 
     # Step 2 - Read a filtered table, can explore with d-tale etc. before continuing (JASP)
     filtered_table = filter_table(table)
-    # rc = RecordingContainer.from_table(filtered_table, "allen", AllenOphysLoader)
-    # TODO I think this step is awkward
 
-    # TODO TEMP let us check a single Allen first
-
-    ## This could be a data class to make it simpler
     for idx, row in filtered_table.iterrows():
         row_as_dict = row.to_dict()
         row_as_dict[filtered_table.index.name] = idx
@@ -298,38 +277,9 @@ def main():
 
     recording = Recording()
     recording.loader = AllenOphysLoader(cache=cache)
-    # loader2 = loader_from_str("allen_ophys")(cache=cache)
-
-    # TODO This should support different types, file, dict, series, etc
-    recording.set_metadata(row_as_dict)
-
-    # TODO this should come with params / loader setting
+    recording.attrs = row_as_dict
     recording.available = ["signals"]
-    print(recording)
-
-    ## TODO is there a setup step? for recording to set paths?
-
-    # This will call load in the background
-    # If not already loaded
-    # recording.get_blah()
-
-    # Alternatively can call
-    recording.new_load()
-
-    # Inspect what data is available
-    # print(recording.get_attrs())
-
-    # Perhaps have allen specific functions from the loader??
-    # recording.print_key_info()
-    print(recording.signals.__dict__)
-
-    # For example loop over this and print the df / f
-    # At the end of the day this is just a signal
-    # Best thing to do is to check how NWB stores data
-    # Because NWB stores all nscience data
-    # And then can facilitate storing results back to NWB
-    # etc. etc.
-    # For instance, pynapple just converts to NWB as step1
+    recording.load()
 
     # Step 3 - Iterate over the table performing a fixed function/s with some optional
     # parameters that change
@@ -339,13 +289,7 @@ def main():
     # Step 4 - Save output of analysis in multiple formats
     # CSV, straight to JASP etc.
     output_location = "results.csv"
-    ah.save_results(output_location)
-
-    # Step 5 - Support to view figures and tables from within the program
-
-    # TODO no support for that yet
-
-    # What about interactions between objects in recordings?
+    ah.save_results_to_table(output_location)
 
 
 if __name__ == "__main__":
