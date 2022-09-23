@@ -6,7 +6,7 @@ from neurochat.nc_lfp import NLfp
 from neurochat.nc_spatial import NSpatial
 from neurochat.nc_spike import NSpike
 from simuran.core.param_handler import ParamHandler
-from simuran.loaders.nc_loader import NCLoader
+from simuran.loaders.neurochat_loader import NCLoader
 from simuran.recording import Recording
 
 main_dir = os.path.dirname(__file__)[:-len(f"{os.sep}tests")]

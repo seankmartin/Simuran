@@ -4,7 +4,7 @@ mapping = {
     "signals": {},
     "units": {},
     "spatial": {},
-    "loader": "nc_loader",
+    "loader": "neurochat",
     "loader_kwargs": {"system": "Axona", "pos_extension": ".txt"},
 }
 
