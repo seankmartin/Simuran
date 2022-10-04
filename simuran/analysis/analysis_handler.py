@@ -1,14 +1,14 @@
 """This module provides functionality for performing large batch analysis."""
 
-from dataclasses import dataclass, field
 import logging
+from dataclasses import dataclass, field
 
+import pandas as pd
 from indexed import IndexedOrderedDict
 from simuran.core.log_handler import log_exception
+from skm_pyutils.table import df_to_file
 from tqdm import tqdm
 from tqdm.notebook import tqdm as tqdm_notebook
-import pandas as pd
-from skm_pyutils.table import df_to_file
 
 
 @dataclass
@@ -121,7 +121,7 @@ class AnalysisHandler(object):
         self.fn_params_list.append(args)
         self.fn_kwargs_list.append(kwargs)
 
-    def save_results_to_table(self, filename=None):
+    def save_results_to_table(self, filename=None, columns=None, from_dict=True):
         """
         Dump analysis results to file with pickle.
 
@@ -136,7 +136,10 @@ class AnalysisHandler(object):
             The resulting dataframe
 
         """
-        df = pd.DataFrame.from_dict(self.results, orient="index")
+        if from_dict:
+            df = pd.DataFrame.from_dict(self.results, orient="index", columns=columns)
+        else:
+            df = pd.DataFrame(self.results)
 
         if filename is not None:
             df_to_file(df, filename)
