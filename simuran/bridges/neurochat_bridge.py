@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     from simuran.core.base_signal import BaseSignal
 
 
-def signal_to_neurochat(signal: "BaseSignal"):
+def signal_to_neurochat(signal: "BaseSignal") -> "NLfp":
     """Convert BaseSignal to NeuroChaT NLfp object."""
 
     if signal.data is not None and type(signal.data) == NLfp:
