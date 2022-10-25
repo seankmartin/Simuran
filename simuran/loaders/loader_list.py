@@ -37,10 +37,10 @@ def loader_from_string(value: str, *args, **kwargs) -> "BaseLoader":
     args and kwargs are passed to the loader initialiser
 
     """
-    loader_to_use = find_loader_class(value)
+    loader_to_use = find_loader_class(value.lower())
 
     if loader_to_use is None:
-        raise ValueError(f"Can't load with uninstalled loader {value}")
+        raise ValueError(f"Can't load with uninstalled loader {value.lower()}")
 
     return loader_to_use(*args, **kwargs)
 
