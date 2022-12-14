@@ -114,7 +114,7 @@ class NCLoader(MetadataLoader):
                 Path(recording.attrs["directory"]) / recording.attrs["filename"]
             )
         else:
-            source_file = None
+            source_file = recording.source_file
         recording.source_file = source_file
         recording.attrs["source_files"] = self.auto_fname_extraction(
             recording.source_file
