@@ -1,4 +1,5 @@
 import os
+import pytest
 from simuran.loaders.nwb_loader import NWBLoader
 from simuran.recording import Recording
 
@@ -8,7 +9,7 @@ from dateutil.tz import tzlocal
 from pynwb import NWBFile, NWBHDF5IO
 
 
-def test_nwb_loader():
+def test_nwb_loader(tmp_path):
     # 1. Create an example NWB and write it out
     nwbfile = NWBFile(
         session_description="my first synthetic recording",
@@ -22,11 +23,11 @@ def test_nwb_loader():
         session_id="LONELYMTN",
     )
 
-    with NWBHDF5IO("ecephys_tutorial.nwb", "w") as io:
+    with NWBHDF5IO(tmp_path / "ecephys_tutorial.nwb", "w") as io:
         io.write(nwbfile)
 
     # 3. Set up a recording with metadata
-    r = Recording(attrs=dict(source_file="ecephys_tutorial.nwb"))
+    r = Recording(attrs=dict(source_file=tmp_path / "ecephys_tutorial.nwb"))
 
     # 4. Load that NWB
     r.loader = NWBLoader()
@@ -38,4 +39,4 @@ def test_nwb_loader():
 
     r.unload()
 
-    os.remove("ecephys_tutorial.nwb")
+    os.remove(tmp_path / "ecephys_tutorial.nwb")

@@ -3,6 +3,7 @@ This lists the available loaders in SIMURAN.
 """
 NWB_NAME = "nwb"
 ALLEN_NAME = "allen_ophys"
+ONE_NAME = "one"
 NEUROCHAT_NAME = "neurochat"
 BASE_NAME = "params_only"
 from typing import TYPE_CHECKING
@@ -89,10 +90,20 @@ def _nwb_loader():
         module_logger.warning("The pynwb module is not installed.")
 
 
+def _one_loader():
+    try:
+        from simuran.loaders.one_loader import OneAlyxLoader
+
+        return OneAlyxLoader
+    except ModuleNotFoundError:
+        module_logger.warning("The one.api module is not installed.")
+
+
 def _options_dict():
     return {
         NWB_NAME: _nwb_loader,
         ALLEN_NAME: _allen_ophys_loader,
+        ONE_NAME: _one_loader,
         NEUROCHAT_NAME: _neurochat_loader,
         BASE_NAME: _params_only_loader,
     }
