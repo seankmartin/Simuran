@@ -39,11 +39,12 @@ class BaseAllenLoader(MetadataLoader):
         manifest_file = self.cache.current_manifest()
         manifest_version = splitext(manifest_file)[0].split("_")[-1][1:]
         id_ = recording.attrs[id_]
+
         return (
             Path(self.cache.fetch_api.cache._cache_dir)
             / f"visual-behavior-{t}-{manifest_version}"
             / session_name
-            / f"{session_name}_{id_}.nwb"
+            / f"{session_name[:-1]}_{id_}.nwb"
         )
 
     def parse_metadata(self, recording: "Recording") -> None:
