@@ -1,15 +1,11 @@
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-import dtale
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import simuran as smr
-import xarray as xr
-from icecream import ic
 
-# TODO can this be a member of smr directly? Should it be?
 from simuran.loaders.allen_loader import AllenOphysLoader
 from simuran.loaders.nwb_loader import NWBLoader
 from skm_pyutils.log import print_memory_usage
@@ -45,6 +41,7 @@ def plot_mpis(recording_container: "smr.RecordingContainer", output_dir: "Path")
         ax_title = f"ID: {id_}, S: {s}"
         ax.set_title(ax_title)
     out_path = output_dir / "mpis" / f"{name}.png"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
     gf.fig.savefig(out_path, dpi=400)
     plt.close(gf.fig)
 
@@ -70,14 +67,13 @@ def array_of_ci_events(
 def main(
     data_storage_directory,
     output_directory,
-    verbose=False,
 ):
     loader = AllenOphysLoader.from_local_cache(data_storage_directory)
     nwb_loader = NWBLoader()
     cache = loader.cache
 
     behaviour_table, session_table, experiment_table = get_tables_from_cache(
-        cache, verbose
+        cache,
     )
 
     gcamp_table = filter_table_to_gcamp_behaviour2p(experiment_table)
@@ -89,25 +85,16 @@ def main(
             table["source_file"] = table.apply(
                 lambda row: process_source_file(row), axis=1
             )
-            nwb_rc = smr.RecordingContainer.from_table(table, nwb_loader)
+            nwb_rc = smr.RecordingContainer.from_table(table, loader)
             nwb_rc.attrs["container_id"] = container_id
 
             plot_mpis(nwb_rc, output_directory)
 
 
-def get_tables_from_cache(
-    cache: "VisualBehaviorOphysProjectCache", verbose: bool = False
-):
+def get_tables_from_cache(cache: "VisualBehaviorOphysProjectCache"):
     behaviour_table = cache.get_behavior_session_table(as_df=True)
     session_table = cache.get_ophys_session_table(as_df=True)
     experiment_table = cache.get_ophys_experiment_table(as_df=True)
-
-    if verbose:
-        dtale.show(behaviour_table)
-        dtale.show(session_table)
-        dtale.show(experiment_table).open_browser()
-        inp = input("Press Enter to continue...")
-
     return behaviour_table, session_table, experiment_table
 
 
@@ -147,6 +134,4 @@ if __name__ == "__main__":
     main_output_dir = main_dir / "results"
     main_output_dir.mkdir(parents=True, exist_ok=True)
 
-    main_verbose = False
-
-    main(main_dir, main_output_dir, main_verbose)
+    main(main_dir, main_output_dir)

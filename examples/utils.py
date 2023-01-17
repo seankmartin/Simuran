@@ -4,7 +4,6 @@ from urllib.parse import urljoin
 import requests
 from tqdm import tqdm
 
-# TODO move to config
 OUTPUT_DIR = Path(r"D:\AllenBrainObservatory\ophys_data\results")
 HERE = Path(__file__).parent.absolute()
 MANIFEST_VERSION = "1.0.1"
