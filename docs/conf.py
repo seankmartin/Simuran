@@ -17,7 +17,7 @@ sys.path.append(package_location)
 # -- Project information -----------------------------------------------------
 
 project = "simuran"
-copyright = "2020, Sean K. Martin"
+copyright = "2023, Sean K. Martin"
 author = "Sean K. Martin"
 
 # The full version, including alpha/beta/rc tags
