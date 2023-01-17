@@ -38,7 +38,7 @@ class BaseAllenLoader(MetadataLoader):
         id_ = name_dict["id"]
         manifest_file = self.cache.current_manifest()
         manifest_version = splitext(manifest_file)[0].split("_")[-1][1:]
-        id_ = recording.attrs["id_"]
+        id_ = recording.attrs[id_]
         return (
             Path(self.cache.fetch_api.cache._cache_dir)
             / f"visual-behavior-{t}-{manifest_version}"
@@ -93,7 +93,7 @@ class BaseAllenLoader(MetadataLoader):
         elif self.cache_class_type.__name__ == "VisualBehaviorNeuropixelsProjectCache":
             name_dict["session_name"] = "ecephys_sessions"
             name_dict["t"] = "neuropixels"
-            name_dict["id"] = "ecephys_experiment_id"
+            name_dict["id"] = "ecephys_session_id"
             name_dict["unique"] = 2
         else:
             raise ValueError(f"Unsupported cache type {self.cache_class_type.__name__}")
