@@ -12,15 +12,16 @@ if TYPE_CHECKING:
 class NWBLoader(MetadataLoader):
     """
     Load NWB data.
-    
+
     Attributes
     ----------
-    mode : str 
+    mode : str
         The mode to open the file in, by default "r"
         But "a" and "w" are other options for example.
 
     """
-    mode : str = "r"
+
+    mode: str = "r"
 
     def parse_metadata(self, recording: "Recording") -> None:
         options = ["nwb_file", "source_file"]
@@ -47,5 +48,9 @@ class NWBLoader(MetadataLoader):
 
     def unload(self, recording: "Recording") -> None:
         if hasattr(recording, "_nwb_io"):
-            recording._nwb_io.close()
-            delattr(recording, "_nwb_io")
+            try:
+                recording._nwb_io.close()
+            except TypeError:
+                delattr(recording, "_nwb_io")
+            else:
+                delattr(recording, "_nwb_io")

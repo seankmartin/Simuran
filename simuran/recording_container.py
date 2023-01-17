@@ -86,8 +86,7 @@ class RecordingContainer(GenericContainer):
         rc.table = table
 
         for i in range(len(table)):
-            if isinstance(loader, abcIterable):
-                loader_ = loader[i]
+            loader_ = loader[i] if isinstance(loader, abcIterable) else loader
             recording = Recording()
             module_logger.debug(f"Parsing information from table for row {i}")
             loader_.parse_table_row(table, i, recording)

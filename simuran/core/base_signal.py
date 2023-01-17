@@ -204,3 +204,10 @@ class BaseSignal(BaseSimuran):
         self.timestamps = np.array(
             [i / self.sampling_rate for i in range(len(self.samples))]
         )
+
+
+@dataclass
+class Eeg(BaseSignal):
+    """A signal of channel_type eeg"""
+
+    channel_type: str = "eeg"

@@ -1,9 +1,5 @@
 """
 This lists the available loaders in SIMURAN.
-
-Current loaders are:
-1. params_only : only loads parameters from files.
-2. nc_loader : requires the neurochat package to be installed.
 """
 NWB_NAME = "nwb"
 ALLEN_NAME = "allen_ophys"
@@ -41,10 +37,10 @@ def loader_from_string(value: str, *args, **kwargs) -> "BaseLoader":
     args and kwargs are passed to the loader initialiser
 
     """
-    loader_to_use = find_loader_class(value)
+    loader_to_use = find_loader_class(value.lower())
 
     if loader_to_use is None:
-        raise ValueError(f"Can't load with uninstalled loader {value}")
+        raise ValueError(f"Can't load with uninstalled loader {value.lower()}")
 
     return loader_to_use(*args, **kwargs)
 
@@ -68,7 +64,7 @@ def _params_only_loader():
 
 def _neurochat_loader():
     try:
-        from simuran.loaders.nc_loader import NCLoader
+        from simuran.loaders.neurochat_loader import NCLoader
 
         return NCLoader
     except ModuleNotFoundError:

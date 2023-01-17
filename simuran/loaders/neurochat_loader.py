@@ -2,10 +2,10 @@
 import datetime
 import logging
 import os
+from collections.abc import Iterable
 from copy import deepcopy
 from pathlib import Path
 from typing import TYPE_CHECKING
-from collections.abc import Iterable
 
 import numpy as np
 from dateutil.tz import tzlocal
@@ -114,7 +114,7 @@ class NCLoader(MetadataLoader):
                 Path(recording.attrs["directory"]) / recording.attrs["filename"]
             )
         else:
-            source_file = None
+            source_file = recording.source_file
         recording.source_file = source_file
         recording.attrs["source_files"] = self.auto_fname_extraction(
             recording.source_file
@@ -386,13 +386,13 @@ class NCLoader(MetadataLoader):
             root_folders.append(os.path.normpath(os.path.dirname(fname)))
             with open(fname) as f:
                 f.readline()
-                t = f.readline()[-9:-2]
+                t = f.readline()[-9:-1]
                 try:
                     int(t[:2])
                     times.append(t)
                     f.readline()
                     f.readline()
-                    durations.append(f.readline()[-11:-8])
+                    durations.append(int(f.readline()[-11:-1].strip()))
                 except Exception:
                     if len(times) != len(set_files):
                         times.append(np.nan)
