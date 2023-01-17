@@ -2,7 +2,8 @@
 This lists the available loaders in SIMURAN.
 """
 NWB_NAME = "nwb"
-ALLEN_NAME = "allen_ophys"
+ALLEN_OPHYS_NAME = "allen_ophys"
+ALLEN_NPIXELS_NAME = "allen_npixels"
 ONE_NAME = "one"
 NEUROCHAT_NAME = "neurochat"
 BASE_NAME = "params_only"
@@ -81,6 +82,15 @@ def _allen_ophys_loader():
         module_logger.warning("The allensdk package is not installed.")
 
 
+def _allen_npixels_loader():
+    try:
+        from simuran.loaders.allen_loader import AllenVisualBehaviorLoader
+
+        return AllenVisualBehaviorLoader
+    except ModuleNotFoundError:
+        module_logger.warning("The allensdk package is not installed.")
+
+
 def _nwb_loader():
     try:
         from simuran.loaders.nwb_loader import NWBLoader
@@ -102,7 +112,8 @@ def _one_loader():
 def _options_dict():
     return {
         NWB_NAME: _nwb_loader,
-        ALLEN_NAME: _allen_ophys_loader,
+        ALLEN_OPHYS_NAME: _allen_ophys_loader,
+        ALLEN_NPIXELS_NAME: _allen_npixels_loader,
         ONE_NAME: _one_loader,
         NEUROCHAT_NAME: _neurochat_loader,
         BASE_NAME: _params_only_loader,
