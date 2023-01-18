@@ -111,12 +111,19 @@ class BaseAllenLoader(MetadataLoader):
 @dataclass
 class AllenOphysLoader(BaseAllenLoader):
     """
-    Load AIS ophys data from a cache.
+    Load AIS ophys data VBO from a cache.
 
     Attributes
     ----------
     cache : VisualBehaviorOphysProjectCache
         The AIS ophys cache to load data from.
+
+    Parameters
+    ----------
+    cache_directory : str
+        Where to store the cached data.
+    manifest : str
+        The name of the .json manifest file to use (version).
 
     """
 
@@ -128,6 +135,22 @@ class AllenOphysLoader(BaseAllenLoader):
 
 @dataclass
 class AllenVisualBehaviorLoader(BaseAllenLoader):
+    """
+    Load AIS VBN dataset.
+
+    Attributes
+    ----------
+    cache : VisualBehaviorOphysProjectCache
+        The AIS ophys cache to load data from.
+
+    Parameters
+    ----------
+    cache_directory : str
+        Where to store the cached data.
+    manifest : str
+        The name of the .json manifest file to use (version).
+    """
+
     cache: "VisualBehaviorNeuropixelsProjectCache" = field(init=False)
     cache_class_type: Type[ProjectCacheBase] = field(
         repr=False, init=False, default=VisualBehaviorNeuropixelsProjectCache
