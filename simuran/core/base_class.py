@@ -59,9 +59,11 @@ class BaseSimuran(ABC):
     tag: Optional[str] = None
     loader: Optional["BaseLoader"] = field(default=None)
     source_file: Optional[Union[str, "Path"]] = None
-    last_loaded_source: Optional[Union[str, "Path"]] = DEFAULT
-    data: Any = None
-    results: dict = field(default_factory=dict)
+    last_loaded_source: Optional[Union[str, "Path"]] = field(
+        init=False, default=DEFAULT
+    )
+    data: Any = field(init=False, default=None)
+    results: dict = field(init=False, default_factory=dict)
 
     @abstractmethod
     def load(self) -> None:
@@ -83,7 +85,7 @@ class BaseSimuran(ABC):
                 f"Set a loader in {self.__class__.__name__} before calling load."
             )
         self.last_loaded_source = self.source_file
-    
+
     def unload(self):
         """Unload / close related open files."""
         if self.loader is not None and hasattr(self.loader, "unload"):
