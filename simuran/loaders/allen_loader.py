@@ -40,12 +40,15 @@ class BaseAllenLoader(MetadataLoader):
         manifest_version = splitext(manifest_file)[0].split("_")[-1][1:]
         id_ = recording.attrs[id_]
 
-        return (
+        path_start = (
             Path(self.cache.fetch_api.cache._cache_dir)
             / f"visual-behavior-{t}-{manifest_version}"
             / session_name
-            / f"{session_name[:-1]}_{id_}.nwb"
         )
+        if session_name == "behavior_ecephys_sessions":
+            return path_start / str(id_) / f"{session_name[9:-1]}_{id_}.nwb"
+        else:
+            return path_start / f"{session_name[:-1]}_{id_}.nwb"
 
     def parse_metadata(self, recording: "Recording") -> None:
         """
@@ -92,7 +95,10 @@ class BaseAllenLoader(MetadataLoader):
             name_dict["id"] = "ophys_experiment_id"
             name_dict["unique"] = 1
         elif self.cache_class_type.__name__ == "VisualBehaviorNeuropixelsProjectCache":
-            name_dict["session_name"] = "ecephys_sessions"
+            if (self.manifest is not None) and ("0.4.0" in self.manifest):
+                name_dict["session_name"] = "behavior_ecephys_sessions"
+            else:
+                name_dict["session_name"] = "ecephys_sessions"
             name_dict["t"] = "neuropixels"
             name_dict["id"] = "ecephys_session_id"
             name_dict["unique"] = 2
