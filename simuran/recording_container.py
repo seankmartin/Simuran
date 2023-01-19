@@ -8,8 +8,7 @@ from dataclasses import dataclass, field
 import logging
 from pathlib import Path
 import pickle
-import re
-from typing import TYPE_CHECKING, Iterable, Optional, Union, overload
+from typing import TYPE_CHECKING, Iterable, Optional, Union, overload, List, Tuple, Any
 from skm_pyutils.table import df_to_file
 
 import pandas as pd
@@ -151,7 +150,7 @@ class RecordingContainer(GenericContainer):
         """
         return [item.results for item in self] if idx is None else self[idx].results
 
-    def find_recording_with_source(self, source_file):
+    def find_recording_with_source(self, source_file) -> Union[int, List]:
         """
         Return the index of the recording in the container with the given source file.
 
@@ -174,9 +173,30 @@ class RecordingContainer(GenericContainer):
             compare = recording.source_file[-len(source_file) :]
             if os.path.normpath(source_file) == os.path.normpath(compare):
                 locations.append(i)
-        if not locations:
-            return None
         return locations[0] if len(locations) == 1 else locations
+
+    def find_recording_by_attribute(self, key: str, value: Any) -> Recording:
+        """
+        Return the recording(s) with self.attrs[key] matching value.
+
+        Parameters
+        ----------
+        key : str
+            The attribute to match by.
+        value : Any
+            The value to match by.
+
+        Returns
+        -------
+        Recording
+            The matched recording (first match)
+        """
+        for recording in self:
+            if recording.attrs[key] == value:
+                return recording
+        raise ValueError(
+            f"No recording with key {key} matching {value}, values are {[r.attrs[key] for r in self.container]}"
+        )
 
     def load_iter(self):
         """Iterator through the container that loads data on item retrieval."""
@@ -204,7 +224,7 @@ class RecordingContainer(GenericContainer):
 
     def save_results_to_table(self, filename=None):
         """
-        Dump recording_container to file with pickle.
+        Dump recording_container results to file with pandas.
 
         Parameters
         ----------
