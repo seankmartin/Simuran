@@ -49,9 +49,9 @@ class OneAlyxLoader(MetadataLoader):
         self.one = one_instance
         if self.atlas is None:
             self.atlas = AllenAtlas()
-        self._sessions = self.one.alyx.rest("insertions", "list")
+        self.sessions = self.one.alyx.rest("insertions", "list")
         self._probe_dict = {}
-        for s in self._sessions:
+        for s in self.sessions:
             self._probe_dict.setdefault(s["session"], []).append(s["id"])
 
     def find_eid(self, lab, subject, details=True):
@@ -61,6 +61,11 @@ class OneAlyxLoader(MetadataLoader):
         return self.one.list_datasets(eid=eid, collection="alf", details=True)
 
     def load_recording(self, recording: "Recording") -> "Recording":
+        id_ = recording.attrs.get("session")
+        if id_ is None:
+            id_ = recording.attrs.get("experiment_id")
+        if id_ is None:
+            raise KeyError("No id or experiment_id set in recording.attrs")
         recording.data = self._download_data(recording.attrs["experiment_id"])
         return recording
 

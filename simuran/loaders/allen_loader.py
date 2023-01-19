@@ -69,6 +69,7 @@ class BaseAllenLoader(MetadataLoader):
         """
         recording.source_file = self.path_to_nwb(recording)
         recording.attrs["downloaded"] = isfile(recording.source_file)
+        recording.attrs["id_name"] = self._map_class_to_values()["id"]
 
     def load_recording(self, recording) -> "Recording":
         t = self._map_class_to_values()
