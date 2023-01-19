@@ -64,7 +64,7 @@ class TestRecordingContainer(object):
 
         assert rc.find_recording_with_source("hi") == 0
         assert rc.find_recording_with_source("bye") == 1
-        assert rc.find_recording_with_source("hih") is None
+        assert len(rc.find_recording_with_source("hih")) == 0
 
         rc[1].source_file = "hi"
         assert rc.find_recording_with_source("hi") == [0, 1]
