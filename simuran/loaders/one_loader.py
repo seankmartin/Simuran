@@ -66,7 +66,7 @@ class OneAlyxLoader(MetadataLoader):
             id_ = recording.attrs.get("experiment_id")
         if id_ is None:
             raise KeyError("No id or experiment_id set in recording.attrs")
-        recording.data = self._download_data(recording.attrs["experiment_id"])
+        recording.data = self._download_data(id_)
         return recording
 
     def _download_data(self, eid):

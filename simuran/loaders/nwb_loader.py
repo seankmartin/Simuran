@@ -36,7 +36,10 @@ class NWBLoader(MetadataLoader):
 
     def load_recording(self, recording) -> "Recording":
         try:
-            nwb_io = pynwb.NWBHDF5IO(recording.source_file, self.mode)
+            load_namespaces = True if self.mode == "r" else False
+            nwb_io = pynwb.NWBHDF5IO(
+                recording.source_file, self.mode, load_namespaces=load_namespaces
+            )
         except OSError as e:
             print(f"{recording.source_file} is not a valid NWB file")
             raise (e)
