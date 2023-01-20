@@ -3,12 +3,16 @@
 import os
 from copy import copy
 
+from typing import TYPE_CHECKING
 import matplotlib.pyplot as plt
 import seaborn as sns
 import skm_pyutils.path
 
+if TYPE_CHECKING:
+    import matplotlib
 
-def setup_ax(ax, default, **kwargs):
+
+def setup_ax(ax=None, default={}, **kwargs) -> "matplotlib.axes.Axes":
     """
     Set up an axis object with default parameters that can be overridden.
 
@@ -18,7 +22,7 @@ def setup_ax(ax, default, **kwargs):
 
     Parameters
     ----------
-    ax : matplotlib.axes
+    ax : matplotlib.axes.Axes
         The axis object to set up.
     default : dict
         Parameters to use for setting up the axis if not overridden.
@@ -47,9 +51,11 @@ def setup_ax(ax, default, **kwargs):
 
     Returns
     -------
-    None
+    ax
 
     """
+    if ax is None:
+        fig, ax = plt.subplots()
     default = copy(default)
     for key, value in kwargs.items():
         default[key] = value
@@ -80,6 +86,7 @@ def setup_ax(ax, default, **kwargs):
         )
     if "labelsize" in default:
         ax.tick_params(labelsize=default["labelsize"])
+    return ax
 
 
 def save_simuran_plot(fig, save_location, **kwargs):
