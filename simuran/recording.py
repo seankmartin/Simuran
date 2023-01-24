@@ -100,5 +100,15 @@ class Recording(BaseSimuran):
         name_up_to_rel = path_sf.relative_to(rel_dir).with_suffix("")
         return "--".join(name_up_to_rel.parts)
 
+    def summarise(self) -> str:
+        if self.loader is None:
+            raise RuntimeError("Please set a loader before summarising")
+        if hasattr(self.loader, "summarise"):
+            return self.loader.summarise(self)
+        else:
+            raise NotImplementedError(
+                "Please implement a summarise method on the selected loader"
+            )
+
     def __del__(self):
-        self.unload() 
+        self.unload()

@@ -1,10 +1,12 @@
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Optional
+from pprint import pprint
 
 from one.api import ONE
 import one
 from brainbox.io.one import SpikeSortingLoader
 from ibllib.atlas import AllenAtlas
+import pandas as pd
 
 from simuran.loaders.base_loader import MetadataLoader
 
@@ -69,6 +71,29 @@ class OneAlyxLoader(MetadataLoader):
         recording.data = self._download_data(id_)
         return recording
 
+    def summarise(self, recording: "Recording") -> "Recording":
+        out_dict = {}
+        for key, value in recording.data.items():
+            out_dict[key] = type(value)
+
+        output_str = (
+            "This dataset is summarised as follows:\n"
+            f"It contains the following data keys and data types {out_dict}\n"
+        )
+
+        out_dict = {}
+        for key, value in recording.data.items():
+            if hasattr(value, "__items__"):
+                out_dict[key] = [value.keys()]
+            elif hasattr(value, "columns"):
+                out_dict[key] = value.columns
+
+        for key, value in out_dict.items():
+            output_str += f"The {key} has keys {value}\n"
+
+        pprint(output_str)
+        return output_str
+
     def _download_data(self, eid):
         session_data = [
             "trials",
@@ -102,5 +127,7 @@ class OneAlyxLoader(MetadataLoader):
         sl = SpikeSortingLoader(pid=pid, one=self.one, atlas=self.atlas)
         spikes, clusters, channels = sl.load_spike_sorting()
         clusters = sl.merge_clusters(spikes, clusters, channels)
+        clusters_df = pd.DataFrame(clusters)
 
-        return clusters
+        # Filter to only have good units
+        return clusters_df.loc[clusters["label"] == 1]
