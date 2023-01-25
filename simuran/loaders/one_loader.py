@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Optional
-from pprint import pprint
 
 from one.api import ONE
 import one
@@ -76,22 +75,26 @@ class OneAlyxLoader(MetadataLoader):
         for key, value in recording.data.items():
             out_dict[key] = type(value)
 
+        pass_ = recording.data["full_details"]["qc"]
+
         output_str = (
-            "This dataset is summarised as follows:\n"
-            f"It contains the following data keys and data types {out_dict}\n"
+            f"This dataset is a {pass_} and is summarised as follows:\n"
+            + f"It contains the following data keys and data types {out_dict}\n"
         )
 
         out_dict = {}
         for key, value in recording.data.items():
-            if hasattr(value, "__items__"):
-                out_dict[key] = [value.keys()]
+            if hasattr(value, "keys"):
+                out_dict[key] = [k for k in value.keys()]
             elif hasattr(value, "columns"):
                 out_dict[key] = value.columns
+            else:
+                print("Unknown type {value}")
 
         for key, value in out_dict.items():
             output_str += f"The {key} has keys {value}\n"
 
-        pprint(output_str)
+        print(output_str)
         return output_str
 
     def _download_data(self, eid):
@@ -129,5 +132,7 @@ class OneAlyxLoader(MetadataLoader):
         clusters = sl.merge_clusters(spikes, clusters, channels)
         clusters_df = pd.DataFrame(clusters)
 
-        # Filter to only have good units
-        return clusters_df.loc[clusters["label"] == 1]
+        # Filter to only have good units as per data release
+        # return clusters_df.loc[clusters["label"] == 1]
+
+        return spikes, clusters_df
