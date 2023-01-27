@@ -23,16 +23,19 @@ class BaseAllenLoader(MetadataLoader):
     manifest: Optional[str]
 
     def create_s3_cache(self):
+        """Create an instance of the cache class for s3."""
         self.cache = self.cache_class_type.from_s3_cache(cache_dir=self.cache_directory)
         if self.manifest is not None:
             self.cache.load_manifest(self.manifest)
 
     def create_local_cache(self):
+        """Create an instance of the cache class for local data only."""
         self.cache = self.cache_class_type.from_local_cache(self.cache_directory)
         if self.manifest is not None:
             self.cache.load_manifest(self.manifest)
 
-    def path_to_nwb(self, recording) -> str:
+    def path_to_nwb(self, recording: "Recording") -> str:
+        """Return the path to the nwb file for a given recording."""
         name_dict = self._map_class_to_values()
         t, session_name = name_dict["t"], name_dict["session_name"]
         id_ = name_dict["id"]
@@ -71,7 +74,8 @@ class BaseAllenLoader(MetadataLoader):
         recording.attrs["downloaded"] = isfile(recording.source_file)
         recording.attrs["id_name"] = self._map_class_to_values()["id"]
 
-    def load_recording(self, recording) -> "Recording":
+    def load_recording(self, recording: "Recording") -> "Recording":
+        """Load a recording into memory using AllenSDK."""
         t = self._map_class_to_values()
         experiment_id = recording.attrs[t["id"]]
         try:
