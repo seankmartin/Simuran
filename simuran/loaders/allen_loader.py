@@ -2,7 +2,7 @@ from pathlib import Path
 from dataclasses import dataclass, field
 from os.path import isfile, splitext
 from pathlib import Path
-from typing import Type, Union, Optional
+from typing import Type, Union, Optional, TYPE_CHECKING
 
 from allensdk.brain_observatory.behavior.behavior_project_cache.project_cache_base import (
     ProjectCacheBase,
@@ -13,6 +13,9 @@ from allensdk.brain_observatory.behavior.behavior_project_cache import (
 )
 from simuran.loaders.base_loader import MetadataLoader
 from simuran.recording import Recording
+
+if TYPE_CHECKING:
+    from pandas import DataFrame
 
 
 @dataclass
@@ -91,6 +94,17 @@ class BaseAllenLoader(MetadataLoader):
             return recording
         recording.data = experiment
         return recording
+
+    def get_units(self) -> "DataFrame":
+        all_units = self.cache.get_unit_table()
+        channels = self.cache.get_channel_table()
+        merged_units = all_units.merge(
+            channels,
+            left_on="ecephys_channel_id",
+            right_index=True,
+            suffixes=(None, "_y"),
+        )
+        return merged_units
 
     def _map_class_to_values(self):
         name_dict = {}
