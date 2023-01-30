@@ -7,7 +7,6 @@ if TYPE_CHECKING:
     from simuran import Recording
 
 
-# TODO evaulate if this would be better as a Bridge subclass (also check spike-interface)
 def filter_good_units(unit_channels: "DataFrame", sort_: bool = True) -> "DataFrame":
     """
     Filter out all non-desired units.
@@ -45,7 +44,9 @@ def filter_good_units(unit_channels: "DataFrame", sort_: bool = True) -> "DataFr
 
 
 def allen_to_spike_train(
-    recording: "Recording", filter_units: bool = True, filter_function=filter_good_units,
+    recording: "Recording",
+    filter_units: bool = True,
+    filter_function=filter_good_units,
 ) -> Tuple["DataFrame", Dict[int, np.ndarray]]:
     """
     Retrieve a spike train for the units in the recording.
@@ -82,7 +83,9 @@ def allen_to_spike_train(
     return unit_channels, good_spikes
 
 
-def allen_to_trial_passes(recording: "Recording") -> Tuple["DataFrame", Dict[int, np.ndarray]]:
+def allen_to_trial_passes(
+    recording: "Recording",
+) -> Tuple["DataFrame", Dict[int, np.ndarray]]:
     # See https://allensdk.readthedocs.io/en/latest/_static/examples/nb/aligning_behavioral_data_to_task_events_with_the_stimulus_and_trials_tables.html
     session = recording.data
     stimulus_presentations = session.stimulus_presentations
@@ -96,58 +99,60 @@ def allen_to_trial_passes(recording: "Recording") -> Tuple["DataFrame", Dict[int
 
     return trial_times, passed
 
-brain_regions_in_structure = {
-    "cortex": [
-        "VISp",
-        "VISl",
-        "VISrl",
-        "VISam",
-        "VISpm",
-        "VIS",
-        "VISal",
-        "VISmma",
-        "VISmmp",
-        "VISli",
-    ],
-    "thalamus": [
-        "LGd",
-        "LD",
-        "LP",
-        "VPM",
-        "TH",
-        "MGm",
-        "MGv",
-        "MGd",
-        "PO",
-        "LGv",
-        "VL",
-        "VPL",
-        "POL",
-        "Eth",
-        "PoT",
-        "PP",
-        "PIL",
-        "IntG",
-        "IGL",
-        "SGN",
-        "VPL",
-        "PF",
-        "RT",
-    ],
-    "hippocampus": ["CA1", "CA2", "CA3", "DG", "SUB", "POST", "PRE", "ProS", "HPF"],
-    "midbrain": [
-        "MB",
-        "SCig",
-        "SCiw",
-        "SCsg",
-        "SCzo",
-        "PPT",
-        "APN",
-        "NOT",
-        "MRN",
-        "OP",
-        "LT",
-        "RPF",
-        "CP",
-    ],
-}
+
+def get_brain_regions_to_structure_dict():
+    return {
+        "cortex": [
+            "VISp",
+            "VISl",
+            "VISrl",
+            "VISam",
+            "VISpm",
+            "VIS",
+            "VISal",
+            "VISmma",
+            "VISmmp",
+            "VISli",
+        ],
+        "thalamus": [
+            "LGd",
+            "LD",
+            "LP",
+            "VPM",
+            "TH",
+            "MGm",
+            "MGv",
+            "MGd",
+            "PO",
+            "LGv",
+            "VL",
+            "VPL",
+            "POL",
+            "Eth",
+            "PoT",
+            "PP",
+            "PIL",
+            "IntG",
+            "IGL",
+            "SGN",
+            "VPL",
+            "PF",
+            "RT",
+        ],
+        "hippocampus": ["CA1", "CA2", "CA3", "DG", "SUB", "POST", "PRE", "ProS", "HPF"],
+        "midbrain": [
+            "MB",
+            "SCig",
+            "SCiw",
+            "SCsg",
+            "SCzo",
+            "PPT",
+            "APN",
+            "NOT",
+            "MRN",
+            "OP",
+            "LT",
+            "RPF",
+            "CP",
+        ],
+    }

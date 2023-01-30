@@ -174,3 +174,13 @@ class AllenVisualBehaviorLoader(BaseAllenLoader):
     cache_class_type: Type[ProjectCacheBase] = field(
         repr=False, init=False, default=VisualBehaviorNeuropixelsProjectCache
     )
+
+    def get_all_units(self):
+        all_units = self.cache.get_unit_table()
+        channels = self.cache.get_channel_table()
+        return all_units.merge(
+            channels,
+            left_on="ecephys_channel_id",
+            right_index=True,
+            suffixes=(None, "_y"),
+        )

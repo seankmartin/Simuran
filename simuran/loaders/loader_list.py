@@ -34,7 +34,8 @@ def loader_from_string(value: str, *args, **kwargs) -> "BaseLoader":
     Loader class from string value
 
     Currently supports:
-    "nwb", "neurochat", "allen_ophys"
+    "nwb", "neurochat", "allen_ophys", "allen_npxiels", "one",
+    "params_only"
 
     args and kwargs are passed to the loader initialiser
 
