@@ -70,8 +70,6 @@ class RecordingContainer(GenericContainer):
         loader : BaseLoader or iterable of BaseLoader
             The loader to use for all recordings if one passed
             Otherwise a different loader to use for each recording.
-        param_dir : str
-            A path to the directory containing parameter files
         load_on_fly : bool, optional
             Whether to load the data for the recording container on the fly.
             Defaults to True (best for memory usage).

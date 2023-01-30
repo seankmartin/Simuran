@@ -60,6 +60,9 @@ class OneAlyxLoader(MetadataLoader):
 
     def describe_dataset(self, eid: str):
         return self.one.list_datasets(eid=eid, collection="alf", details=True)
+    
+    def get_sessions_table(self):
+        return pd.DataFrame([s for s in self.sessions])
 
     def load_recording(self, recording: "Recording") -> "Recording":
         id_ = recording.attrs.get("session")
