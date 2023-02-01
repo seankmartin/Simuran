@@ -11,6 +11,8 @@ from allensdk.brain_observatory.behavior.behavior_project_cache import (
     VisualBehaviorOphysProjectCache,
     VisualBehaviorNeuropixelsProjectCache,
 )
+import pandas as pd
+
 from simuran.loaders.base_loader import MetadataLoader
 from simuran.recording import Recording
 
@@ -21,9 +23,9 @@ if TYPE_CHECKING:
 @dataclass
 class BaseAllenLoader(MetadataLoader):
     cache_class_type: Type[ProjectCacheBase]
-    cache: "ProjectCacheBase"
     cache_directory: Union[str, Path]
     manifest: Optional[str]
+    cache: Optional["ProjectCacheBase"] = None
 
     def create_s3_cache(self):
         """Create an instance of the cache class for s3."""
@@ -106,6 +108,11 @@ class BaseAllenLoader(MetadataLoader):
         )
         return merged_units
 
+    def get_sessions_table(self) -> "DataFrame":
+        allen_sessions = self.cache.get_ecephys_session_table()
+        allen_sessions = allen_sessions.dropna(subset=["file_id"])
+        return allen_sessions
+
     def _map_class_to_values(self):
         name_dict = {}
         if self.cache_class_type.__name__ == "VisualBehaviorOphysProjectCache":
@@ -143,13 +150,24 @@ class AllenOphysLoader(BaseAllenLoader):
         Where to store the cached data.
     manifest : str
         The name of the .json manifest file to use (version).
+    local : bool
+        If true, instantiate a local cache over
 
     """
 
-    cache: "VisualBehaviorOphysProjectCache" = field(init=False)
+    cache: Optional["VisualBehaviorOphysProjectCache"] = None
     cache_class_type: Type[ProjectCacheBase] = field(
         repr=False, init=False, default=VisualBehaviorOphysProjectCache
     )
+    local: bool = False
+
+    def __post_init__(self):
+        if self.cache is not None:
+            return
+        if self.local:
+            self.create_local_cache()
+        else:
+            self.create_s3_cache()
 
 
 @dataclass
@@ -168,12 +186,23 @@ class AllenVisualBehaviorLoader(BaseAllenLoader):
         Where to store the cached data.
     manifest : str
         The name of the .json manifest file to use (version).
+    local : bool
+        If true, instantiate a local cache over
     """
 
-    cache: "VisualBehaviorNeuropixelsProjectCache" = field(init=False)
+    cache: Optional["VisualBehaviorNeuropixelsProjectCache"] = None
     cache_class_type: Type[ProjectCacheBase] = field(
         repr=False, init=False, default=VisualBehaviorNeuropixelsProjectCache
     )
+    local: bool = False
+
+    def __post_init__(self):
+        if self.cache is not None:
+            return
+        if self.local:
+            self.create_local_cache()
+        else:
+            self.create_s3_cache()
 
     def get_all_units(self):
         all_units = self.cache.get_unit_table()

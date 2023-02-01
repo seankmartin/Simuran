@@ -11,6 +11,7 @@ from simuran.loaders.base_loader import MetadataLoader
 
 if TYPE_CHECKING:
     from simuran import Recording
+    from pandas import DataFrame
 
 
 @dataclass
@@ -60,8 +61,8 @@ class OneAlyxLoader(MetadataLoader):
 
     def describe_dataset(self, eid: str):
         return self.one.list_datasets(eid=eid, collection="alf", details=True)
-    
-    def get_sessions_table(self):
+
+    def get_sessions_table(self) -> "DataFrame":
         return pd.DataFrame([s for s in self.sessions])
 
     def load_recording(self, recording: "Recording") -> "Recording":
@@ -69,8 +70,13 @@ class OneAlyxLoader(MetadataLoader):
         if id_ is None:
             id_ = recording.attrs.get("experiment_id")
         if id_ is None:
-            raise KeyError("No id or experiment_id set in recording.attrs")
-        recording.data = self._download_data(id_)
+            raise KeyError("No session or experiment_id set in recording.attrs")
+        exclude = recording.attrs.get("data_to_exclude", ["full_details", "motion"])
+        recording.data = self._download_data(id_, exclude=exclude)
+        recording.attrs["quality_control"] = recording.data.pop("quality_control")
+        recording.attrs["extended_quality_control"] = recording.data.pop(
+            "extended_quality_control"
+        )
         return recording
 
     def summarise(self, recording: "Recording") -> "Recording":
@@ -78,7 +84,7 @@ class OneAlyxLoader(MetadataLoader):
         for key, value in recording.data.items():
             out_dict[key] = type(value)
 
-        pass_ = recording.data["full_details"]["qc"]
+        pass_ = recording.attrs["quality_control"]
 
         output_str = (
             f"This dataset is a {pass_} and is summarised as follows:\n"
@@ -92,27 +98,32 @@ class OneAlyxLoader(MetadataLoader):
             elif hasattr(value, "columns"):
                 out_dict[key] = value.columns
             else:
-                print("Unknown type {value}")
+                out_dict[key] = f"of type {type(value)}"
 
         for key, value in out_dict.items():
-            output_str += f"The {key} has keys {value}\n"
+            output_str += f"The {key} is {value}\n"
+
+        output_str += f"\nThe full quality control is {recording.attrs['extended_quality_control']}"
 
         print(output_str)
         return output_str
 
-    def _download_data(self, eid):
+    def _download_data(self, eid, exclude=[]):
         session_data = [
             "trials",
             "wheels",
             "wheelMoves",
             "licks",
-            "leftCamera",
-            "bodyCamera",
-            "rightCamera",
-            "leftROIMotionEnergy",
-            "bodyROIMotionEnergy",
-            "rightROIMotionEnergy",
         ]
+        if not "camera" in exclude:
+            session_data += ["leftCamera", "bodyCamera", "rightCamera"]
+
+        if not "motion" in exclude:
+            session_data += [
+                "leftROIMotionEnergy",
+                "bodyROIMotionEnergy",
+                "rightROIMotionEnergy",
+            ]
 
         return_dict = {}
         for sd in session_data:
@@ -125,7 +136,16 @@ class OneAlyxLoader(MetadataLoader):
             name = self.one.alyx.rest("insertions", "list", id=pid)[0]["name"]
             return_dict[f"{name}"] = self._get_probe_data(pid)
 
-        return_dict["full_details"] = self.one.get_details(eid, full=True)
+        if not "full_details" in exclude:
+            return_dict["full_details"] = self.one.get_details(eid, full=True)
+            return_dict["quality_control"] = return_dict["full_details"]["qc"]
+            return_dict["extended_quality_control"] = return_dict["full_details"][
+                "extended_qc"
+            ]
+        else:
+            full = self.one.get_details(eid, full=True)
+            return_dict["quality_control"] = full["qc"]
+            return_dict["extended_quality_control"] = full["extended_qc"]
         return return_dict
 
     def _get_probe_data(self, pid):

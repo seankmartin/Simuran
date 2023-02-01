@@ -10,6 +10,7 @@ from pathlib import Path
 import pickle
 from typing import TYPE_CHECKING, Iterable, Optional, Union, overload, List, Tuple, Any
 from skm_pyutils.table import df_to_file
+import gc
 
 import pandas as pd
 
@@ -100,7 +101,7 @@ class RecordingContainer(GenericContainer):
         ...
         """Load recording at index idx and return it."""
 
-    def load(self, idx: Optional[int] = None) -> "Recording":
+    def load(self, idx: Optional[int] = None, force_reload=False) -> "Recording":
         """
         Get the item at the specified index, and load it if not already loaded.
 
@@ -108,6 +109,8 @@ class RecordingContainer(GenericContainer):
         ----------
         idx : int
             The index of the the item to retrieve.
+        force_reload : bool
+            Whether to force reload if loading on the fly.
 
         Returns
         -------
@@ -122,7 +125,9 @@ class RecordingContainer(GenericContainer):
                 r.load()
             return
         if self.load_on_fly:
-            if self._last_loaded_idx != idx:
+            if self._last_loaded_idx != idx or force_reload:
+                del self.last_loaded
+                gc.collect()
                 self.last_loaded = copy.copy(self[idx])
                 self.last_loaded.load()
                 self._last_loaded_idx = idx

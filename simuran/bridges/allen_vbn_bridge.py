@@ -73,7 +73,7 @@ def allen_to_spike_train(
             filter_by_validity=True,
             filter_out_of_brain_units=True,
         )
-        units = filter_function(unit_channels)
+        units = filter_function(units)
     else:
         units = session.get_units()
     channels = session.get_channels()
