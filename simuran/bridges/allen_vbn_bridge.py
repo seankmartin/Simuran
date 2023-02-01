@@ -1,4 +1,5 @@
-from typing import TYPE_CHECKING, Tuple, Dict
+from typing import TYPE_CHECKING, Tuple, Dict, Callable
+from collections import OrderedDict
 
 import numpy as np
 
@@ -7,7 +8,7 @@ if TYPE_CHECKING:
     from simuran import Recording
 
 
-def filter_good_units(unit_channels: "DataFrame", sort_: bool = True) -> "DataFrame":
+def filter_good_units(unit_table: "DataFrame", sort_: bool = False) -> "DataFrame":
     """
     Filter out all non-desired units.
 
@@ -21,32 +22,30 @@ def filter_good_units(unit_channels: "DataFrame", sort_: bool = True) -> "DataFr
 
     Parameters
     ----------
-    unit_channels : pd.DataFrame
+    unit_table: pd.DataFrame
         The unit dataframe to filter from, with channel information.
     sort_ : bool
         Whether or not to sort the units, which is by depth.
     """
     if sort_:
-        unit_channels = unit_channels.sort_values(
-            "probe_vertical_position", ascending=False
-        )
+        unit_table = unit_table.sort_values("probe_vertical_position", ascending=False)
     good_unit_filter = (
-        (unit_channels["isi_violations"] < 0.4)  # Well isolated units
-        & (unit_channels["nn_hit_rate"] > 0.9)  # Well isolated units
+        (unit_table["isi_violations"] < 0.4)  # Well isolated units
+        & (unit_table["nn_hit_rate"] > 0.9)  # Well isolated units
         & (
-            unit_channels["amplitude_cutoff"] < 0.1
+            unit_table["amplitude_cutoff"] < 0.1
         )  # Units that have most of their activations
-        & (unit_channels["presence_ratio"] > 0.9)  # Tracked for 90% of the recording
+        & (unit_table["presence_ratio"] > 0.9)  # Tracked for 90% of the recording
         # & (unit_channels["quality"] == "good") # Non-artifactual waveform
     )
 
-    return unit_channels.loc[good_unit_filter]
+    return unit_table.loc[good_unit_filter]
 
 
 def allen_to_spike_train(
     recording: "Recording",
     filter_units: bool = True,
-    filter_function=filter_good_units,
+    filter_function: Callable[["DataFrame", bool], "DataFrame"] = filter_good_units,
 ) -> Tuple["DataFrame", Dict[int, np.ndarray]]:
     """
     Retrieve a spike train for the units in the recording.
@@ -79,7 +78,9 @@ def allen_to_spike_train(
     channels = session.get_channels()
     unit_channels = units.merge(channels, left_on="peak_channel_id", right_index=True)
     if filter_units:
-        good_spikes = {k: v for k, v in session.spike_times.items() if k in units.index}
+        good_spikes = OrderedDict(
+            (k, v) for k, v in session.spike_times.items() if k in units.index
+        )
     return unit_channels, good_spikes
 
 
