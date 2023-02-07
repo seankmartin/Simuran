@@ -1,7 +1,9 @@
 from collections import OrderedDict
 from typing import Callable, TYPE_CHECKING, Tuple, Dict
+
 import numpy as np
 import pandas as pd
+from brainbox.behavior.training import get_signed_contrast
 
 if TYPE_CHECKING:
     from simuran import Recording
@@ -36,7 +38,7 @@ def filter_good_units(unit_table: "DataFrame", sort_: bool = False):
     return unit_table.loc[good_unit_filter]
 
 
-def create_spike_train_one(
+def one_spike_train(
     recording: "Recording",
     filter_units: bool = True,
     filter_function: Callable[["DataFrame", bool], "DataFrame"] = filter_good_units,
@@ -67,3 +69,32 @@ def create_spike_train_one(
 
     unit_table = pd.concat(unit_dfs, ignore_index=True)
     return unit_table, spike_train
+
+
+def one_trial_info(recording: "Recording") -> dict:
+    """
+    Convert a one recording to a trial information dict.
+
+    Parameters
+    ----------
+    recording : Recording
+        The recording to convert.
+
+    Returns
+    -------
+    result_dict : dict
+        The trial passes dict.
+
+    """
+    result_dict = {}
+    trials = recording.data["trials"]
+
+    # https://int-brain-lab.github.io/iblenv/notebooks_external/loading_trials_data.html
+    result_dict["trial_contrasts"] = get_signed_contrast(trials)
+    result_dict["trial_correct"] = trials["feedbackType"]
+
+    trial_starts = trials["stimOn_times"]
+    trial_ends = trials["response_times"]
+    result_dict["trial_times"] = [(x, y) for x, y in zip(trial_starts, trial_ends)]
+
+    return result_dict

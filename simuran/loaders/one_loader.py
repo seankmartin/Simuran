@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Union
 
 from one.api import ONE
 import one
@@ -12,6 +12,7 @@ from simuran.loaders.base_loader import MetadataLoader
 if TYPE_CHECKING:
     from simuran import Recording
     from pandas import DataFrame
+    from pathlib import Path
 
 
 @dataclass
@@ -32,13 +33,12 @@ class OneAlyxLoader(MetadataLoader):
 
     one: Optional["ONE"] = None
     atlas: Optional["AllenAtlas"] = None
-    cache_directory: Optional[str] = None
+    cache_directory: Optional[Union[str, "Path"]] = None
+    mode: str = "auto"
 
-    @classmethod
-    def from_cache(cls, cache_directory: str):
-        self = cls(cache_directory=cache_directory)
-        self.create_cache()
-        return self
+    def __post_init__(self):
+        if self.one is None:
+            self.create_cache()
 
     def create_cache(self):
         one_instance = ONE(
@@ -46,8 +46,12 @@ class OneAlyxLoader(MetadataLoader):
             password="international",
             silent=True,
             cache_dir=self.cache_directory,
+            mode=self.mode,
         )
         one.params.CACHE_DIR_DEFAULT = self.cache_directory
+        one.params.setup(silent=True)
+        print(one.params.get())
+        exit(-1)
         self.one = one_instance
         if self.atlas is None:
             self.atlas = AllenAtlas()

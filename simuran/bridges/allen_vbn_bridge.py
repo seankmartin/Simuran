@@ -42,7 +42,7 @@ def filter_good_units(unit_table: "DataFrame", sort_: bool = False) -> "DataFram
     return unit_table.loc[good_unit_filter]
 
 
-def allen_to_spike_train(
+def allen_spike_train(
     recording: "Recording",
     filter_units: bool = True,
     filter_function: Callable[["DataFrame", bool], "DataFrame"] = filter_good_units,
@@ -84,10 +84,27 @@ def allen_to_spike_train(
     return unit_channels, good_spikes
 
 
-def allen_to_trial_passes(
+def allen_trial_info(
     recording: "Recording",
 ) -> Tuple["DataFrame", Dict[int, np.ndarray]]:
-    # See https://allensdk.readthedocs.io/en/latest/_static/examples/nb/aligning_behavioral_data_to_task_events_with_the_stimulus_and_trials_tables.html
+    """
+    Retrieve the trial information for the recording.
+
+    Parameters
+    ----------
+    recording: simuran.Recording
+        The recording to retrieve from.
+
+    Returns
+    -------
+    trial_info : pd.DataFrame
+        The trial information.
+
+    See also
+    --------
+    https://allensdk.readthedocs.io/en/latest/_static/examples/nb/aligning_behavioral_data_to_task_events_with_the_stimulus_and_trials_tables.html
+
+    """
     session = recording.data
     stimulus_presentations = session.stimulus_presentations
     active_stimuli = stimulus_presentations[
