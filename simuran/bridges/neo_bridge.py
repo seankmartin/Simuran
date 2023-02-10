@@ -7,6 +7,8 @@ import quantities
 def convert_spikes_to_train(
     spikes: Union[Dict[str, np.ndarray], List[np.ndarray]],
     units: quantities.Quantity = quantities.s,
+    custom_t_stop: float = None,
+    **kwargs
 ) -> List["SpikeTrain"]:
     """
     Convert a list of spike times or dict of spike times to list of SpikeTrain.
@@ -17,6 +19,10 @@ def convert_spikes_to_train(
         The times can be lists or np.ndarray
     units: quantities.Quantity
         The time unit.
+    custom_t_stop: float
+        The t_stop to use for all SpikeTrain objects.
+    kwargs: dict
+        Additional arguments to pass to neo.SpikeTrain.
 
     Returns
     -------
@@ -29,14 +35,17 @@ def convert_spikes_to_train(
         to_iter = spikes.values()
     else:
         to_iter = spikes
-    max_ = 0
+    if custom_t_stop is not None:
+        max_ = custom_t_stop
+    else:
+        max_ = 0
+        for v in to_iter:
+            if len(v) == 0:
+                continue
+            max_temp = max(v)
+            if max_temp > max_:
+                max_ = max_temp
     for v in to_iter:
-        if len(v) == 0:
-            continue
-        max_temp = max(v)
-        if max_temp > max_:
-            max_ = max_temp
-    for v in to_iter:
-        l.append(SpikeTrain(v, units=units, t_stop=max_))
+        l.append(SpikeTrain(v, units=units, t_stop=max_, **kwargs))
 
     return l

@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Optional, Union
+from pathlib import Path
 
 from one.api import ONE
 import one
@@ -12,7 +13,6 @@ from simuran.loaders.base_loader import MetadataLoader
 if TYPE_CHECKING:
     from simuran import Recording
     from pandas import DataFrame
-    from pathlib import Path
 
 
 @dataclass
@@ -48,10 +48,11 @@ class OneAlyxLoader(MetadataLoader):
             cache_dir=self.cache_directory,
             mode=self.mode,
         )
+        param_file_location = one.params.iopar.getfile(one.params._PAR_ID_STR)
+        p = Path(param_file_location) / ".caches"
+        p.unlink(missing_ok=True)
         one.params.CACHE_DIR_DEFAULT = self.cache_directory
         one.params.setup(silent=True)
-        print(one.params.get())
-        exit(-1)
         self.one = one_instance
         if self.atlas is None:
             self.atlas = AllenAtlas()
