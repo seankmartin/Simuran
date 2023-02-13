@@ -1,18 +1,12 @@
 numpy
--e git+https://github.com/seankmartin/PythonUtils.git#egg=skm_pyutils
+skm-pyutils
 seaborn
-matplotlib
--e git+https://github.com/seankmartin/NeuroChaT.git#egg=neurochat
 indexed
 tqdm
-doit
 mne
 pandas
 pytest
-astropy
 rich
 dearpygui
 typer
 click-spinner
--e git+https://github.com/seankmartin/sumatra.git#egg=sumatra
-GitPython
