@@ -9,7 +9,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 
 
 def main(folder, overwrite=False):
-    df = simuran.loaders.NCLoader().index_files(folder)
+    df = simuran.loaders.NeurochatLoader().index_files(folder)
 
     recording = recording_from_df_line(df.iloc[1055])
     print(recording)

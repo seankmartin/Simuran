@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 module_logger = logging.getLogger("simuran.loaders")
 
 
-class NCLoader(MetadataLoader):
+class NeurochatLoader(MetadataLoader):
     """
     Load data compatible with the NeuroChaT package.
 
@@ -373,7 +373,7 @@ class NCLoader(MetadataLoader):
         durations = []
         module_logger.info("Finding all .set files...")
         files = get_all_files_in_dir(
-            folder,
+            str(folder),
             ext=".set",
             recursive=True,
             return_absolute=True,

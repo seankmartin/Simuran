@@ -67,9 +67,9 @@ def _params_only_loader():
 
 def _neurochat_loader():
     try:
-        from simuran.loaders.neurochat_loader import NCLoader
+        from simuran.loaders.neurochat_loader import NeurochatLoader
 
-        return NCLoader
+        return NeurochatLoader
     except ModuleNotFoundError:
         module_logger.warning("The NeuroChaT package is not installed.")
 

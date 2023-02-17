@@ -6,10 +6,10 @@ from neurochat.nc_lfp import NLfp
 from neurochat.nc_spatial import NSpatial
 from neurochat.nc_spike import NSpike
 from simuran.core.param_handler import ParamHandler
-from simuran.loaders.neurochat_loader import NCLoader
+from simuran.loaders.neurochat_loader import NeurochatLoader
 from simuran.recording import Recording
 
-main_dir = os.path.dirname(__file__)[:-len(f"{os.sep}tests")]
+main_dir = os.path.dirname(__file__)[: -len(f"{os.sep}tests")]
 
 
 def fetch_axona_data():
@@ -51,7 +51,7 @@ def test_nc_recording_loading(delete=False):
     )
     metadata["source_file"] = axona_files[-1]
 
-    loader = NCLoader(system="Axona", pos_extension=".txt")
+    loader = NeurochatLoader(system="Axona", pos_extension=".txt")
     ex = Recording(attrs=metadata, loader=loader)
     ex.parse_metadata()
 
@@ -77,7 +77,7 @@ def test_nc_recording_loading(delete=False):
     assert np.all(ex.data["units"][0].data.get_unit_tags() == unit.get_unit_tags())
     assert np.all(ex.data["spatial"].data.get_pos_x() == spatial.get_pos_x())
 
-    ncl = NCLoader()
+    ncl = NeurochatLoader()
     ncl.system = "Axona"
     loc = os.path.join(main_dir, "tests", "resources", "temp", "axona")
     file_locs, _ = ncl.auto_fname_extraction(
