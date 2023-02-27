@@ -70,14 +70,17 @@ class OneAlyxLoader(MetadataLoader):
     def get_sessions_table(self) -> "DataFrame":
         return pd.DataFrame([s for s in self.sessions])
 
-    def load_recording(self, recording: "Recording") -> "Recording":
+    def parse_metadata(self, recording: "Recording") -> None:
         id_ = recording.attrs.get("session")
         if id_ is None:
             id_ = recording.attrs.get("experiment_id")
         if id_ is None:
             raise KeyError("No session or experiment_id set in recording.attrs")
+        recording.source_file = id_
+
+    def load_recording(self, recording: "Recording") -> "Recording":
         exclude = recording.attrs.get("data_to_exclude", ["full_details", "motion"])
-        recording.data = self._download_data(id_, exclude=exclude)
+        recording.data = self._download_data(recording.source_file, exclude=exclude)
         recording.attrs["quality_control"] = recording.data.pop("quality_control")
         recording.attrs["extended_quality_control"] = recording.data.pop(
             "extended_quality_control"

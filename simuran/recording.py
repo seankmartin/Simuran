@@ -94,6 +94,8 @@ class Recording(BaseSimuran):
             The name for saving, it has no extension and os.sep replaced by --
 
         """
+        if self.source_file is None:
+            raise RuntimeError("Please set a source file before getting a name")
         path_sf = Path(self.source_file)
         if rel_dir is None:
             return "--".join(path_sf.with_suffix("").parts)

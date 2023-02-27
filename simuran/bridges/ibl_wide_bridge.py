@@ -45,7 +45,7 @@ def one_spike_train(
 ) -> Tuple["DataFrame", Dict[int, np.ndarray]]:
     """
     Retrieve a spike train for the units in the recording.
-    
+
     Parameters
     ----------
     recording
@@ -54,12 +54,12 @@ def one_spike_train(
         Whether to filter out noisy cells, by default True.
     filter_function : function
         The function to use for filtering, be default filter_good_units.
-    
+
     Returns
     -------
     unit_table, spike_train
         The unit table and spike train.
-    
+
     """
     unit_dfs = []
     spike_train = OrderedDict()
@@ -109,7 +109,9 @@ def one_trial_info(recording: "Recording") -> dict:
 
     # https://int-brain-lab.github.io/iblenv/notebooks_external/loading_trials_data.html
     result_dict["trial_contrasts"] = get_signed_contrast(trials)
-    result_dict["trial_correct"] = trials["feedbackType"]
+    result_dict["trial_correct"] = np.array(
+        [True if t == 1 else False for t in trials["feedbackType"]]
+    )
 
     trial_starts = trials["stimOn_times"]
     trial_ends = trials["response_times"]
