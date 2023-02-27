@@ -19,10 +19,10 @@ class ParamHandler(object):
 
     Attributes
     ----------
-    dictionary : dict
-        The dictionary of underlying parameters
     source_file : Path
         The path to the file containing the parameters.
+    attrs: dict
+        The dictionary of underlying parameters
     name : str
         The name of the variable describing the parameters, default is "params".
         This is only used if in_loc is not None.
@@ -32,8 +32,8 @@ class ParamHandler(object):
 
     """
 
-    attrs: dict = field(default_factory=dict)
     source_file: Optional[Union[str, "Path"]] = None
+    attrs: dict = field(default_factory=dict)
     name: str = "params"
     dirname_replacement: str = ""
 

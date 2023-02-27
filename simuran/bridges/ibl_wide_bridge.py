@@ -43,6 +43,24 @@ def one_spike_train(
     filter_units: bool = True,
     filter_function: Callable[["DataFrame", bool], "DataFrame"] = filter_good_units,
 ) -> Tuple["DataFrame", Dict[int, np.ndarray]]:
+    """
+    Retrieve a spike train for the units in the recording.
+    
+    Parameters
+    ----------
+    recording
+        The recording to retrieve from.
+    filter_units : bool
+        Whether to filter out noisy cells, by default True.
+    filter_function : function
+        The function to use for filtering, be default filter_good_units.
+    
+    Returns
+    -------
+    unit_table, spike_train
+        The unit table and spike train.
+    
+    """
     unit_dfs = []
     spike_train = OrderedDict()
     for k, v in recording.data.items():

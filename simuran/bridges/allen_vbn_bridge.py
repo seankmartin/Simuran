@@ -97,8 +97,8 @@ def allen_trial_info(
 
     Returns
     -------
-    trial_info : pd.DataFrame
-        The trial information.
+    trial_info : dict
+        The trial information
 
     See also
     --------
@@ -115,7 +115,12 @@ def allen_trial_info(
     trial_times[:, 0] = active_stimuli["start_time"]
     trial_times[:, 1] = active_stimuli["end_time"]
 
-    return trial_times, passed
+    trial_info = {
+        "trial_times": trial_times,
+        "trial_correct": passed,
+    }
+
+    return trial_info
 
 
 def get_brain_regions_to_structure_dict():
