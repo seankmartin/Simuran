@@ -5,17 +5,12 @@ Uses the factory method design pattern.
 """
 
 from copy import deepcopy
+import contextlib
 
 import dearpygui.dearpygui as dpg
 from rich import print
 
-# Should probably convert to abstract
 
-# TODO this needs to be a factory method
-# And then nodes - so node factories make nodes
-
-# TODO abstract
-# TODO remove getter and setter
 class BaseNode(object):
     def __init__(self, parent, label="Node", tag=None, debug=False):
         self.tag = dpg.generate_uuid() if tag is None else tag
@@ -26,16 +21,13 @@ class BaseNode(object):
         self.debug = debug
         self.category = None
 
-        # TODO this should hold application state
         self.state = {}
-
         self.input_attributes = {}
         self.output_attributes = {}
 
         self.plot_paths = None
 
     def on_connect(self, sender, receiver):
-        # Needs work for context
         sender_attr = self.get_attribute(sender)
         receiver_attr = self.get_attribute(receiver)
 
@@ -52,7 +44,6 @@ class BaseNode(object):
                 print(f"{self.tag}: Connected to {sender} as receiver")
 
     def on_disconnect(self, sender, receiver):
-        # Needs work for context
         sender_attr = self.get_attribute(sender)
         receiver_attr = self.get_attribute(receiver)
 
@@ -111,7 +102,6 @@ class BaseNode(object):
                     )
                 elif type_ == "TEXT":
                     dpg.add_input_text(parent=attribute_tag, tag=content_tag, **content)
-                    # TODO perhaps a separate menu for selecting files
                     handler_tag = dpg.generate_uuid()
                     with dpg.item_handler_registry(tag=handler_tag) as handler:
                         dpg.add_item_clicked_handler(
@@ -231,6 +221,25 @@ class NodeFactory(object):
             print(self)
 
         return new_node
+
+    def find_matching_input_node(self, receiver_label, nodes):
+        for key, _ in self.input_attributes.items():
+            sender, receiver = key.split("--")
+            with contextlib.suppress(ValueError):
+                sender = int(sender)
+            with contextlib.suppress(ValueError):
+                receiver = int(receiver)
+            attr = self.get_attribute(receiver)
+            if attr["label"] == receiver_label:
+                source_file_tag = sender
+                break
+
+        for node in nodes.values():
+            if node.has_attribute(source_file_tag):
+                input_recording = node.recording
+                break
+
+        return input_recording
 
     def __str__(self):
         return (

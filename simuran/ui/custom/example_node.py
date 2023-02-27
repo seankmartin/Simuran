@@ -3,113 +3,8 @@ import os
 import dearpygui.dearpygui as dpg
 
 from simuran.ui.node import BaseNode, NodeFactory
-from simuran.recording import Recording
 from simuran.plot.figure import SimuranFigure
-from simuran.eeg import EEGArray, EEG
-from simuran.loaders.loader_list import loader_from_string
-
-## TODO add run button, and then test
-
-## TODO make a converter from py files
-class RecordingNodeFactory(NodeFactory):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.label = kwargs.get("label", "Neural data source file")
-        self.node_class = RecordingNode
-        self.category = "Source"
-
-        contents = [
-            dict(
-                type="TEXT",
-                width=200,
-                label="File: Recording mapping",
-            )
-        ]
-
-        contents2 = [
-            dict(
-                type="TEXT",
-                width=200,
-                label="File: Recording source",
-            )
-        ]
-
-        self.attributes = [
-            dict(
-                label="File: Recording mapping",
-                attribute_type=dpg.mvNode_Attr_Output,
-                shape=dpg.mvNode_PinShape_Triangle,
-                category="File select",
-                contents=contents,
-                tooltip="Choose the source file by right clicking the node.",
-            ),
-            dict(
-                label="File: Recording source",
-                attribute_type=dpg.mvNode_Attr_Static,
-                shape=dpg.mvNode_PinShape_Triangle,
-                category="File select",
-                contents=contents2,
-                tooltip="Choose the source file by right clicking the node.",
-            ),
-        ]
-
-
-class RecordingNode(BaseNode):
-    def __init__(self, parent, label="Node", tag=None, debug=False):
-        super().__init__(parent, label=label, tag=tag, debug=debug)
-        self.recording = Recording()
-        self.last_loaded_param_file = None
-        self.last_loaded_source_file = None
-        self.param_file = None
-        self.source_file = None
-
-    def process(self, nodes):
-        super().process(nodes)
-
-        # Use set parameters
-        self.param_file = self.get_value_of_label(label="File: Recording mapping")
-        self.source_file = self.get_value_of_label(label="File: Recording source")
-
-        if self.param_file == "":
-            print("ERROR: No file selected")
-            return False
-
-        if not os.path.isfile(self.param_file):
-            print(f"ERROR: Non existant file {self.param_file} selected")
-            return False
-
-        if self.source_file == "":
-            print("ERROR: No file selected")
-            return False
-
-        if not os.path.isfile(self.source_file):
-            print(f"ERROR: Non existant file {self.source_file} selected")
-            return False
-
-        if (
-            self.last_loaded_param_file != self.param_file
-            or self.last_loaded_source_file != self.source_file
-        ):
-            self.load_setup()
-        else:
-            print(f"Already Loaded {self.source_file} with params {self.param_file}")
-
-        return True
-
-    def load_setup(self):
-        if self.debug:
-            print(f"Loading {self.source_file} with params {self.param_file}")
-        self.recording.attrs["source_file"] = self.source_file
-        self.recording.attrs["mapping_file"] = self.param_file
-        # TODO add as UI parameter
-        self.recording.loader = loader_from_string("neurochat")
-        self.recording.parse_metadata()
-
-        self.recording.load()
-        self.last_loaded_param_file = self.param_file
-        self.last_loaded_source_file = self.source_file
-        if self.debug:
-            print(f"Loaded {self.source_file} with params {self.param_file}")
+from simuran.core.base_signal import Eeg
 
 
 class LFPViewFactory(NodeFactory):
@@ -193,7 +88,7 @@ class LFPViewNode(BaseNode):
 
         name_for_save = input_recording.get_name_for_save(BASE_DIR)
         # TODO clean up
-        eeg_array = EEGArray(input_recording.data["signals"])
+        eeg_array = [Eeg.from_numpy(s, 250) for s in input_recording.data["signals"]]
         fig = eeg_array.plot(title=name_for_save, show=False)
         all_figs = [(fig, "all")]
 
@@ -210,11 +105,3 @@ class LFPViewNode(BaseNode):
         self.plot_paths = bitmap_fnames
 
         return True
-
-
-def create_example_nodes():
-    node1 = LFPViewFactory()
-
-    node2 = RecordingNodeFactory()
-
-    return [node1, node2]

@@ -1,5 +1,4 @@
-print("Starting application...")
-
+print("Starting application:")
 import click_spinner
 
 with click_spinner.spinner():
@@ -14,8 +13,10 @@ with click_spinner.spinner():
     import dearpygui.dearpygui as dpg
     import PIL
     import numpy as np
+    import dearpygui._dearpygui as internal_dpg
 
-    from simuran.ui.custom.example_node import create_example_nodes
+    from simuran.ui.recording_node import RecordingNodeFactory, InspectRecordingFactory
+    from simuran.loaders.loader_list import supported_loaders, installed_loaders
 
 
 class SimuranUI(object):
@@ -50,9 +51,8 @@ class SimuranUI(object):
         self.start_render()
 
     def init_nodes(self):
-        # TODO currently a set list, should be expanded
-        # TODO change the context menu based on category.
-        for node in create_example_nodes():
+        nodes = [RecordingNodeFactory(), InspectRecordingFactory()]
+        for node in nodes:
             node.clicked_callback = self.show_plot_menu
             self.node_factories.append(node)
 
@@ -61,11 +61,8 @@ class SimuranUI(object):
         dpg.destroy_context()
 
     def setup_viewport(self):
-        vp = dpg.create_viewport(
-            title="SIMURAN demo", width=self.width, height=self.height
-        )  # create viewport takes in config options too!
+        vp = dpg.create_viewport(title="SIMURAN", width=self.width, height=self.height)
 
-        # must be called before showing viewport
         here = os.path.dirname(os.path.realpath(__file__))
         favicon_path = os.path.join(here, "favicon.ico")
         if os.path.exists(favicon_path):
@@ -111,7 +108,9 @@ class SimuranUI(object):
         with dpg.handler_registry(label="global handlers"):
             # Use this for right click
             # dpg.add_mouse_click_handler(button=1, callback=self.show_popup_menu)
-            dpg.add_key_press_handler(key=78, callback=self.show_popup_menu)
+            dpg.add_key_press_handler(
+                key=internal_dpg.mvKey_Control, callback=self.show_popup_menu
+            )
 
     def link_callback(self, sender, app_data, user_data):
         # app_data -> (link_id1, link_id2)
@@ -152,6 +151,9 @@ class SimuranUI(object):
     def show_plots_callback(self, sender, app_data, user_data):
         node_clicked = self.last_clicked_node
         paths = self.nodes[node_clicked].plot_paths
+        if paths is None:
+            print("No plots generated yet.")
+            return
         for path in paths:
             if path not in self.loaded_images.keys():
                 t_id = dpg.generate_uuid()
@@ -184,7 +186,7 @@ class SimuranUI(object):
 
     def run_graph_callback(self, sender, app_data, user_data):
         dpg.configure_item("MainRunButton", enabled=False, label="Running...")
-        # TODO revise this for performance (e.g. multiprocessing or live running)
+
         def kill_process():
             print("There was an error in processing. Aborting.")
             dpg.configure_item("MainRunButton", enabled=True, label="Run")
@@ -227,7 +229,12 @@ class SimuranUI(object):
 
         return True
 
-    # Windows
+    def print_loaders_callback(self, sender, app_data, user_data):
+        print(installed_loaders())
+
+    def print_all_loaders_callback(self, sender, app_data, user_data):
+        print(supported_loaders())
+
     def create_add_node_window(self):
         with dpg.window(label="Add Node", show=False, id="NodeAddWindow", modal=True):
 
@@ -246,9 +253,8 @@ class SimuranUI(object):
             )
 
     def create_node_info_window(self):
-
         with dpg.window(
-            label="Node context", show=False, id="NodeContextWindow", modal=True
+            label="Node options", show=False, id="NodeContextWindow", modal=True
         ):
             dpg.add_button(
                 label="Show plots",
@@ -268,11 +274,35 @@ class SimuranUI(object):
             )
 
     def create_main_window(self):
-        with dpg.window(label="SIMURAN Demo", tag=self.main_window_id):
-            dpg.add_text("Main menu")
+        with dpg.window(label="SIMURAN", tag=self.main_window_id):
+            # dpg.add_text("Menu:", indent=10)
             self.create_add_node_window()
             self.create_node_info_window()
             self.global_handlers()
+
+            dpg.add_button(
+                label="Add node",
+                width=150,
+                indent=25,
+                callback=lambda: dpg.configure_item("NodeAddWindow", show=True),
+                tag="MainAddButton",
+            )
+
+            dpg.add_button(
+                label="Installed data loaders",
+                width=150,
+                indent=25,
+                callback=self.print_loaders_callback,
+                tag="MainLoadersButton",
+            )
+
+            dpg.add_button(
+                label="All data loaders",
+                width=150,
+                indent=25,
+                callback=self.print_all_loaders_callback,
+                tag="MainAllLoadersButton",
+            )
 
             dpg.add_button(
                 label="Run",
@@ -308,28 +338,19 @@ class SimuranUI(object):
             print(f"Menu Item: {sender}")
 
         with dpg.menu_bar(parent=self.main_window_id):
+            # TODO implement save and load
             with dpg.menu(label="File"):
                 dpg.add_menu_item(label="Save", callback=print_me)
-                dpg.add_menu_item(label="Save As", callback=print_me)
-
-                with dpg.menu(label="Settings"):
-                    dpg.add_menu_item(label="Setting 1", callback=print_me, check=True)
-                    dpg.add_menu_item(label="Setting 2", callback=print_me)
-
-            dpg.add_menu_item(label="Help", callback=print_me)
-
-            with dpg.menu(label="Widget Items"):
-                dpg.add_checkbox(label="Pick Me", callback=print_me)
-                dpg.add_button(label="Press Me", callback=print_me)
-                dpg.add_color_picker(label="Color Me", callback=print_me)
+                dpg.add_menu_item(label="Load", callback=print_me)
 
     def create_file_selection_window(self):
-
         with dpg.file_dialog(
             directory_selector=False,
             show=False,
             callback=self.file_select_callback,
             id="file_dialog_id",
+            width=600,
+            height=400,
         ):
             dpg.add_file_extension(".*")
             dpg.add_file_extension("", color=(150, 255, 150, 255))
