@@ -483,6 +483,7 @@ class SimuranUI(object):
 
     def save_graph(self):
         dict_nodes = {}
+        link_graph = {}
         nodes = list(self.nodes.values())
         for n in nodes:
             dict_nodes[n.label] = {}
@@ -493,33 +494,79 @@ class SimuranUI(object):
             for k, v in n.attributes.items():
                 attribute_dict[v["label"]] = n.get_value_of_label(v["label"])
             dict_nodes[n.label]["attributes"] = attribute_dict
+            link_graph[n.tag] = {}
+            if len(n.input_attributes) > 0:
+                for tags, v in n.input_attributes.items():
+                    input_tag, output_tag = tags.split("->")
+                    input_tag, output_tag = int(input_tag), int(output_tag)
+                    for n2 in nodes:
+                        if n2.has_attribute(input_tag):
+                            input_label = n2.get_attribute(input_tag)["label"]
+                            input_node_tag = str(n2.tag)
+                        if n2.has_attribute(output_tag):
+                            output_label = n2.get_attribute(output_tag)["label"]
+                            output_node_tag = str(n2.tag)
+                    link_graph[n.tag][tags] = [
+                        input_node_tag + "->" + output_node_tag,
+                        input_label + "->" + output_label,
+                    ]
+
+        result = {}
+        result["link_graph"] = link_graph
+        result["nodes"] = dict_nodes
 
         with open(self.graph_location, "w") as f:
-            json.dump(dict_nodes, f)
+            json.dump(result, f)
 
     def load_graph(self):
         self.reset()
         with open(self.graph_location, "r") as f:
-            dict_nodes = json.load(f)
+            result = json.load(f)
 
+        dict_nodes = result["nodes"]
         for k, v in dict_nodes.items():
             self.create_saved_node(
                 v["factory_label"], v["postition"], v["attributes"], v["id"]
             )
 
+        link_graph = result["link_graph"]
+        for k, v in link_graph.items():
+            for k2, label_list in v.items():
+                node_labels, attribute_labels = label_list
+                input_node_tag, output_node_tag = node_labels.split("->")
+                input_node_tag, output_node_tag = int(input_node_tag), int(
+                    output_node_tag
+                )
+                input_label, output_label = attribute_labels.split("->")
+                input_node = [
+                    n
+                    for n in list(self.nodes.values())
+                    if n.internal_id == input_node_tag
+                ][0]
+                output_node = [
+                    n
+                    for n in list(self.nodes.values())
+                    if n.internal_id == output_node_tag
+                ][0]
+                input_tag, input_ = input_node.get_attribute_with_label(input_label)
+                output_tag, output_ = output_node.get_attribute_with_label(output_label)
+                dpg.add_node_link(input_tag, output_tag, parent=self.editor_tag)
+
     def reset(self):
-        for k, node in self.nodes.items():
-            dpg.delete_item(node.tag)
-        self.nodes = {}
+        tags = [n.tag for n in list(self.nodes.values())]
+        for tag in tags:
+            self.delete_node_with_tag(tag)
 
     def delete_item(self, sender, app_data, user_data):
         selected_nodes = dpg.get_selected_nodes(self.editor_tag)
-        for node in selected_nodes:
-            self.delete_node_with_tag(node)
+        for tag in selected_nodes:
+            self.delete_node_with_tag(tag)
 
     def delete_node_with_tag(self, tag):
         dpg.delete_item(tag)
-        self.nodes.pop(tag)
+        node = self.nodes.pop(tag)
+        node_factory_label = node.factory_label
+        self.node_factories[node_factory_label].created_nodes.remove(tag)
 
 
 def main_ui(debug: bool = False):

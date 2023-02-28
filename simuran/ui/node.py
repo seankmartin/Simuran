@@ -37,12 +37,12 @@ class BaseNode(object):
         if sender_attr is not None:
             if self.debug:
                 print(f"{self.tag}: Connected to {receiver} as sender {sender}")
-            self.output_attributes[f"{sender}--{receiver}"] = receiver
+            self.output_attributes[f"{sender}->{receiver}"] = receiver
 
         if receiver_attr is not None:
             if self.debug:
                 print(f"{self.tag}: Connected to {sender} as receiver {receiver}")
-            self.input_attributes[f"{sender}--{receiver}"] = sender
+            self.input_attributes[f"{sender}->{receiver}"] = sender
 
     def on_disconnect(self, sender, receiver):
         sender_attr = self.get_attribute(sender)
@@ -51,12 +51,12 @@ class BaseNode(object):
         if sender_attr is not None:
             if self.debug:
                 print(f"{self.tag}: Disconnected from {receiver} as sender {sender}")
-            self.output_attributes.pop(f"{sender}--{receiver}")
+            self.output_attributes.pop(f"{sender}->{receiver}")
 
         if receiver_attr is not None:
             if self.debug:
                 print(f"{self.tag}: Disconnected from {sender} as receiver {receiver}")
-            self.input_attributes.pop(f"{sender}--{receiver}")
+            self.input_attributes.pop(f"{sender}->{receiver}")
 
     def create(self, attributes, clicked_callback, position=None):
         self.position = position
@@ -133,7 +133,7 @@ class BaseNode(object):
             print(f"Processing {self.tag} -- {self.label}")
 
     def __str__(self):
-        return f"SIMURAN node with label {self.label}, tag {self.tag} and contains {[self.attribute_tags, self.content_tags]}"
+        return f"SIMURAN node with label {self.label}, tag {self.tag} and contains {self.attributes}, {self.contents}"
 
     def get_values(self):
         return dpg.get_values(list(self.contents.keys()))
@@ -157,6 +157,16 @@ class BaseNode(object):
 
     def get_attribute(self, tag):
         return self.attributes[tag] if tag in self.attributes.keys() else None
+
+    def get_attribute_with_label(self, label):
+        return next(
+            (
+                (attribute_tag, attribute)
+                for attribute_tag, attribute in self.attributes.items()
+                if label == attribute.get("label", "")
+            ),
+            (None, None),
+        )
 
     def get_owning_attribute(self, content_tag):
         return self.attributes[self.contents[content_tag]["parent"]]
@@ -188,7 +198,7 @@ class BaseNode(object):
 
     def find_matching_input_node(self, receiver_label, nodes):
         for key, _ in self.input_attributes.items():
-            sender, receiver = key.split("--")
+            sender, receiver = key.split("->")
             with contextlib.suppress(ValueError):
                 sender = int(sender)
             with contextlib.suppress(ValueError):
@@ -226,7 +236,10 @@ class NodeFactory(object):
         if num_nodes > 0:
             new_node_label = f"{new_node_label} {num_nodes}"
         new_node = self.node_class(
-            parent=editor_id, label=new_node_label, debug=self.debug
+            parent=editor_id,
+            label=new_node_label,
+            debug=self.debug,
+            tag=kwargs.get("tag"),
         )
         new_node.name = self.label
         new_node.category = self.category
