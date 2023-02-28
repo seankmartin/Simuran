@@ -394,6 +394,7 @@ class SimuranUI(object):
             parent="NodeWindow",
             minimap=True,
             minimap_location=dpg.mvNodeMiniMap_Location_BottomRight,
+            height=self.height - 100,
         )
         dpg.add_text("Ctrl+Click to remove a link.", bullet=True, parent="NodeWindow")
         dpg.add_item_handler_registry(tag="node context handler")
