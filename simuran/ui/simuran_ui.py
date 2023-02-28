@@ -31,13 +31,14 @@ class SimuranUI(object):
         self.viewport = None
         self.main_window_id = kwargs.get("main_window_id", "M1")
         self.nodes = {}
-        self.node_factories = []
+        self.node_factories = {}
         self.button_to_node_mapping = {}
         self.debug = kwargs.get("debug", False)
         self.last_clicked_node = None
         self.last_clicked_content = None
         self.loaded_images = {}
         self.links = {}
+        self.editor_tag = "E1"
         self.default_location = Path.home()
         if os.path.exists(self.default_location / ".skm_python" / "ui_settings.json"):
             try:
@@ -48,6 +49,7 @@ class SimuranUI(object):
                 )
             except Exception:
                 print("Failed to load last file location")
+        self.graph_location = self.default_location / "graph.json"
 
     # Control functions
     def main(self):
@@ -58,6 +60,8 @@ class SimuranUI(object):
         self.create_node_editor()
         self.create_menu_bar()
         self.create_file_selection_window()
+        self.create_file_save_window()
+        self.create_file_load_window()
 
         if self.debug:
             dpg.show_debug()
@@ -66,10 +70,10 @@ class SimuranUI(object):
         self.start_render()
 
     def init_nodes(self):
-        nodes = [RecordingNodeFactory(), InspectRecordingFactory()]
-        for node in nodes:
-            node.clicked_callback = self.show_plot_menu
-            self.node_factories.append(node)
+        node_factories = [RecordingNodeFactory(), InspectRecordingFactory()]
+        for node_factory in node_factories:
+            node_factory.clicked_callback = self.show_plot_menu
+            self.node_factories[node_factory.label] = node_factory
 
     def start_render(self):
         dpg.start_dearpygui()
@@ -97,7 +101,6 @@ class SimuranUI(object):
     def show_plot_menu(self, sender, app_data, user_data):
         if self.debug:
             print(f"Clicked {user_data}")
-        # TODO pass through the node selected here
         if user_data[0] == "node":
             self.last_clicked_node = user_data[1]
             self.last_clicked_content = None
@@ -114,10 +117,22 @@ class SimuranUI(object):
         node_factory = self.button_to_node_mapping[sender]
         total_pos = dpg.get_mouse_pos(local=False)
         position = [max(total_pos[0] - 250, 0), max(total_pos[1] - 60, 0)]
-        node = node_factory.create("E1", position=position)
+        node = node_factory.create(self.editor_tag, position=position)
         self.nodes[node.tag] = node
         dpg.configure_item("NodeAddWindow", show=False)
         node.debug = self.debug
+
+    def create_saved_node(self, label, position, attributes, id_):
+        node_factory = self.node_factories[label]
+        node = node_factory.create(self.editor_tag, position=position)
+        self.nodes[node.tag] = node
+        node.debug = self.debug
+        node.internal_id = id_
+        for k, v in attributes.items():
+            content_tag, content = node.get_content_with_label(k)
+            if content_tag is None:
+                raise ValueError("No content tag found for " + k)
+            dpg.set_value(content_tag, v)
 
     def global_handlers(self):
         with dpg.handler_registry(label="global handlers"):
@@ -153,22 +168,35 @@ class SimuranUI(object):
 
     def file_select_callback(self, sender, app_data, user_data):
         selections = app_data["selections"]
+        location_to_save = None
 
         if user_data is None:
             for basename, fpath in selections.items():
                 last_node = self.nodes[self.last_clicked_node]
                 last_node.set_source_file(fpath, label=self.last_clicked_content)
-            default_location = Path.home()
-
-            # Write this to json
-            with open(default_location / ".skm_python" / "ui_settings.json", "w") as f:
-                json.dump({"last_file_location": str(Path(fpath).parent)}, f)
-            self.default_location = Path(fpath).parent
-
-        elif len(selections) == 1:
-            dpg.set_value(user_data, selections[0])
-        else:
+                location_to_save = Path(fpath).parent
+        elif user_data == "save":
+            if len(selections) == 0:
+                self.graph_location = Path(app_data["file_path_name"])
+            else:
+                for basename, fpath in selections.items():
+                    self.graph_location = Path(fpath)
+            location_to_save = self.graph_location.parent
+            self.save_graph()
+        elif user_data == "load":
+            for basename, fpath in selections.items():
+                self.graph_location = Path(fpath)
+            self.load_graph()
+            location_to_save = self.graph_location.parent
+        elif len(selections) > 1:
             print("Selected multiple files, please choose one.")
+            return
+
+        default_location = Path.home()
+        if location_to_save is not None:
+            with open(default_location / ".skm_python" / "ui_settings.json", "w") as f:
+                json.dump({"last_file_location": str(location_to_save)}, f)
+        self.default_location = location_to_save
 
     def show_plots_callback(self, sender, app_data, user_data):
         node_clicked = self.last_clicked_node
@@ -260,7 +288,7 @@ class SimuranUI(object):
     def create_add_node_window(self):
         with dpg.window(label="Add Node", show=False, id="NodeAddWindow", modal=True):
 
-            for node in self.node_factories:
+            for node in self.node_factories.values():
                 tag = dpg.add_button(
                     label=node.label,
                     width=200,
@@ -297,39 +325,38 @@ class SimuranUI(object):
 
     def create_main_window(self):
         with dpg.window(label="SIMURAN", tag=self.main_window_id):
-            # dpg.add_text("Menu:", indent=10)
             self.create_add_node_window()
             self.create_node_info_window()
             self.global_handlers()
 
             dpg.add_button(
                 label="Add node",
-                width=150,
-                indent=25,
+                width=175,
+                indent=7,
                 callback=lambda: dpg.configure_item("NodeAddWindow", show=True),
                 tag="MainAddButton",
             )
 
             dpg.add_button(
                 label="Installed data loaders",
-                width=150,
-                indent=25,
+                width=175,
+                indent=7,
                 callback=self.print_loaders_callback,
                 tag="MainLoadersButton",
             )
 
             dpg.add_button(
                 label="All data loaders",
-                width=150,
-                indent=25,
+                width=175,
+                indent=7,
                 callback=self.print_all_loaders_callback,
                 tag="MainAllLoadersButton",
             )
 
             dpg.add_button(
                 label="Run",
-                width=150,
-                indent=25,
+                width=175,
+                indent=7,
                 callback=self.run_graph_callback,
                 tag="MainRunButton",
             )
@@ -349,25 +376,23 @@ class SimuranUI(object):
             label="NEditor",
             callback=self.link_callback,
             delink_callback=self.delink_callback,
-            tag="E1",
+            tag=self.editor_tag,
             parent="NodeWindow",
         )
         dpg.add_item_handler_registry(tag="node context handler")
         dpg.add_texture_registry(tag="plot_registry")
 
     def create_menu_bar(self):
-        def print_me(sender):
-            print(f"Menu Item: {sender}")
-
         with dpg.menu_bar(parent=self.main_window_id):
-            # TODO implement save and load
             with dpg.menu(label="File"):
-                dpg.add_menu_item(label="Save", callback=print_me)
-                dpg.add_menu_item(label="Load", callback=print_me)
+                dpg.add_menu_item(label="Save", callback=self.save_graph)
+                dpg.add_menu_item(label="Save As", callback=self.save_graph_callback)
+                dpg.add_menu_item(label="Load", callback=self.load_graph_callback)
 
     def create_file_selection_window(self):
 
         with dpg.file_dialog(
+            label="Load data from...",
             directory_selector=False,
             show=False,
             callback=self.file_select_callback,
@@ -379,8 +404,107 @@ class SimuranUI(object):
             dpg.add_file_extension(".*")
             dpg.add_file_extension("", color=(150, 255, 150, 255))
             dpg.add_file_extension(
-                ".py", color=(0, 255, 0, 255), custom_text="[Python]"
+                ".nwb",
+                color=(0, 255, 0, 255),
+                custom_text="[Neurodata Without Borders]",
             )
+            dpg.add_file_extension(".h5", color=(0, 255, 0, 255))
+            dpg.add_file_extension(
+                ".set", color=(0, 255, 0, 255), custom_text="Axona .set"
+            )
+
+    def create_file_save_window(self):
+
+        with dpg.file_dialog(
+            label="Save graph to...",
+            directory_selector=False,
+            show=False,
+            callback=self.file_select_callback,
+            id="file_save_id",
+            width=600,
+            height=400,
+            default_path=str(self.default_location),
+            default_filename="graph.json",
+            user_data="save",
+        ):
+            dpg.add_file_extension(
+                ".json",
+                color=(0, 255, 0, 255),
+                custom_text="[Saved graphs]",
+            )
+            dpg.add_file_extension(".*")
+            dpg.add_file_extension("", color=(150, 255, 150, 255))
+
+    def create_file_load_window(self):
+
+        with dpg.file_dialog(
+            label="Load graph from...",
+            directory_selector=False,
+            show=False,
+            callback=self.file_select_callback,
+            id="file_load_id",
+            width=600,
+            height=400,
+            default_path=str(self.default_location),
+            default_filename="graph.json",
+            user_data="load",
+        ):
+            dpg.add_file_extension(
+                ".json",
+                color=(0, 255, 0, 255),
+                custom_text="[Saved graphs]",
+            )
+            dpg.add_file_extension(".*")
+            dpg.add_file_extension("", color=(150, 255, 150, 255))
+
+    def save_graph_callback(self):
+        dpg.show_item("file_save_id")
+
+    def load_graph_callback(self):
+        dpg.show_item("file_load_id")
+
+    def save_graph(self):
+        dict_nodes = {}
+        nodes = list(self.nodes.values())
+        for n in nodes:
+            dict_nodes[n.label] = {}
+            dict_nodes[n.label]["id"] = n.tag
+            dict_nodes[n.label]["factory_label"] = n.factory_label
+            dict_nodes[n.label]["postition"] = dpg.get_item_pos(n.tag)
+            attribute_dict = {}
+            for k, v in n.attributes.items():
+                attribute_dict[v["label"]] = n.get_value_of_label(v["label"])
+            dict_nodes[n.label]["attributes"] = attribute_dict
+
+        with open(self.graph_location, "w") as f:
+            json.dump(dict_nodes, f)
+
+    def load_graph(self):
+        self.reset()
+        with open(self.graph_location, "r") as f:
+            dict_nodes = json.load(f)
+
+        for k, v in dict_nodes.items():
+            self.create_saved_node(
+                v["factory_label"], v["postition"], v["attributes"], v["id"]
+            )
+
+    def reset(self):
+        for k, node in self.nodes.items():
+            dpg.delete_item(node.tag)
+        self.nodes = {}
+        # dpg.delete_item("E1")
+        # dpg.delete_item("NodeWindow")
+        # dpg.remove_item_handler_registry(tag="node context handler")
+        # dpg.add_item_handler_registry(tag="node context handler")
+        # dpg.add_texture_registry(tag="plot_registry")
+        # self.nodes = {}
+        # self.editor_tag = "E" + str(int(self.editor_tag[1:]) + 1)
+        # self.create_node_editor()
+
+    def delete_node(self, node):
+        dpg.delete_item(node.tag)
+        self.nodes.pop(node.tag)
 
 
 def main_ui(debug: bool = False):

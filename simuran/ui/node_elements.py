@@ -31,7 +31,7 @@ def create_file_select(label, tooltip="", output=False):
         )
     ]
     return dict(
-        label=f"File: {label}",
+        label=label,
         attribute_type=attribute_type,
         shape=dpg.mvNode_PinShape_Triangle,
         category="File select",

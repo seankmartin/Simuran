@@ -20,6 +20,9 @@ class BaseNode(object):
         self.contents = {}
         self.debug = debug
         self.category = None
+        self.position = None
+        self.factory_label = None
+        self.internal_id = None
 
         self.state = {}
         self.input_attributes = {}
@@ -59,7 +62,8 @@ class BaseNode(object):
             if self.debug:
                 print(f"{self.tag}: Disconnected from {sender} as receiver")
 
-    def create(self, attributes, clicked_callback, tooltip=None, position=None):
+    def create(self, attributes, clicked_callback, position=None):
+        self.position = position
         if position is None:
             position = []
         dpg.add_node(
@@ -233,6 +237,7 @@ class NodeFactory(object):
         new_node.create(
             deepcopy(self.attributes), self.clicked_callback, position=position
         )
+        new_node.factory_label = self.label
 
         self.created_nodes.append(new_node.tag)
 

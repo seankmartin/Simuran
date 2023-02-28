@@ -104,7 +104,7 @@ class InspectRecordingNode(BaseNode):
         super().process(nodes)
 
         # Use set parameters
-        self.output_file = self.get_value_of_label(label="File: Output file location")
+        self.output_file = self.get_value_of_label(label="Output file location")
         self.input_recording_node = self.find_matching_input_node(
             reciever_label="Input neural data"
         )
