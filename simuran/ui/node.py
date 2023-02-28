@@ -35,32 +35,28 @@ class BaseNode(object):
         receiver_attr = self.get_attribute(receiver)
 
         if sender_attr is not None:
+            if self.debug:
+                print(f"{self.tag}: Connected to {receiver} as sender {sender}")
             self.output_attributes[f"{sender}--{receiver}"] = receiver
 
-            if self.debug:
-                print(f"{self.tag}: Connected to {receiver} as sender")
-
         if receiver_attr is not None:
-            self.input_attributes[f"{sender}--{receiver}"] = sender
-
             if self.debug:
-                print(f"{self.tag}: Connected to {sender} as receiver")
+                print(f"{self.tag}: Connected to {sender} as receiver {receiver}")
+            self.input_attributes[f"{sender}--{receiver}"] = sender
 
     def on_disconnect(self, sender, receiver):
         sender_attr = self.get_attribute(sender)
         receiver_attr = self.get_attribute(receiver)
 
         if sender_attr is not None:
-            receiver_attr = self.output_attributes.pop(f"{sender}--{receiver}")
-
             if self.debug:
-                print(f"{self.tag}: Disconnected from {receiver} as sender")
+                print(f"{self.tag}: Disconnected from {receiver} as sender {sender}")
+            self.output_attributes.pop(f"{sender}--{receiver}")
 
         if receiver_attr is not None:
-            sender_attr = self.input_attributes.pop(f"{sender}--{receiver}")
-
             if self.debug:
-                print(f"{self.tag}: Disconnected from {sender} as receiver")
+                print(f"{self.tag}: Disconnected from {sender} as receiver {receiver}")
+            self.input_attributes.pop(f"{sender}--{receiver}")
 
     def create(self, attributes, clicked_callback, position=None):
         self.position = position

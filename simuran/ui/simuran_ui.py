@@ -26,8 +26,8 @@ with click_spinner.spinner():
 
 class SimuranUI(object):
     def __init__(self, **kwargs):
-        self.width = kwargs.get("width", 1200)
-        self.height = kwargs.get("height", 800)
+        self.width = kwargs.get("width", 1400)
+        self.height = kwargs.get("height", 950)
         self.viewport = None
         self.main_window_id = kwargs.get("main_window_id", "M1")
         self.nodes = {}
@@ -138,16 +138,26 @@ class SimuranUI(object):
         with dpg.handler_registry(label="global handlers"):
             # Use this for right click
             # dpg.add_mouse_click_handler(button=1, callback=self.show_popup_menu)
+            # dpg.add_key_press_handler(
+            #     key=internal_dpg.mvKey_Control, callback=self.show_popup_menu
+            # )
             dpg.add_key_press_handler(
-                key=internal_dpg.mvKey_Control, callback=self.show_popup_menu
+                key=internal_dpg.mvKey_Delete, callback=self.delete_item
+            )
+            dpg.add_key_press_handler(
+                key=internal_dpg.mvKey_F1, callback=self.show_popup_menu
             )
 
     def link_callback(self, sender, app_data, user_data):
         # app_data -> (link_id1, link_id2)
         from_tag, to_tag = app_data[0], app_data[1]
         link_tag = dpg.add_node_link(from_tag, to_tag, parent=sender)
+        if self.debug:
+            print(f"Linking {from_tag} to {to_tag}")
 
         for node_id, node in self.nodes.items():
+            if self.debug:
+                print(f"Node {node_id} has attributes {list(node.attributes.keys())}")
             if node.has_attribute(from_tag):
                 node.on_connect(from_tag, to_tag)
             if node.has_attribute(to_tag):
@@ -159,8 +169,12 @@ class SimuranUI(object):
         # app_data -> link_id
         dpg.delete_item(app_data)
         from_tag, to_tag = self.links.pop(app_data)
+        if self.debug:
+            print(f"Unlinking {from_tag} to {to_tag}")
 
         for node_id, node in self.nodes.items():
+            if self.debug:
+                print(f"Node {node_id} has attributes {list(node.attributes.keys())}")
             if node.has_attribute(from_tag):
                 node.on_disconnect(from_tag, to_tag)
             if node.has_attribute(to_tag):
@@ -378,7 +392,10 @@ class SimuranUI(object):
             delink_callback=self.delink_callback,
             tag=self.editor_tag,
             parent="NodeWindow",
+            minimap=True,
+            minimap_location=dpg.mvNodeMiniMap_Location_BottomRight,
         )
+        dpg.add_text("Ctrl+Click to remove a link.", bullet=True, parent="NodeWindow")
         dpg.add_item_handler_registry(tag="node context handler")
         dpg.add_texture_registry(tag="plot_registry")
 
@@ -493,18 +510,15 @@ class SimuranUI(object):
         for k, node in self.nodes.items():
             dpg.delete_item(node.tag)
         self.nodes = {}
-        # dpg.delete_item("E1")
-        # dpg.delete_item("NodeWindow")
-        # dpg.remove_item_handler_registry(tag="node context handler")
-        # dpg.add_item_handler_registry(tag="node context handler")
-        # dpg.add_texture_registry(tag="plot_registry")
-        # self.nodes = {}
-        # self.editor_tag = "E" + str(int(self.editor_tag[1:]) + 1)
-        # self.create_node_editor()
 
-    def delete_node(self, node):
-        dpg.delete_item(node.tag)
-        self.nodes.pop(node.tag)
+    def delete_item(self, sender, app_data, user_data):
+        selected_nodes = dpg.get_selected_nodes(self.editor_tag)
+        for node in selected_nodes:
+            self.delete_node_with_tag(node)
+
+    def delete_node_with_tag(self, tag):
+        dpg.delete_item(tag)
+        self.nodes.pop(tag)
 
 
 def main_ui(debug: bool = False):
