@@ -4,6 +4,8 @@ import click_spinner
 with click_spinner.spinner():
     import os
     import traceback
+    from pathlib import Path
+    import json
 
     import matplotlib
 
@@ -15,7 +17,10 @@ with click_spinner.spinner():
     import numpy as np
     import dearpygui._dearpygui as internal_dpg
 
-    from simuran.ui.recording_node import RecordingNodeFactory, InspectRecordingFactory
+    from simuran.ui.nodes.recording_node import (
+        RecordingNodeFactory,
+        InspectRecordingFactory,
+    )
     from simuran.loaders.loader_list import supported_loaders, installed_loaders
 
 
@@ -33,6 +38,16 @@ class SimuranUI(object):
         self.last_clicked_content = None
         self.loaded_images = {}
         self.links = {}
+        self.default_location = Path.home()
+        if os.path.exists(self.default_location / ".skm_python" / "ui_settings.json"):
+            try:
+                self.default_location = Path(
+                    json.load(
+                        open(self.default_location / ".skm_python" / "ui_settings.json")
+                    )["last_file_location"]
+                )
+            except Exception:
+                print("Failed to load last file location")
 
     # Control functions
     def main(self):
@@ -143,6 +158,13 @@ class SimuranUI(object):
             for basename, fpath in selections.items():
                 last_node = self.nodes[self.last_clicked_node]
                 last_node.set_source_file(fpath, label=self.last_clicked_content)
+            default_location = Path.home()
+
+            # Write this to json
+            with open(default_location / ".skm_python" / "ui_settings.json", "w") as f:
+                json.dump({"last_file_location": str(Path(fpath).parent)}, f)
+            self.default_location = Path(fpath).parent
+
         elif len(selections) == 1:
             dpg.set_value(user_data, selections[0])
         else:
@@ -344,6 +366,7 @@ class SimuranUI(object):
                 dpg.add_menu_item(label="Load", callback=print_me)
 
     def create_file_selection_window(self):
+
         with dpg.file_dialog(
             directory_selector=False,
             show=False,
@@ -351,6 +374,7 @@ class SimuranUI(object):
             id="file_dialog_id",
             width=600,
             height=400,
+            default_path=str(self.default_location),
         ):
             dpg.add_file_extension(".*")
             dpg.add_file_extension("", color=(150, 255, 150, 255))
