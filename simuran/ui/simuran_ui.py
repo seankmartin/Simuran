@@ -26,8 +26,8 @@ with click_spinner.spinner():
 
 class SimuranUI(object):
     def __init__(self, **kwargs):
-        self.width = kwargs.get("width", 1400)
-        self.height = kwargs.get("height", 950)
+        self.width = kwargs.get("width", kwargs.get("width", 1400))
+        self.height = kwargs.get("height", kwargs.get("height", 950))
         self.viewport = None
         self.main_window_id = kwargs.get("main_window_id", "M1")
         self.nodes = {}
@@ -386,6 +386,7 @@ class SimuranUI(object):
             pos=[200, 0],
             horizontal_scrollbar=False,
         )
+        dpg.add_text("Ctrl+Click to remove a link.", bullet=True, parent="NodeWindow")
         dpg.add_node_editor(
             label="NEditor",
             callback=self.link_callback,
@@ -394,9 +395,8 @@ class SimuranUI(object):
             parent="NodeWindow",
             minimap=True,
             minimap_location=dpg.mvNodeMiniMap_Location_BottomRight,
-            height=self.height - 100,
+            # height=self.height - 100,
         )
-        dpg.add_text("Ctrl+Click to remove a link.", bullet=True, parent="NodeWindow")
         dpg.add_item_handler_registry(tag="node context handler")
         dpg.add_texture_registry(tag="plot_registry")
 
@@ -569,8 +569,8 @@ class SimuranUI(object):
         self.node_factories[node_factory_label].created_nodes.remove(tag)
 
 
-def main_ui(debug: bool = False):
-    su = SimuranUI(debug=debug)
+def main_ui(debug: bool = False, height: int = 950, width: int = 1400):
+    su = SimuranUI(debug=debug, height=height, width=width)
     su.main()
 
 
