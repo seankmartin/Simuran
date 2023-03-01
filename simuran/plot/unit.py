@@ -16,7 +16,7 @@ def plot_unit_properties(
     log_scale: List[bool],
     output_directory: Union[Path, str],
     region_dict: Optional[Dict[str, str]] = None,
-    structure_name: str = "structure_acronym",
+    structure_name: str = "structure_acronyms",
     split_regions: bool = False,
 ):
     set_plot_style()
@@ -39,18 +39,6 @@ def plot_unit_properties(
 
         fig = SimuranFigure(fig)
         fig.save(Path(output_directory) / f"{prop}_distribution")
-
-
-def get_brain_regions_units(units, n=20):
-    return units["structure_acronym"].value_counts()[:n].index.tolist()
-
-
-color_dict = {
-    "cortex": "#08858C",
-    "thalamus": "#FC6B6F",
-    "hippocampus": "#7ED04B",
-    "midbrain": "#FC9DFE",
-}
 
 
 def ccf_unit_plot(session_units_channels):
