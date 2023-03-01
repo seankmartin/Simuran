@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from typing import Callable, TYPE_CHECKING, Tuple, Dict
+from typing import Callable, TYPE_CHECKING, Tuple, Dict, Optional, List
 
 import numpy as np
 import pandas as pd
@@ -42,6 +42,7 @@ def one_spike_train(
     recording: "Recording",
     filter_units: bool = True,
     filter_function: Callable[["DataFrame", bool], "DataFrame"] = filter_good_units,
+    brain_regions: Optional[List[str]] = None,
 ) -> Tuple["DataFrame", Dict[int, np.ndarray]]:
     """
     Retrieve a spike train for the units in the recording.
@@ -67,6 +68,8 @@ def one_spike_train(
         if not k.startswith("probe"):
             continue
         unit_table = v[1]
+        if brain_regions is not None:
+            unit_table = unit_table.loc[unit_table["acronym"].isin(brain_regions)]
         unit_table["simuran_id"] = str(k) + unit_table["cluster_id"].astype(str)
 
         if filter_units:
@@ -118,3 +121,13 @@ def one_trial_info(recording: "Recording") -> dict:
     result_dict["trial_times"] = [(x, y) for x, y in zip(trial_starts, trial_ends)]
 
     return result_dict
+
+
+def one_recorded_regions(recording: "Recording") -> List[str]:
+    vals = []
+    for k, v in recording.data.items():
+        if not k.startswith("probe"):
+            continue
+        unit_table = v[1]
+        vals.extend(unit_table["acronym"].unique())
+    return list(set(vals))

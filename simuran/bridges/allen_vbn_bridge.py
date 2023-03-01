@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Tuple, Dict, Callable
+from typing import TYPE_CHECKING, Tuple, Dict, Callable, List, Optional
 from collections import OrderedDict
 
 import numpy as np
@@ -46,6 +46,7 @@ def allen_spike_train(
     recording: "Recording",
     filter_units: bool = True,
     filter_function: Callable[["DataFrame", bool], "DataFrame"] = filter_good_units,
+    brain_regions: Optional[List[str]] = None,
 ) -> Tuple["DataFrame", Dict[int, np.ndarray]]:
     """
     Retrieve a spike train for the units in the recording.
@@ -72,6 +73,8 @@ def allen_spike_train(
             filter_by_validity=True,
             filter_out_of_brain_units=True,
         )
+        if brain_regions is not None:
+            units = units.loc[units["structure_acronyms"].isin(brain_regions)]
         units = filter_function(units)
     else:
         units = session.get_units()
@@ -179,3 +182,7 @@ def get_brain_regions_to_structure_dict():
             "CP",
         ],
     }
+
+
+def allen_recorded_regions(recording: "Recording") -> List[str]:
+    return recording.attrs["structure_acronyms"]
