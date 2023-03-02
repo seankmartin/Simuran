@@ -68,7 +68,8 @@ class OneAlyxLoader(MetadataLoader):
         return self.one.list_datasets(eid=eid, collection="alf", details=True)
 
     def get_sessions_table(self) -> "DataFrame":
-        return pd.DataFrame([s for s in self.sessions])
+        all_insertions = pd.DataFrame([s for s in self.sessions])
+        return all_insertions.drop_duplicates(subset=["session"])
 
     def parse_metadata(self, recording: "Recording") -> None:
         id_ = recording.attrs.get("session")
