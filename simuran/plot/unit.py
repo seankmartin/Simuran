@@ -16,7 +16,7 @@ def plot_unit_properties(
     log_scale: List[bool],
     output_directory: Union[Path, str],
     region_dict: Optional[Dict[str, str]] = None,
-    structure_name: str = "structure_acronyms",
+    structure_name: str = "structure_acronym",
     split_regions: bool = False,
 ):
     set_plot_style()

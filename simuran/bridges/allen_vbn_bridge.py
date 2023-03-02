@@ -73,17 +73,19 @@ def allen_spike_train(
             filter_by_validity=True,
             filter_out_of_brain_units=True,
         )
-        if brain_regions is not None:
-            units = units.loc[units["structure_acronyms"].isin(brain_regions)]
-        units = filter_function(units)
     else:
         units = session.get_units()
     channels = session.get_channels()
     unit_channels = units.merge(channels, left_on="peak_channel_id", right_index=True)
+    if brain_regions is not None:
+        unit_channels = unit_channels.loc[
+            unit_channels["structure_acronym"].isin(brain_regions)
+        ]
     if filter_units:
-        good_spikes = OrderedDict(
-            (k, v) for k, v in session.spike_times.items() if k in units.index
-        )
+        unit_channels = filter_function(unit_channels)
+    good_spikes = OrderedDict(
+        (k, v) for k, v in session.spike_times.items() if k in unit_channels.index
+    )
     return unit_channels, good_spikes
 
 

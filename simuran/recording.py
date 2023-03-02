@@ -99,8 +99,11 @@ class Recording(BaseSimuran):
         path_sf = Path(self.source_file)
         if rel_dir is None:
             return "--".join(path_sf.with_suffix("").parts)
-        name_up_to_rel = path_sf.relative_to(rel_dir).with_suffix("")
-        return "--".join(name_up_to_rel.parts)
+        try:
+            name_up_to_rel = path_sf.relative_to(rel_dir).with_suffix("")
+            return "--".join(name_up_to_rel.parts)
+        except Exception:
+            return "--".join(path_sf.with_suffix("").parts)
 
     def summarise(self) -> str:
         if self.loader is None:
