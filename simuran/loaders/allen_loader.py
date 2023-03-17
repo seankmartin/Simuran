@@ -213,3 +213,11 @@ class AllenVisualBehaviorLoader(BaseAllenLoader):
             right_index=True,
             suffixes=(None, "_y"),
         )
+
+    def download_data(self, session_id: Optional[int] = None):
+        if session_id is None:
+            sessions = self.get_sessions_table()
+            for session_id, row in sessions.iterrows():
+                self.cache.get_ecephys_session(ecephys_session_id=session_id)
+        else:
+            self.cache.get_ecephys_session(ecephys_session_id=session_id)

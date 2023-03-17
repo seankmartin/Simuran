@@ -3,7 +3,7 @@ This lists the available loaders in SIMURAN.
 """
 NWB_NAME = "nwb"
 ALLEN_OPHYS_NAME = "allen_ophys"
-ALLEN_NPIXELS_NAME = "allen_npixels"
+ALLEN_NPIXELS_NAME = "allen_vbn"
 ONE_NAME = "one"
 NEUROCHAT_NAME = "neurochat"
 BASE_NAME = "params_only"

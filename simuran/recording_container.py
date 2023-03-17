@@ -81,15 +81,7 @@ class RecordingContainer(GenericContainer):
 
         """
         rc = cls(load_on_fly=load_on_fly)
-        rc.table = table
-
-        for i in range(len(table)):
-            loader_ = loader[i] if isinstance(loader, abcIterable) else loader
-            recording = Recording()
-            module_logger.debug(f"Parsing information from table for row {i}")
-            loader_.parse_table_row(table, i, recording)
-            rc.append(recording)
-
+        rc._setup_from_table(table, loader)
         return rc
 
     def load(self) -> None:
@@ -253,6 +245,25 @@ class RecordingContainer(GenericContainer):
             df_to_file(df, filename)
 
         return df
+
+    def filter_table(
+        self,
+        rows: Union[List[int], slice],
+        loader: Union["BaseLoader", Iterable["BaseLoader"]],
+    ) -> None:
+        """Filter the table by rows."""
+        table = self.table.iloc[rows].copy().reset_index(drop=True)
+        self._setup_from_table(table, loader)
+
+    def _setup_from_table(self, table, loader) -> None:
+        self.table = table
+
+        for i in range(len(table)):
+            loader_ = loader[i] if isinstance(loader, abcIterable) else loader
+            recording = Recording()
+            module_logger.debug(f"Parsing information from table for row {i}")
+            loader_.parse_table_row(table, i, recording)
+            self.append(recording)
 
 
 class RecordingContainerLoadIterator(object):

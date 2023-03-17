@@ -4,7 +4,7 @@ from neo.core import SpikeTrain
 import quantities
 
 
-def convert_spikes_to_train(
+def convert_spikes(
     spikes: Union[Dict[str, np.ndarray], List[np.ndarray]],
     units: quantities.Quantity = quantities.s,
     custom_t_stop: float = None,
