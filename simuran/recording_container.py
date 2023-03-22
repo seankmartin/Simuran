@@ -250,10 +250,32 @@ class RecordingContainer(GenericContainer):
         self,
         rows: Union[List[int], slice],
         loader: Union["BaseLoader", Iterable["BaseLoader"]],
-    ) -> None:
-        """Filter the table by rows."""
+        inplace: bool = False,
+    ) -> RecordingContainer:
+        """
+        Filter the table by rows.
+
+        Parameters
+        ----------
+        rows : list of int or slice
+            The rows to keep.
+        loader : BaseLoader or list of BaseLoader
+            The loader(s) to use to parse the table.
+        inplace : bool, optional
+            Whether to modify the current container, by default False
+
+        Returns
+        -------
+        RecordingContainer
+            The filtered container.
+
+        """
         table = self.table.iloc[rows].copy().reset_index(drop=True)
-        self._setup_from_table(table, loader)
+        if inplace:
+            self._setup_from_table(table, loader)
+            return self
+        else:
+            return RecordingContainer(table, loader)
 
     def _setup_from_table(self, table, loader) -> None:
         self.table = table
