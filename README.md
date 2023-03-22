@@ -64,3 +64,12 @@ SIMURAN can use any code that is on the Python path. The easiest way to manage t
 3. [GitHub - seankmartin/NeuroChaT_API_Scripts: A set of python neuroscience scripts which rely on the NeuroChaT API](https://github.com/seankmartin/NeuroChaT_API_Scripts)
 4. [GitHub - mne-tools/mne-python: MNE: Magnetoencephalography (MEG) and Electroencephalography (EEG) in Python](https://github.com/mne-tools/mne-python/)
 5. [Sumatra - NeuralEnsemble](http://neuralensemble.org/sumatra/)
+
+## TODO
+
+1. Add more tests
+2. Add more documentation
+3. Convert bridge functions into classes
+4. Add more examples
+5. Add more nodes to the UI
+6. Implement a direct threading system for the RecordingContainer
