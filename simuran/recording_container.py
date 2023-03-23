@@ -249,7 +249,7 @@ class RecordingContainer(GenericContainer):
     def filter_table(
         self,
         rows: Union[List[int], slice],
-        loader: Union["BaseLoader", Iterable["BaseLoader"]],
+        loader: Optional[Union["BaseLoader", Iterable["BaseLoader"]]] = None,
         inplace: bool = False,
     ) -> RecordingContainer:
         """
@@ -261,6 +261,8 @@ class RecordingContainer(GenericContainer):
             The rows to keep.
         loader : BaseLoader or list of BaseLoader
             The loader(s) to use to parse the table.
+            If None, it is assumed that the first loader in the
+            container is the correct one.
         inplace : bool, optional
             Whether to modify the current container, by default False
 
@@ -270,12 +272,14 @@ class RecordingContainer(GenericContainer):
             The filtered container.
 
         """
-        table = self.table.iloc[rows].copy().reset_index(drop=True)
+        table = self.table.copy().iloc[rows]
+        if loader is None:
+            loader = self[0].loader
         if inplace:
             self._setup_from_table(table, loader)
             return self
         else:
-            return RecordingContainer(table, loader)
+            return RecordingContainer.from_table(table, loader)
 
     def _setup_from_table(self, table, loader) -> None:
         self.table = table
