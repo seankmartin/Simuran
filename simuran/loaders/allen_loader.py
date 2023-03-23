@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 class BaseAllenLoader(MetadataLoader):
     cache_class_type: Type[ProjectCacheBase]
     cache_directory: Union[str, Path]
-    manifest: Optional[str]
+    manifest: Optional[str] = None
     cache: Optional["ProjectCacheBase"] = None
 
     def create_s3_cache(self):
@@ -39,14 +39,21 @@ class BaseAllenLoader(MetadataLoader):
         if self.manifest is not None:
             self.cache.load_manifest(self.manifest)
 
-    def path_to_nwb(self, recording: "Recording") -> str:
+    def path_to_nwb(
+        self, recording: Optional["Recording"] = None, session_id: Optional[int] = None
+    ) -> str:
         """Return the path to the nwb file for a given recording."""
         name_dict = self._map_class_to_values()
         t, session_name = name_dict["t"], name_dict["session_name"]
-        id_ = name_dict["id"]
         manifest_file = self.cache.current_manifest()
         manifest_version = splitext(manifest_file)[0].split("_")[-1][1:]
-        id_ = recording.attrs[id_]
+        if session_id is not None:
+            id_ = session_id
+        elif recording is not None:
+            id_ = name_dict["id"]
+            id_ = recording.attrs[id_]
+        else:
+            raise ValueError("Must provide either recording or session_id")
 
         path_start = (
             Path(self.cache.fetch_api.cache._cache_dir)
@@ -218,6 +225,8 @@ class AllenVisualBehaviorLoader(BaseAllenLoader):
         if session_id is None:
             sessions = self.get_sessions_table()
             for session_id, row in sessions.iterrows():
-                self.cache.get_ecephys_session(ecephys_session_id=session_id)
+                if not self.path_to_nwb(session_id=session_id).exists():
+                    self.cache.get_ecephys_session(ecephys_session_id=session_id)
         else:
-            self.cache.get_ecephys_session(ecephys_session_id=session_id)
+            if not self.path_to_nwb(session_id=session_id).exists():
+                self.cache.get_ecephys_session(ecephys_session_id=session_id)
