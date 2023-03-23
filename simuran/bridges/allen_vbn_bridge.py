@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING, Tuple, Dict, Callable, List, Optional, Union
 from dataclasses import dataclass, field
 from collections import OrderedDict
+import ast
 
 import numpy as np
 from simuran.core.utils import convert_filter
@@ -10,10 +11,11 @@ if TYPE_CHECKING:
     from simuran import Recording
 
 
+@dataclass
 class AllenVBNBridge(object):
     """A class to bridge between Allen VBN and other tools."""
 
-    good_unit_properties = field(default_factory=dict)
+    good_unit_properties: Dict[str, List] = field(default_factory=dict)
 
     def __post_init__(self):
         if len(self.good_unit_properties) == 0:
@@ -148,26 +150,28 @@ class AllenVBNBridge(object):
         return trial_info
 
     @staticmethod
-    def brain_regions_in_structure(structure: Optional[str] = None) -> Union[List[str], Dict[str, List[str]]]:
+    def brain_regions_in_structure(
+        structure: Optional[str] = None,
+    ) -> Union[List[str], Dict[str, List[str]]]:
         """
         Get the brain regions in a structure.
-        
+
         Parameters
         ----------
         structure : str, optional
             The structure to get the brain regions for, by default None.
             If None, return all brain regions.
-            
+
         Returns
         -------
         brain_regions : list
             The brain regions in the structure.
-        
+
         Raises
         ------
         ValueError
             If the structure is not known.
-        
+
         """
 
         structures = {
@@ -243,4 +247,4 @@ class AllenVBNBridge(object):
 
     @staticmethod
     def recorded_regions(recording: "Recording") -> List[str]:
-        return recording.attrs["structure_acronyms"]
+        return ast.literal_eval(recording.attrs["structure_acronyms"])
