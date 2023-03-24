@@ -17,10 +17,7 @@ with click_spinner.spinner():
     import numpy as np
     import dearpygui._dearpygui as internal_dpg
 
-    from simuran.ui.nodes.recording_node import (
-        RecordingNodeFactory,
-        InspectRecordingFactory,
-    )
+    from simuran.ui.node_factories import get_node_factories
     from simuran.loaders.loader_list import supported_loaders, installed_loaders
 
 
@@ -70,7 +67,7 @@ class SimuranUI(object):
         self.start_render()
 
     def init_nodes(self):
-        node_factories = [RecordingNodeFactory(), InspectRecordingFactory()]
+        node_factories = [c() for c in get_node_factories()]
         for node_factory in node_factories:
             node_factory.clicked_callback = self.show_plot_menu
             self.node_factories[node_factory.label] = node_factory
