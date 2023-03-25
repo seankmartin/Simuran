@@ -19,8 +19,8 @@ class TestAnalysisHandler(object):
     @pytest.fixture
     def ah(self):
         ah = AnalysisHandler(handle_errors=False, verbose=True)
-        ah.add_fn(add, [(1.34, "hi"), (1.1, "3"), (1.0, "hello")])
-        ah.add_fn(unpack, [([4, 3],)])
+        ah.add_analysis(add, [(1.34, "hi"), (1.1, "3"), (1.0, "hello")])
+        ah.add_analysis(unpack, [([4, 3],)])
 
         return ah
 

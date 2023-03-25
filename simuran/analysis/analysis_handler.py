@@ -54,11 +54,7 @@ class AnalysisHandler(object):
     results: IndexedOrderedDict = field(default_factory=IndexedOrderedDict, init=False)
     _was_error: bool = field(repr=False, default=False)
 
-    def run_all(self, pbar=False, n_jobs=1):
-        """Alias for run_all_fns."""
-        self.run_all_fns(pbar)
-
-    def run_all_fns(self, pbar: bool = False, n_jobs: int = 1, save_every: int = 0):
+    def run(self, pbar: bool = False, n_jobs: int = 1, save_every: int = 0):
         """
         Run all of the established functions.
 
@@ -79,6 +75,7 @@ class AnalysisHandler(object):
         None
 
         """
+        results = []
         self._was_error = False
         for fn_, args_ in zip(self.fns_to_run, self.fn_params_list):
             with WorkerPool(n_jobs=n_jobs) as pool:
@@ -86,6 +83,7 @@ class AnalysisHandler(object):
                     self._handle_result(fn_, result)
                     if save_every > 0 and len(self.results) % save_every == 0:
                         self.save_results_to_pickle()
+                    results.append(result)
 
         if self._was_error:
             logging.warning("A handled error occurred while running analysis")
@@ -98,7 +96,7 @@ class AnalysisHandler(object):
         self.fn_kwargs_list = []
         self.results = IndexedOrderedDict()
 
-    def add_fn(self, fn, args):
+    def add_analysis(self, fn, args):
         """
         Add the function fn to the list with the given args and kwargs.
 

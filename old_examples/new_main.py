@@ -255,8 +255,8 @@ def establish_analysis(rec):
         return vars(recording)
 
     ah = AnalysisHandler()
-    ah.add_fn(summarise_single_session, rec)
-    ah.add_fn(print_info, rec)
+    ah.add_analysis(summarise_single_session, rec)
+    ah.add_analysis(print_info, rec)
 
     return ah
 
@@ -284,7 +284,7 @@ def main():
     # Step 3 - Iterate over the table performing a fixed function/s with some optional
     # parameters that change
     ah = establish_analysis(recording)
-    ah.run_all_fns()
+    ah.run()
 
     # Step 4 - Save output of analysis in multiple formats
     # CSV, straight to JASP etc.

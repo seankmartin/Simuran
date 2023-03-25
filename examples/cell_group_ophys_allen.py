@@ -7,9 +7,9 @@ import pandas as pd
 import simuran as smr
 
 from simuran.loaders.allen_loader import AllenOphysLoader
-from simuran.loaders.nwb_loader import NWBLoader
-from skm_pyutils.log import print_memory_usage
+from simuran import AnalysisHandler
 from skm_pyutils.plot import GridFig
+from skm_pyutils.profile import profileit
 
 from utils import get_path_to_allen_ophys_nwb
 
@@ -19,31 +19,66 @@ if TYPE_CHECKING:
     )
 
 
-def plot_mpis(recording_container: "smr.RecordingContainer", output_dir: "Path"):
-    name = recording_container.attrs["container_id"]
-    gf = GridFig(len(recording_container))
-    for i in range(len(recording_container)):
-        recording = recording_container.load(i)
-        print(f"After loading iteration {i}; {print_memory_usage(as_string=True)}")
-        dataset = recording.data
-        if dataset is None:
-            return
-        ax = gf.get_next()
-        if hasattr(dataset, "max_projection"):  # Allensdk
-            mpi = dataset.max_projection.data
-        else:  # PyNWB
-            mpi = dataset.processing["ophys"]["images"]["max_projection"].data
+def _get_mpi(recording: "smr.Recording") -> "np.ndarray":
+    recording.load()
+    dataset = recording.data
+    if dataset is None:
+        return
+    if hasattr(dataset, "max_projection"):  # Allensdk
+        mpi = dataset.max_projection.data
+    else:  # PyNWB
+        mpi = dataset.processing["ophys"]["images"]["max_projection"].data
+    return mpi
 
-        ## For NWB
+
+def get_mpis_simuran(recording_container: "smr.RecordingContainer"):
+    analysis_handler = AnalysisHandler()
+    analysis_handler.add_analysis(_get_mpi, recording_container)
+    return analysis_handler.run(pbar=True, n_jobs=4)
+
+
+def get_mpis_allensdk(recording_container: "smr.RecordingContainer"):
+    mpis = []
+    for recording in recording_container:
+        recording.load()
+        dataset = recording.data
+        mpi = dataset.max_projection.data
+        mpis.append(mpi)
+    return mpis
+
+
+def plot_mpis(
+    recording_container: "smr.RecordingContainer", output_dir: "Path", sm=True
+):
+    if sm:
+        mpis = get_mpis_simuran(recording_container)
+        oname = "sm_mpis"
+    else:
+        mpis = get_mpis_allensdk(recording_container)
+        oname = "allen_mpis"
+    gf = GridFig(len(recording_container))
+    for recording, mpi in zip(mpis, recording_container):
+        ax = gf.get_next()
         ax.imshow(mpi, cmap="gray")
         id_ = recording.attrs["ophys_experiment_id"]
         s = recording.attrs["session_number"]
         ax_title = f"ID: {id_}, S: {s}"
         ax.set_title(ax_title)
-    out_path = output_dir / "mpis" / f"{name}.png"
+    name = recording_container.attrs["container_id"]
+    out_path = output_dir / oname / f"{name}.png"
     out_path.parent.mkdir(parents=True, exist_ok=True)
     gf.fig.savefig(out_path, dpi=400)
     plt.close(gf.fig)
+
+
+@profileit("simuran_time")
+def simuran_mpi_plot(recording_container, output_dir):
+    plot_mpis(recording_container, output_dir, sm=True)
+
+
+@profileit("allensdk_time")
+def allensdk_mpi_plot(recording_container, output_dir):
+    plot_mpis(recording_container, output_dir, sm=False)
 
 
 def process_source_file(row):
@@ -64,14 +99,11 @@ def array_of_ci_events(
     return np_arrays
 
 
-def main(
-    data_storage_directory,
-    output_directory,
-):
-    loader = AllenOphysLoader.from_local_cache(data_storage_directory)
-    nwb_loader = NWBLoader()
+def main(data_storage_directory, output_directory, manifest):
+    loader = AllenOphysLoader(
+        local=True, cache_directory=data_storage_directory, manifest=manifest
+    )
     cache = loader.cache
-
     behaviour_table, session_table, experiment_table = get_tables_from_cache(
         cache,
     )
@@ -79,7 +111,6 @@ def main(
     gcamp_table = filter_table_to_gcamp_behaviour2p(experiment_table)
     experiment_groups_with_fixed_fov = gcamp_table.groupby("ophys_container_id")
 
-    print(f"Memory usage before loading: {print_memory_usage(as_string=True)}")
     for container_id, table in experiment_groups_with_fixed_fov:
         if len(table) >= 5:
             table["source_file"] = table.apply(
@@ -88,7 +119,8 @@ def main(
             nwb_rc = smr.RecordingContainer.from_table(table, loader)
             nwb_rc.attrs["container_id"] = container_id
 
-            plot_mpis(nwb_rc, output_directory)
+            allensdk_mpi_plot(nwb_rc, output_directory)
+            simuran_mpi_plot(nwb_rc, output_directory)
 
 
 def get_tables_from_cache(cache: "VisualBehaviorOphysProjectCache"):
@@ -133,5 +165,6 @@ if __name__ == "__main__":
     main_dir = Path(r"D:\AllenBrainObservatory\ophys_data")
     main_output_dir = main_dir / "results"
     main_output_dir.mkdir(parents=True, exist_ok=True)
+    manifest = r"visual-behavior-ophys_project_manifest_v1.0.1.json"
 
-    main(main_dir, main_output_dir)
+    main(main_dir, main_output_dir, manifest)
