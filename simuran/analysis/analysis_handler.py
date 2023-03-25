@@ -88,6 +88,7 @@ class AnalysisHandler(object):
         if self._was_error:
             logging.warning("A handled error occurred while running analysis")
         self._was_error = False
+        return results
 
     def reset(self):
         """Reset this object, clearing results and function list."""

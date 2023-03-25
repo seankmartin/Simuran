@@ -90,6 +90,7 @@ class BaseSimuran(ABC):
         """Unload / close related open files."""
         if self.loader is not None and hasattr(self.loader, "unload"):
             self.loader.unload(self)
+        self.data = None
 
     def is_loaded(self) -> bool:
         """
