@@ -2,13 +2,17 @@
 
 import logging
 from dataclasses import dataclass, field
+import pickle
+from typing import Union, Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 import pandas as pd
 from indexed import IndexedOrderedDict
 from simuran.core.log_handler import log_exception
 from skm_pyutils.table import df_to_file
-from tqdm import tqdm
-from tqdm.notebook import tqdm as tqdm_notebook
+from mpire import WorkerPool
 
 
 @dataclass
@@ -44,17 +48,17 @@ class AnalysisHandler(object):
 
     fns_to_run: list = field(default_factory=list)
     fn_params_list: list = field(default_factory=list)
-    fn_kwargs_list: list = field(default_factory=list)
-    results: IndexedOrderedDict = field(default_factory=IndexedOrderedDict)
     verbose: bool = False
     handle_errors: bool = False
+    pickle_path: Optional[Union[str, "Path"]] = "simuran_analysis.pkl"
+    results: IndexedOrderedDict = field(default_factory=IndexedOrderedDict, init=False)
     _was_error: bool = field(repr=False, default=False)
 
-    def run_all(self, pbar=False):
+    def run_all(self, pbar=False, n_jobs=1):
         """Alias for run_all_fns."""
         self.run_all_fns(pbar)
 
-    def run_all_fns(self, pbar=False):
+    def run_all_fns(self, pbar: bool = False, n_jobs: int = 1, save_every: int = 0):
         """
         Run all of the established functions.
 
@@ -65,6 +69,10 @@ class AnalysisHandler(object):
             False (default) no progress bar.
             True a tdqm progress bat
             "notebook" a progress for notebooks
+        n_jobs : int, optional
+            The number of jobs to run in parallel, by default 1
+            Uses mpire.WorkerPool along with a mapping.
+            For more complex multiprocessing, directly use mpire.WorkerPool.
 
         Returns
         -------
@@ -72,22 +80,13 @@ class AnalysisHandler(object):
 
         """
         self._was_error = False
-        pbar_ = None
-        if pbar is True:
-            pbar_ = tqdm(range(len(self.fns_to_run)))
-        elif pbar == "notebook":
-            pbar_ = tqdm_notebook(range(len(self.fns_to_run)))  # pragma no cover
+        for fn_, args_ in zip(self.fns_to_run, self.fn_params_list):
+            with WorkerPool(n_jobs=n_jobs) as pool:
+                for result in pool.imap(fn_, args_, progress_bar=pbar):
+                    self._handle_result(fn_, result)
+                    if save_every > 0 and len(self.results) % save_every == 0:
+                        self.save_results_to_pickle()
 
-        if pbar_ is not None:
-            for i in pbar_:
-                fn = self.fns_to_run[i]
-                fn_params = self.fn_params_list[i]
-                fn_kwargs = self.fn_kwargs_list[i]
-                self._run_fn(fn, *fn_params, **fn_kwargs)
-        else:
-            fn_zipped = zip(self.fns_to_run, self.fn_params_list, self.fn_kwargs_list)
-            for (fn, fn_params, fn_kwargs) in fn_zipped:
-                self._run_fn(fn, *fn_params, **fn_kwargs)
         if self._was_error:
             logging.warning("A handled error occurred while running analysis")
         self._was_error = False
@@ -99,7 +98,7 @@ class AnalysisHandler(object):
         self.fn_kwargs_list = []
         self.results = IndexedOrderedDict()
 
-    def add_fn(self, fn, *args, **kwargs):
+    def add_fn(self, fn, args):
         """
         Add the function fn to the list with the given args and kwargs.
 
@@ -107,10 +106,10 @@ class AnalysisHandler(object):
         ----------
         fn : function
             The function to add.
-        *args : positional arguments
-            The positional arguments to run the function with.
-        **kwargs : keyword arguments
-            The keyword arguments to run the function with.
+        args : positional arguments
+            The list of arguments to run the function with.
+            See https://slimmer-ai.github.io/mpire/usage/map/map.html
+            For more information on how arguments are handled.
 
         Returns
         -------
@@ -119,11 +118,10 @@ class AnalysisHandler(object):
         """
         self.fns_to_run.append(fn)
         self.fn_params_list.append(args)
-        self.fn_kwargs_list.append(kwargs)
 
     def save_results_to_table(self, filename=None, columns=None, from_dict=True):
         """
-        Dump analysis results to file with pickle.
+        Dump analysis results to csv file.
 
         Parameters
         ----------
@@ -146,43 +144,18 @@ class AnalysisHandler(object):
 
         return df
 
-    def _run_fn(self, fn, *args, **kwargs):
-        """
-        Run the function with *args and **kwargs, not usually publicly called.
+    def save_results_to_pickle(self):
+        with open(self.pickle_path, "wb") as f:
+            pickle.dump(self.results, f)
 
-        Pass simuran_save_result as a keyword argument to control
-        if the result of the function is saved or not.
+    def load_results_from_pickle(self):
+        with open(self.pickle_path, "rb") as f:
+            self.results = pickle.load(f)
 
-        Parameters
-        ----------
-        fn : function
-            The function to run.
-
-        Returns
-        -------
-        object
-            The return value of the function
-
-        """
-        if self.verbose:
-            print(f"Running {fn} with params {args} kwargs {kwargs}")
-        if self.handle_errors:
-            try:
-                result = fn(*args, **kwargs)
-            except BaseException as e:
-                log_exception(
-                    e, f"Running {fn.__name__} with args {args} and kwargs {kwargs}"
-                )
-                self._was_error = True
-                result = "SIMURAN-ERROR"
-        else:
-            result = fn(*args, **kwargs)
+    def _handle_result(self, fn_, result):
         ctr = 1
-        save_result = kwargs.get("simuran_save_result", True)
-        save_name = str(fn.__name__)
-        if save_result:
-            while save_name in self.results.keys():
-                save_name = f"{str(fn.__name__)}_{ctr}"
-                ctr = ctr + 1
-            self.results[save_name] = result
-        return result
+        save_name = str(fn_.__name__)
+        while save_name in self.results.keys():
+            save_name = f"{str(fn_.__name__)}_{ctr}"
+            ctr = ctr + 1
+        self.results[save_name] = result
