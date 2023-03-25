@@ -4,7 +4,8 @@ import numpy as np
 import mne
 from simuran.core.base_signal import BaseSignal, Eeg
 from simuran.bridges.neurochat_bridge import signal_to_neurochat
-from simuran.bridges.mne_bridge import convert_signals_to_mne, plot_signals
+from simuran.bridges.mne_bridge import convert_signals_to_mne
+from simuran.plot.signal import plot_signals
 from simuran.loaders.base_loader import MetadataLoader
 
 from copy import copy

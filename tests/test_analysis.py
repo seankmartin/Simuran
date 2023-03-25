@@ -1,4 +1,5 @@
 import pytest
+import os
 from simuran.analysis.analysis_handler import AnalysisHandler
 
 
@@ -30,7 +31,7 @@ class TestAnalysisHandler(object):
         assert ah.results["add_2"] == "hello 1.0"
         df = ah.save_results_to_table(filename="test.csv")
         assert df.loc["add", 0] == "hi 1.34"
-        # os.remove("test.csv")
+        os.remove("test.csv")
 
         ah.reset()
         assert len((ah.results.keys())) == 0
