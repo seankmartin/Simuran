@@ -1,3 +1,4 @@
+from time import perf_counter
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -9,7 +10,6 @@ import simuran as smr
 from simuran.loaders.allen_loader import AllenOphysLoader
 from simuran import AnalysisHandler
 from skm_pyutils.plot import GridFig
-from skm_pyutils.profile import profileit
 
 from utils import get_path_to_allen_ophys_nwb
 
@@ -28,6 +28,7 @@ def _get_mpi(recording: "smr.Recording") -> "np.ndarray":
         mpi = dataset.max_projection.data
     else:  # PyNWB
         mpi = dataset.processing["ophys"]["images"]["max_projection"].data
+    recording.unload()
     return mpi
 
 
@@ -40,10 +41,7 @@ def get_mpis_simuran(recording_container: "smr.RecordingContainer"):
 def get_mpis_allensdk(recording_container: "smr.RecordingContainer"):
     mpis = []
     for recording in recording_container:
-        recording.load()
-        dataset = recording.data
-        mpi = dataset.max_projection.data
-        mpis.append(mpi)
+        mpis.append(_get_mpi(recording))
     return mpis
 
 
@@ -57,7 +55,7 @@ def plot_mpis(
         mpis = get_mpis_allensdk(recording_container)
         oname = "allen_mpis"
     gf = GridFig(len(recording_container))
-    for recording, mpi in zip(mpis, recording_container):
+    for mpi, recording in zip(mpis, recording_container):
         ax = gf.get_next()
         ax.imshow(mpi, cmap="gray")
         id_ = recording.attrs["ophys_experiment_id"]
@@ -71,12 +69,27 @@ def plot_mpis(
     plt.close(gf.fig)
 
 
-@profileit("simuran_time")
+def timeit(name):
+    def inner(func):
+        def wrapper(*args, **kwargs):
+            t1 = perf_counter()
+            func(*args, **kwargs)
+            t2 = perf_counter()
+
+            with open("timeit.txt", "a+") as f:
+                f.write(f"{name} took {t2 - t1:.2f} seconds\n")
+
+        return wrapper
+
+    return inner
+
+
+@timeit("simuran_time")
 def simuran_mpi_plot(recording_container, output_dir):
     plot_mpis(recording_container, output_dir, sm=True)
 
 
-@profileit("allensdk_time")
+@timeit("allensdk_time")
 def allensdk_mpi_plot(recording_container, output_dir):
     plot_mpis(recording_container, output_dir, sm=False)
 
@@ -119,7 +132,7 @@ def main(data_storage_directory, output_directory, manifest):
             nwb_rc = smr.RecordingContainer.from_table(table, loader)
             nwb_rc.attrs["container_id"] = container_id
 
-            allensdk_mpi_plot(nwb_rc, output_directory)
+            # allensdk_mpi_plot(nwb_rc, output_directory)
             simuran_mpi_plot(nwb_rc, output_directory)
 
 

@@ -1,6 +1,6 @@
 """This may be a temp, lets see"""
 from pathlib import Path
-from typing import TYPE_CHECKING, Union
+from typing import Union
 
 import matplotlib.pyplot as plt
 import numpy as np

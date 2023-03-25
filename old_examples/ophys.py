@@ -2,8 +2,6 @@ from pathlib import Path
 
 import pandas as pd
 import numpy as np
-import dtale
-import objexplore
 from allensdk.brain_observatory.behavior.behavior_project_cache import (
     VisualBehaviorOphysProjectCache,
 )
