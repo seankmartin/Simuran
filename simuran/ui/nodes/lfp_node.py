@@ -3,7 +3,7 @@ import os
 
 from simuran.ui.node import BaseNode, NodeFactory
 from simuran.plot.figure import SimuranFigure
-from simuran.core.base_signal import Eeg
+from simuran.core.base_signal import Eeg, BaseSignal
 from simuran.ui.node_elements import create_input
 from simuran.plot.signal import plot_signals
 
@@ -11,7 +11,7 @@ from simuran.plot.signal import plot_signals
 class LFPViewNodeFactory(NodeFactory):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.label = kwargs.get("label", "View LFP")
+        self.label = kwargs.get("label", "View signals")
         self.node_class = LFPViewNode
         self.category = "Visualise"
 
@@ -35,7 +35,13 @@ class LFPViewNode(BaseNode):
         output_dir = os.getcwd()
 
         name_for_save = input_recording.get_name_for_save(base_dir)
-        eeg_array = [Eeg.from_numpy(s, 250) for s in input_recording.attrs["signals"]]
+        signals = input_recording.attrs["signals"]
+        if not all([isinstance(signals, BaseSignal) for signals in signals]):
+            eeg_array = [
+                Eeg.from_numpy(s, 250) for s in input_recording.attrs["signals"]
+            ]
+        else:
+            eeg_array = signals
         fig = plot_signals(eeg_array, title=name_for_save, show=False)
         all_figs = [(fig, "all")]
 

@@ -117,7 +117,8 @@ class InspectRecordingNode(BaseNode):
             print(
                 "WARNING: the selected neural data source does not support summarising in text, please see the console instead."
             )
-        with open(self.output_file, "w") as f:
-            f.write(summary_info)
+        else:
+            with open(self.output_file, "w") as f:
+                f.write(summary_info)
 
         return True

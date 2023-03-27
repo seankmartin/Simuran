@@ -6,17 +6,17 @@ from simuran.ui.node_elements import create_input, create_code_block
 class PythonCodeNodeFactory(NodeFactory):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.label = kwargs.get("label", "Python Code")
+        self.label = kwargs.get("label", "Python code")
         self.node_class = PythonCodeNode
         self.category = "Processing"
 
         self.attributes = [
-            create_input(label="Input data", hint="Data input", width=300),
+            create_input(label="Input data", hint="Data input", width=350),
             create_code_block(
                 label="Python code",
                 tooltip="Inline Python code",
-                width=300,
-                height=200,
+                width=350,
+                height=120,
             ),
         ]
 

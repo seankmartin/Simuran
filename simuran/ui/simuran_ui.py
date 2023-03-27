@@ -149,6 +149,9 @@ class SimuranUI(object):
         # app_data -> (link_id1, link_id2)
         from_tag, to_tag = app_data[0], app_data[1]
         link_tag = dpg.add_node_link(from_tag, to_tag, parent=sender)
+        self._add_link_backend(link_tag, from_tag, to_tag)
+
+    def _add_link_backend(self, link_tag, from_tag, to_tag):
         if self.debug:
             print(f"Linking {from_tag} to {to_tag}")
 
@@ -548,7 +551,10 @@ class SimuranUI(object):
                 ][0]
                 input_tag, input_ = input_node.get_attribute_with_label(input_label)
                 output_tag, output_ = output_node.get_attribute_with_label(output_label)
-                dpg.add_node_link(input_tag, output_tag, parent=self.editor_tag)
+                link_tag = dpg.add_node_link(
+                    input_tag, output_tag, parent=self.editor_tag
+                )
+                self._add_link_backend(link_tag, input_tag, output_tag)
 
     def reset(self):
         tags = [n.tag for n in list(self.nodes.values())]

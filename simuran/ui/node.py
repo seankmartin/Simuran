@@ -187,6 +187,11 @@ class BaseNode(object):
     def get_downstream_nodes(self, nodes):
         downstream_nodes = []
         output_attributes = self.output_attributes.values()
+        if self.debug:
+            print(
+                f"Searching for attributes {output_attributes}"
+                f" in nodes with attributes: {[(k, list(node.attributes.keys())) for k, node in nodes.items()]}"
+            )
         for _, node in nodes.items():
             downstream_nodes.extend(
                 node.tag
