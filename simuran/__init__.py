@@ -35,6 +35,8 @@ from .plot.base_plot import despine, save_simuran_plot, set_plot_style, setup_ax
 from .plot.figure import SimuranFigure
 from .recording import Recording
 from .recording_container import RecordingContainer
+from .ui.node_factories import register_node_factory
+from .ui.simuran_ui import main_ui as node_editor
 
 loader = loader_from_string
 
