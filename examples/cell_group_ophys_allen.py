@@ -54,10 +54,11 @@ def plot_mpis(
     else:
         mpis = get_mpis_allensdk(recording_container)
         oname = "allen_mpis"
-    gf = GridFig(len(recording_container))
+    gf = GridFig(len(recording_container), wspace=0.1, hspace=0.1, tight_layout=True)
     for mpi, recording in zip(mpis, recording_container):
         ax = gf.get_next()
         ax.imshow(mpi, cmap="gray")
+        ax.set_axis_off()
         id_ = recording.attrs["ophys_experiment_id"]
         s = recording.attrs["session_number"]
         ax_title = f"ID: {id_}, S: {s}"
@@ -107,8 +108,6 @@ def array_of_ci_events(
         recording.load()
         ci_events = recording.data.processing["ophys"]["event_detection"].data.value
         np_arrays.append(ci_events)
-    # Might be able to get this to work with padding? Lets see if worth
-    # xray = xr.DataArray()
     return np_arrays
 
 

@@ -1,6 +1,8 @@
 """This may be a temp, lets see"""
 from pathlib import Path
 from typing import Union
+from matplotlib import cm
+from matplotlib.colors import Normalize
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -18,14 +20,7 @@ from skm_pyutils.plot import GridFig
 input_file_dir = Path(r"D:\AllenBrainObservatory\ophys_data")
 output_dir = Path(r"D:\AllenBrainObservatory\ophys_data\results")
 params = {"loader": "allen_ophys"}
-
-# Step 1a (optional) - Help to set up table - maybe see table.py
-def setup_table(input_file_dir: Union[str, Path]) -> pd.DataFrame:
-    cache = VisualBehaviorOphysProjectCache.from_s3_cache(cache_dir=input_file_dir)
-    experiments = cache.get_ophys_experiment_table()
-    # dtale.show(experiments).open_browser()
-    return experiments
-
+manifest = r"visual-behavior-ophys_project_manifest_v1.0.1.json"
 
 # Step 1b filter the table
 def filter_table(table: pd.DataFrame, inplace: bool = True) -> pd.DataFrame:
@@ -118,13 +113,17 @@ def plot_rewards(ax, dataset, initial_time, final_time):
 
 def plot_stimuli(ax, dataset, initial_time, final_time):
     stimulus_presentations_sample = dataset.stimulus_presentations.query(
-        "stop_time >= @initial_time and start_time <= @final_time"
+        "end_time >= @initial_time and start_time <= @final_time"
     )
+    max_ = stimulus_presentations_sample["image_index"].max()
+    min_ = stimulus_presentations_sample["image_index"].min()
+    cmap = cm.autumn_r
+    norm = Normalize(vmin=min_, vmax=max_)
     for idx, stimulus in stimulus_presentations_sample.iterrows():
         ax.axvspan(
             stimulus["start_time"],
-            stimulus["stop_time"],
-            color=stimulus["color"],
+            stimulus["end_time"],
+            color=cmap(norm(stimulus["image_index"])),
             alpha=0.25,
         )
 
@@ -138,13 +137,11 @@ def summarise_single_session(recording):
     )
     print(f"This experiment has metadata {recording.attrs}")
     cell_specimen_table = allen_dataset.cell_specimen_table
-    print(cell_specimen_table)
     print(
         f"There are {len(cell_specimen_table)} cells "
         f"in this session with IDS {cell_specimen_table.index.array}"
     )
     methods = allen_dataset.list_data_attributes_and_methods()
-    print(f"The available information is {methods}")
 
     ## Stimulus and trial information
     # stimulus_table = allen_dataset.stimulus_presentations
@@ -248,35 +245,23 @@ def summarise_single_session(recording):
 
 
 def establish_analysis(rec):
-    # Temp fn here
-    def print_info(recording, *args, **kwargs):
-        print(recording)
-        print(*args, **kwargs)
-        return vars(recording)
-
     ah = AnalysisHandler()
-    ah.add_analysis(summarise_single_session, rec)
-    ah.add_analysis(print_info, rec)
+    ah.add_analysis(summarise_single_session, [rec])
 
     return ah
 
 
 def main():
-    cache = VisualBehaviorOphysProjectCache.from_s3_cache(cache_dir=input_file_dir)
+    loader = AllenOphysLoader(cache_directory=input_file_dir, manifest=manifest)
+    table = loader.cache.get_ophys_experiment_table()
 
-    # Should support params in multiple formats of metadata
-    table = setup_table(input_file_dir)
-
-    # Step 2 - Read a filtered table, can explore with d-tale etc. before continuing (JASP)
     filtered_table = filter_table(table)
 
     for idx, row in filtered_table.iterrows():
         row_as_dict = row.to_dict()
         row_as_dict[filtered_table.index.name] = idx
         break
-
-    recording = Recording()
-    recording.loader = AllenOphysLoader(cache=cache)
+    recording = Recording(loader=loader)
     recording.attrs = row_as_dict
     recording.available = ["signals"]
     recording.load()
