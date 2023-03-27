@@ -83,7 +83,7 @@ class RecordingNode(BaseNode):
             print(f"Loaded {self.source_file} with params {self.param_file}")
 
 
-class InspectRecordingFactory(NodeFactory):
+class InspectRecordingNodeFactory(NodeFactory):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.label = kwargs.get("label", "Inspect neural data")
@@ -106,7 +106,7 @@ class InspectRecordingNode(BaseNode):
         # Use set parameters
         self.output_file = self.get_value_of_label(label="Output file location")
         self.input_recording_node = self.find_matching_input_node(
-            reciever_label="Input neural data"
+            reciever_label="Input neural data", nodes=nodes
         )
         recording = self.input_recording_node.recording
         recording.inspect()
@@ -119,3 +119,5 @@ class InspectRecordingNode(BaseNode):
             )
         with open(self.output_file, "w") as f:
             f.write(summary_info)
+
+        return True

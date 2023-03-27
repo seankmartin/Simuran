@@ -1,54 +1,22 @@
 import contextlib
 import os
-import dearpygui.dearpygui as dpg
 
 from simuran.ui.node import BaseNode, NodeFactory
 from simuran.plot.figure import SimuranFigure
 from simuran.core.base_signal import Eeg
+from simuran.ui.node_elements import create_input
+from simuran.plot.signal import plot_signals
 
 
-class LFPViewFactory(NodeFactory):
+class LFPViewNodeFactory(NodeFactory):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.label = kwargs.get("label", "LFP signal cleaning")
+        self.label = kwargs.get("label", "View LFP")
         self.node_class = LFPViewNode
-        self.category = "Processing"
-
-        contents1 = [
-            dict(
-                type="TEXT",
-                width=100,
-                label="Input recording",
-                hint="SIMURAN.recording",
-                readonly=True,
-            )
-        ]
-
-        contents = [
-            dict(
-                type="TEXT",
-                width=100,
-                label="Clean method",
-                hint="avg",
-            )
-        ]
+        self.category = "Visualise"
 
         self.attributes = [
-            dict(
-                label="Input recording",
-                attribute_type=dpg.mvNode_Attr_Input,
-                shape=dpg.mvNode_PinShape_Triangle,
-                category="File input",
-                tooltip="Connect a source file node.",
-                contents=contents1,
-            ),
-            dict(
-                label="Clean method",
-                attribute_type=dpg.mvNode_Attr_Static,
-                category="Parameters",
-                contents=contents,
-                tooltip="Options: avg, zscore, ica",
-            ),
+            create_input(label="Input neural data", hint="Data input"),
         ]
 
 
@@ -59,43 +27,22 @@ class LFPViewNode(BaseNode):
     def process(self, nodes):
         super().process(nodes)
 
-        # Use set parameters
-        # method = self.get_value_of_label(label="Clean method")
-        # self.lfp_clean.method = method
-        # if method == "" or method.startswith(" "):
-        #     method = "avg"
+        self.input_recording_node = self.find_matching_input_node(
+            reciever_label="Input neural data", nodes=nodes
+        )
+        input_recording = self.input_recording_node.recording
+        base_dir = None
+        output_dir = os.getcwd()
 
-        # Use the input data
-        for key, _ in self.input_attributes.items():
-            sender, receiver = key.split("--")
-            with contextlib.suppress(ValueError):
-                sender = int(sender)
-            with contextlib.suppress(ValueError):
-                receiver = int(receiver)
-            attr = self.get_attribute(receiver)
-            if attr["label"] == "Input recording":
-                source_file_tag = sender
-                break
-
-        for node in nodes.values():
-            if node.has_attribute(source_file_tag):
-                input_recording = node.recording
-                break
-
-        # TODO include config for things like a base dir / output dir
-        BASE_DIR = None
-        OUTPUT_DIR = os.getcwd()
-
-        name_for_save = input_recording.get_name_for_save(BASE_DIR)
-        # TODO clean up
-        eeg_array = [Eeg.from_numpy(s, 250) for s in input_recording.data["signals"]]
-        fig = eeg_array.plot(title=name_for_save, show=False)
+        name_for_save = input_recording.get_name_for_save(base_dir)
+        eeg_array = [Eeg.from_numpy(s, 250) for s in input_recording.attrs["signals"]]
+        fig = plot_signals(eeg_array, title=name_for_save, show=False)
         all_figs = [(fig, "all")]
 
         bitmap_fnames = []
         for f in all_figs:
             figure, name = f
-            fname = os.path.join(OUTPUT_DIR, "lfp_signals", name_for_save + name)
+            fname = os.path.join(output_dir, "lfp_signals", name_for_save + name)
             fig = SimuranFigure(
                 figure=figure, filename=fname, done=True, verbose=self.debug
             )

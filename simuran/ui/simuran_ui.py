@@ -243,7 +243,7 @@ class SimuranUI(object):
                 width=self.width - 50,
                 height=self.height - 40,
             ):
-                dpg.add_image(label="drawing", texture_id=t_id)
+                dpg.add_image(label="drawing", texture_tag=t_id)
 
     def run_graph_callback(self, sender, app_data, user_data):
         dpg.configure_item("MainRunButton", enabled=False, label="Running...")
@@ -288,6 +288,7 @@ class SimuranUI(object):
             traceback.print_exc()
             dpg.configure_item("MainRunButton", enabled=True, label="Run")
 
+        print("Finished processing.")
         return True
 
     def print_loaders_callback(self, sender, app_data, user_data):

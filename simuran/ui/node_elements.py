@@ -79,6 +79,28 @@ def create_parameter(label, tooltip=None, width=200, type_="TEXT"):
     )
 
 
+def create_code_block(label, tooltip="Inline Python code", width=200, height=400):
+    contents = [
+        dict(
+            type="TEXT",
+            width=width,
+            height=height,
+            label=label,
+            tab_input=True,
+            tracked=True,
+            multiline=True,
+        )
+    ]
+    return dict(
+        label=label,
+        attribute_type=dpg.mvNode_Attr_Output,
+        shape=dpg.mvNode_PinShape_Triangle,
+        category="Code",
+        contents=contents,
+        tooltip=tooltip,
+    )
+
+
 def create_input(label, hint, tooltip="Connect a source file node.", width=200):
     """
     Create an input attribute.

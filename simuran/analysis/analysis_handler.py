@@ -10,7 +10,6 @@ if TYPE_CHECKING:
 
 import pandas as pd
 from indexed import IndexedOrderedDict
-from simuran.core.log_handler import log_exception
 from skm_pyutils.table import df_to_file
 from mpire import WorkerPool
 

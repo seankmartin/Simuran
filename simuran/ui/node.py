@@ -196,7 +196,7 @@ class BaseNode(object):
 
         return downstream_nodes
 
-    def find_matching_input_node(self, receiver_label, nodes):
+    def find_matching_input_node(self, reciever_label, nodes):
         for key, _ in self.input_attributes.items():
             sender, receiver = key.split("->")
             with contextlib.suppress(ValueError):
@@ -204,16 +204,16 @@ class BaseNode(object):
             with contextlib.suppress(ValueError):
                 receiver = int(receiver)
             attr = self.get_attribute(receiver)
-            if attr["label"] == receiver_label:
+            if attr["label"] == reciever_label:
                 source_file_tag = sender
                 break
 
         for node in nodes.values():
             if node.has_attribute(source_file_tag):
-                input_recording = node.recording
+                input_node = node
                 break
 
-        return input_recording
+        return input_node
 
 
 class NodeFactory(object):
