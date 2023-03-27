@@ -10,17 +10,13 @@
 
 ![Demo of UI](demo.gif)
 
-Simultaneous Multi-Region Analysis.
+To see more details than in the readme and read the docs, see the PhD thesis of Sean K. Martin.
 
 ## Installation
 
-```Bash
-git clone https://github.com/seankmartin/SIMURAN
-cd SIMURAN
-pip install ".[neurochat]"
+```console
+pip install simuran
 ```
-
-## OS specific setup
 
 ### MAC OS
 
@@ -30,46 +26,47 @@ pip install ".[neurochat]"
 
 ## Objective
 
-Currently, this can facilitate batch processing of many neural recordings in an easy to handle way.
-Firstly, create a table which describes all of your recordings.
-Then you can filter out specific recordings which match certain criteria.
-A recording container stores these recordings which match these criteria, and provides some bridges between common neuroscience packages to facilate loading / analysing in different formats and with different packages
+Simuran can help facilitate batch processing of many neural recordings in an easy to handle way.
 
-Here, the main object is to setup Recordings (containing all information relevant to an experiment, or part of an experiment) and RecordingContainers, which are a series of Recordings.
+The main objects to setup are Recordings (containing all information relevant to an experiment, or part of an experiment) and RecordingContainers, which are a series of Recordings.
+For instance, a RecordingContainer could represent all t-maze running speed, spikes, etc. and associated metadata, while a Recording is an individual t-maze session.
+This can then support easy extraction of subcontainers, such as, all trials which were successful in mice expressing a particular gene.
 
-For instance, RecordingContainer could represent all t-maze running speed, spikes, etc. and associated metadata, while a Recording is an individual t-maze session.
-This can then support easy extraction of subcontainers, such as, all trials which were successful in mice expressing a particular gene - in a simple filtering method with Pandas style.
+## Usage
 
-Finally, these RecordingContainers can be used to facilitate batch processing of data, and establishing workflows for processing the data.
+### API
 
-### GUI - WORK IN PROGRESS
+The API is built around the Recording and RecordingContainer classes, for instance, one way to load an NWB file is as follows:
+
+```python
+import simuran
+
+recording = simuran.Recording(
+    source_file=PATH_TO_NWB, loader=simuran.loader("NWB"))
+recording.load()
+recording.inspect() # See what was loaded
+```
+
+The Recording class is designed to be as flexible as possible, and can be used to load any data, as long as a loader is provided.
+The loader is a class which takes a Recording object and loads the data into it.
+Other modules include the analysis module, which allows multi-processing of analysis functions, and the base module, which contains the base classes for the API.
+The plot module contains plotting functions for general use, and also some simple figure handling (auto garbage collection, etc.).
+Finally, the bridge module contains Bridge class definitions, which are used to allow interoperability between different software tools and data formats in neuroscience.
+
+### GUI - Visual node based editor
 
 Here, the focus is mostly on the Recording level, but multiple recordings can be bundled as blocks.
 
 Recordings are loaded and processed via Nodes which are established through the UI and run in a digraph fashion.
+The UI is built using dearpygui, and supports a subset of the API via nodes, which can be expanded upon.
 
-## Using custom analysis code
-
-SIMURAN can use any code that is on the Python path. The easiest way to manage this is to either:
-
-1. Fork SIMURAN and place your custom analysis code in the SIMURAN package under the directory labelled custom.
-2. Place your code on path separately, such as by creating a `setup.py` file for your code, or a `pyproject.toml` file for installation.
-3. If you place python code and/or a file with the `.pth` extension in a directory named analysis in the same directory that batch_config_path is in, this `.pth` file will be automatically processed and its contents placed on path. If this option is chosen, it is recommended to store the analysis functions directly so that anyone can run the code without modification.
-4. See [examples](https://github.com/seankmartin/neuro-tools/tree/master/SIMURAN).
+![Demo of UI still](Demo2.PNG)
 
 ## Inspiration
 
-1. [GitHub - seankmartin/NeuroChaT: Analysis toolset with GUI for Neuroscience](https://github.com/seankmartin/NeuroChaT)
+1. [NeuroChaT: Analysis toolset with GUI for Neuroscience](https://github.com/seankmartin/NeuroChaT)
 2. [SpikeInterface · GitHub](https://github.com/SpikeInterface)
-3. [GitHub - seankmartin/NeuroChaT_API_Scripts: A set of python neuroscience scripts which rely on the NeuroChaT API](https://github.com/seankmartin/NeuroChaT_API_Scripts)
-4. [GitHub - mne-tools/mne-python: MNE: Magnetoencephalography (MEG) and Electroencephalography (EEG) in Python](https://github.com/mne-tools/mne-python/)
+3. [A set of python neuroscience scripts which rely on the NeuroChaT API](https://github.com/seankmartin/NeuroChaT_API_Scripts)
+4. [MNE: Magnetoencephalography (MEG) and Electroencephalography (EEG) in Python](https://github.com/mne-tools/mne-python/)
 5. [Sumatra - NeuralEnsemble](http://neuralensemble.org/sumatra/)
-
-## TODO
-
-1. Add more tests
-2. Add more documentation
-3. Convert bridge functions into classes
-4. Add more examples
-5. Add more nodes to the UI
-6. Implement a direct threading system for the RecordingContainer
+6. [Snakemake](https://snakemake.readthedocs.io/en/stable/)
