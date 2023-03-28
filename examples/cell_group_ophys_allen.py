@@ -12,6 +12,7 @@ from simuran import AnalysisHandler
 from skm_pyutils.plot import GridFig
 
 from utils import get_path_to_allen_ophys_nwb
+from summarise_ophys_allen import summarise_single_session
 
 if TYPE_CHECKING:
     from allensdk.brain_observatory.behavior.behavior_project_cache import (
@@ -19,7 +20,7 @@ if TYPE_CHECKING:
     )
 
 
-def _get_mpi(recording: "smr.Recording") -> "np.ndarray":
+def _get_mpi(recording: "smr.Recording", plot_summary=False) -> "np.ndarray":
     recording.load()
     dataset = recording.data
     if dataset is None:
@@ -28,41 +29,56 @@ def _get_mpi(recording: "smr.Recording") -> "np.ndarray":
         mpi = dataset.max_projection.data
     else:  # PyNWB
         mpi = dataset.processing["ophys"]["images"]["max_projection"].data
+    if plot_summary:
+        try:
+            summarise_single_session(recording)
+        except Exception as e:
+            print(e)
     recording.unload()
     return mpi
 
 
-def get_mpis_simuran(recording_container: "smr.RecordingContainer"):
+def get_mpis_simuran(recording_container: "smr.RecordingContainer", plot_summary=False):
     analysis_handler = AnalysisHandler()
-    analysis_handler.add_analysis(_get_mpi, recording_container)
+    analysis_handler.add_analysis(
+        _get_mpi, [(r, plot_summary) for r in recording_container]
+    )
     return analysis_handler.run(pbar=True, n_jobs=4)
 
 
-def get_mpis_allensdk(recording_container: "smr.RecordingContainer"):
+def get_mpis_allensdk(
+    recording_container: "smr.RecordingContainer", plot_summary=False
+):
     mpis = []
     for recording in recording_container:
-        mpis.append(_get_mpi(recording))
+        mpis.append(_get_mpi(recording, plot_summary=plot_summary))
     return mpis
 
 
 def plot_mpis(
-    recording_container: "smr.RecordingContainer", output_dir: "Path", sm=True
+    recording_container: "smr.RecordingContainer",
+    output_dir: "Path",
+    sm=True,
+    plot_summary=False,
 ):
     if sm:
-        mpis = get_mpis_simuran(recording_container)
+        mpis = get_mpis_simuran(recording_container, plot_summary=plot_summary)
         oname = "sm_mpis"
     else:
-        mpis = get_mpis_allensdk(recording_container)
+        mpis = get_mpis_allensdk(recording_container, plot_summary=plot_summary)
         oname = "allen_mpis"
     gf = GridFig(len(recording_container), wspace=0.1, hspace=0.1, tight_layout=True)
     for mpi, recording in zip(mpis, recording_container):
-        ax = gf.get_next()
-        ax.imshow(mpi, cmap="gray")
-        ax.set_axis_off()
-        id_ = recording.attrs["ophys_experiment_id"]
-        s = recording.attrs["session_number"]
-        ax_title = f"ID: {id_}, S: {s}"
-        ax.set_title(ax_title)
+        try:
+            ax = gf.get_next()
+            ax.imshow(mpi, cmap="gray")
+            ax.set_axis_off()
+            id_ = recording.attrs["ophys_experiment_id"]
+            s = recording.attrs["session_number"]
+            ax_title = f"ID: {id_}, S: {s}"
+            ax.set_title(ax_title)
+        except Exception as e:
+            print(e)
     name = recording_container.attrs["container_id"]
     out_path = output_dir / oname / f"{name}.png"
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -86,13 +102,13 @@ def timeit(name):
 
 
 @timeit("simuran_time")
-def simuran_mpi_plot(recording_container, output_dir):
-    plot_mpis(recording_container, output_dir, sm=True)
+def simuran_mpi_plot(recording_container, output_dir, plot_summary=False):
+    plot_mpis(recording_container, output_dir, sm=True, plot_summary=plot_summary)
 
 
 @timeit("allensdk_time")
-def allensdk_mpi_plot(recording_container, output_dir):
-    plot_mpis(recording_container, output_dir, sm=False)
+def allensdk_mpi_plot(recording_container, output_dir, plot_summary=False):
+    plot_mpis(recording_container, output_dir, sm=False, plot_summary=plot_summary)
 
 
 def process_source_file(row):
@@ -131,8 +147,9 @@ def main(data_storage_directory, output_directory, manifest):
             nwb_rc = smr.RecordingContainer.from_table(table, loader)
             nwb_rc.attrs["container_id"] = container_id
 
-            # allensdk_mpi_plot(nwb_rc, output_directory)
-            simuran_mpi_plot(nwb_rc, output_directory)
+            allensdk_mpi_plot(nwb_rc, output_directory, plot_summary=True)
+            # simuran_mpi_plot(nwb_rc, output_directory, plot_summary=True)
+            exit(-1)
 
 
 def get_tables_from_cache(cache: "VisualBehaviorOphysProjectCache"):
