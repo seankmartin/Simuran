@@ -20,8 +20,7 @@ pip install simuran
 ### MAC OS
 
 - To use the UI, you will need to perform at least the following. brew install libpng
-- It is possible you may also need the MAC command line developer tools, but perhaps not.
-- To use doit on MAC, you will need the developer tools.
+- It is possible you may also need the MAC command line developer tools.
 
 ## Objective
 
