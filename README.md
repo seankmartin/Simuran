@@ -1,7 +1,6 @@
 # Simuran
 
 [![Documentation Status](https://readthedocs.org/projects/simuran/badge/?version=latest)](https://simuran.readthedocs.io/en/latest/?badge=latest)
-[![Build Status](https://travis-ci.com/seankmartin/SIMURAN.svg?branch=master)](https://app.travis-ci.com/github/seankmartin/SIMURAN)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=seankmartin_SIMURAN&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=seankmartin_SIMURAN)
 [![codecov](https://codecov.io/gh/seankmartin/SIMURAN/branch/main/graph/badge.svg?token=F67OEU0PF2)](https://codecov.io/gh/seankmartin/SIMURAN)
 [![Maintainability](https://api.codeclimate.com/v1/badges/97aa79ac8f356de695d5/maintainability)](https://codeclimate.com/github/seankmartin/SIMURAN/maintainability)
