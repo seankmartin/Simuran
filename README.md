@@ -68,3 +68,10 @@ The UI is built using dearpygui, and supports a subset of the API via nodes, whi
 4. [MNE: Magnetoencephalography (MEG) and Electroencephalography (EEG) in Python](https://github.com/mne-tools/mne-python/)
 5. [Sumatra - NeuralEnsemble](http://neuralensemble.org/sumatra/)
 6. [Snakemake](https://snakemake.readthedocs.io/en/stable/)
+
+## Update coverage
+
+```console
+pytest .
+codecov -t ba31944a-6070-401e-a731-1bd2f92a5e55
+```
