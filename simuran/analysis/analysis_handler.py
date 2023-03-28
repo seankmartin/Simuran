@@ -89,7 +89,15 @@ class AnalysisHandler(object):
         self._was_error = False
         for fn_, args_ in zip(self.fns_to_run, self.fn_params_list):
             if n_jobs == 1 and not force_mp:
-                for result in map(fn_, args_):
+                for arg_tuple in args_:
+                    kwargs = {}
+                    args = []
+                    for val in arg_tuple:
+                        if isinstance(val, dict):
+                            kwargs.update(val)
+                        else:
+                            args.append(val)
+                    result = fn_(*args, **kwargs)
                     self._handle_result(fn_, result)
                     if save_every > 0 and len(self.results) % save_every == 0:
                         self.save_results_to_pickle()
