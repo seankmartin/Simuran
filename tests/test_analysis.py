@@ -25,7 +25,7 @@ class TestAnalysisHandler(object):
         return ah
 
     def test_analysis_basics(self, ah):
-        ah.add_fn(tuple, [([1, 2, 3, 4],)])
+        ah.add_analysis(tuple, [([1, 2, 3, 4],)])
         ah.run_all(pbar=True)
         assert ah.results["add"] == "hi 1.34"
         assert ah.results["add_2"] == "hello 1.0"
