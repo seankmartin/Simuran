@@ -219,7 +219,9 @@ def summarise_single_session(recording):
     ax.set_ylabel("Normalised magnitude")
     ax.set_xlabel("Time (s)")
 
-    output_path = output_dir / "ophys" / "CI_plots" / f"{ophys_experiment_id}.png"
+    output_path = output_dir / "ophys" / "sessions" / f"{ophys_experiment_id}.png"
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    print(f"Saving figure to {output_path}")
     fig.savefig(output_path, dpi=300)
     plt.close(fig)
 
