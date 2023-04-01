@@ -1,21 +1,16 @@
 """This may be a temp, lets see"""
 from pathlib import Path
-from typing import Union
-from matplotlib import cm
-from matplotlib.colors import Normalize
+from matplotlib.colors import ListedColormap
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from allensdk.brain_observatory.behavior.behavior_project_cache import (
-    VisualBehaviorOphysProjectCache,
-)
 from simuran.analysis.analysis_handler import AnalysisHandler
 from simuran.recording import Recording
 from simuran.loaders.allen_loader import AllenOphysLoader
+import simuran
 
-from skm_pyutils.plot import GridFig
 
 input_file_dir = Path(r"D:\AllenBrainObservatory\ophys_data")
 output_dir = Path(r"D:\AllenBrainObservatory\ophys_data\results")
@@ -62,8 +57,8 @@ def plot_running(ax, dataset, initial_time, final_time):
         running_sample["timestamps"],
         running_sample["speed"] / running_sample["speed"].max(),
         "--",
-        color="gray",
-        linewidth=1,
+        color="k",
+        linewidth=3,
     )
 
 
@@ -75,8 +70,8 @@ def plot_pupil(ax, dataset, initial_time, final_time):
     ax.plot(
         pupil_sample["timestamps"],
         pupil_sample["pupil_width"] / pupil_sample["pupil_width"].max(),
-        color="gray",
-        linewidth=1,
+        color="k",
+        linewidth=3,
     )
 
 
@@ -89,7 +84,7 @@ def plot_licks(ax, dataset, initial_time, final_time):
         licking_sample["timestamps"],
         np.zeros_like(licking_sample["timestamps"]),
         marker="o",
-        markersize=3,
+        markersize=5,
         color="black",
         linestyle="none",
     )
@@ -106,7 +101,7 @@ def plot_rewards(ax, dataset, initial_time, final_time):
         marker="d",
         color="blue",
         linestyle="none",
-        markersize=12,
+        markersize=18,
         alpha=0.5,
     )
 
@@ -115,20 +110,34 @@ def plot_stimuli(ax, dataset, initial_time, final_time):
     stimulus_presentations_sample = dataset.stimulus_presentations.query(
         "end_time >= @initial_time and start_time <= @final_time"
     )
-    max_ = stimulus_presentations_sample["image_index"].max()
-    min_ = stimulus_presentations_sample["image_index"].min()
-    cmap = cm.autumn_r
-    norm = Normalize(vmin=min_, vmax=max_)
+    print(stimulus_presentations_sample)
+
+    # Define the colors for the colormap
+    colors = [
+        "red",
+        "orange",
+        "yellow",
+        "green",
+        "blue",
+        "indigo",
+        "violet",
+        "black",
+        "white",
+    ]
+
+    # Create the colormap using ListedColormap
+    cmap = ListedColormap(colors)
+
     for idx, stimulus in stimulus_presentations_sample.iterrows():
         ax.axvspan(
             stimulus["start_time"],
             stimulus["end_time"],
-            color=cmap(norm(stimulus["image_index"])),
-            alpha=0.25,
+            color=cmap(stimulus["image_index"]),
+            alpha=0.5,
         )
 
 
-def summarise_single_session(recording):
+def summarise_single_session(recording, cell_id_=None):
     allen_dataset = recording.data
     ophys_experiment_id = allen_dataset.ophys_experiment_id
     ## Summary in print
@@ -148,33 +157,44 @@ def summarise_single_session(recording):
     timestamps = allen_dataset.ophys_timestamps
 
     initial_time = 800  # start time in seconds
-    final_time = 860  # stop time in seconds
+    final_time = 840  # stop time in seconds
 
     for cell_id, row in cell_specimen_table.iterrows():
-        fig, axes = plt.subplots(1, 2, figsize=(15, 5))
+        if cell_id_ != None and cell_id != cell_id_:
+            continue
+        fig, ax = plt.subplots(figsize=(10, 8))
 
-        ax = axes[0]
+        simuran.set_plot_style()
         ax.imshow(allen_dataset.max_projection, cmap="gray", interpolation="none")
         ax.imshow(row["roi_mask"], cmap="gray", alpha=0.5, interpolation="none")
         ax.set_title("Max projection with ROI mask")
+        simuran.despine()
 
-        ax = axes[1]
+        output_path = (
+            output_dir
+            / "inkscape"
+            / "CI_plots"
+            / f"{cell_id}"
+            / f"{ophys_experiment_id}_{cell_id}_MPI.png"
+        )
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(output_path, dpi=300)
+        plt.close(fig)
+
+        fig, ax = plt.subplots(figsize=(10, 8))
         dff = np.array(allen_dataset.dff_traces.loc[cell_id, "dff"])
-        events = np.array(allen_dataset.events.loc[cell_id, "events"])
         filtered_events = np.array(allen_dataset.events.loc[cell_id, "filtered_events"])
 
         y = np.concatenate(
             [
                 dff / dff.max(),
-                events / events.max(),
                 filtered_events / filtered_events.max(),
             ]
         )
-        x = np.concatenate([timestamps, timestamps, timestamps])
+        x = np.concatenate([timestamps, timestamps])
         z = np.concatenate(
             [
                 ["DFF"] * len(timestamps),
-                ["Events"] * len(timestamps),
                 ["Filtered Events"] * len(timestamps),
             ]
         )
@@ -185,6 +205,7 @@ def summarise_single_session(recording):
             "`Time (s)` >= @initial_time and `Time (s)` <= @final_time", inplace=False
         )
 
+        simuran.set_plot_style()
         sns.lineplot(
             ax=ax,
             data=cell_df,
@@ -192,13 +213,14 @@ def summarise_single_session(recording):
             y="Normalised magnitude",
             style="Signal",
             hue="Signal",
+            palette=["k", "r"],
         )
         plot_stimuli(ax, allen_dataset, initial_time, final_time)
-        sns.despine()
+        simuran.despine()
 
         output_path = (
             output_dir
-            / "ophys"
+            / "inkscape"
             / "CI_plots"
             / f"{cell_id}"
             / f"{ophys_experiment_id}_{cell_id}.png"
@@ -207,7 +229,7 @@ def summarise_single_session(recording):
         fig.savefig(output_path, dpi=300)
         plt.close(fig)
 
-    fig, ax = plt.subplots(figsize=(10, 6))
+    fig, ax = plt.subplots(figsize=(10, 8))
     plot_running(ax, allen_dataset, initial_time, final_time)
     plot_pupil(ax, allen_dataset, initial_time, final_time)
     plot_licks(ax, allen_dataset, initial_time, final_time)
@@ -218,8 +240,9 @@ def summarise_single_session(recording):
     ax.legend(["running speed", "pupil", "licks", "rewards"])
     ax.set_ylabel("Normalised magnitude")
     ax.set_xlabel("Time (s)")
+    simuran.despine()
 
-    output_path = output_dir / "ophys" / "sessions" / f"{ophys_experiment_id}.png"
+    output_path = output_dir / "inkscape" / "sessions" / f"{ophys_experiment_id}.png"
     output_path.parent.mkdir(parents=True, exist_ok=True)
     print(f"Saving figure to {output_path}")
     fig.savefig(output_path, dpi=300)

@@ -31,7 +31,7 @@ def _get_mpi(recording: "smr.Recording", plot_summary=False) -> "np.ndarray":
         mpi = dataset.processing["ophys"]["images"]["max_projection"].data
     if plot_summary:
         try:
-            summarise_single_session(recording)
+            summarise_single_session(recording, cell_id_=1086493025)
         except Exception as e:
             print(e)
     recording.unload()
