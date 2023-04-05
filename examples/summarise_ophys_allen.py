@@ -85,7 +85,7 @@ def plot_licks(ax, dataset, initial_time, final_time):
         np.zeros_like(licking_sample["timestamps"]),
         marker="o",
         markersize=5,
-        color="black",
+        color="red",
         linestyle="none",
     )
 
@@ -236,7 +236,6 @@ def summarise_single_session(recording, cell_id_=None):
     plot_rewards(ax, allen_dataset, initial_time, final_time)
     plot_stimuli(ax, allen_dataset, initial_time, final_time)
 
-    ax.set_yticks([])
     ax.legend(["running speed", "pupil", "licks", "rewards"])
     ax.set_ylabel("Normalised magnitude")
     ax.set_xlabel("Time (s)")
