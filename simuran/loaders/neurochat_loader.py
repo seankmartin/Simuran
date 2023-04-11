@@ -371,6 +371,8 @@ class NeurochatLoader(MetadataLoader):
         root_folders = []
         times = []
         durations = []
+        dates = []
+        comments = []
         module_logger.info("Finding all .set files...")
         files = get_all_files_in_dir(
             str(folder),
@@ -385,20 +387,26 @@ class NeurochatLoader(MetadataLoader):
             set_files.append(os.path.basename(fname))
             root_folders.append(os.path.normpath(os.path.dirname(fname)))
             with open(fname) as f:
-                f.readline()
+                d = f.readline()
+                dates.append(d.split(" ", 1)[1].strip())
                 t = f.readline()[-9:-1]
                 try:
                     int(t[:2])
                     times.append(t)
-                    f.readline()
-                    f.readline()
-                    durations.append(int(f.readline()[-11:-1].strip()))
+                except ValueError:
+                    times.append(np.nan)
+                f.readline()
+                comment = f.readline()
+                try:
+                    comments.append(comment.split(" ", 1)[1].strip())
+                except IndexError:
+                    comments.append("")
+                duration = f.readline()
+                try:
+                    durations.append(int(float(duration.split(" ", 1)[1].strip())))
                 except Exception:
-                    if len(times) != len(set_files):
-                        times.append(np.nan)
-                    if len(durations) != len(set_files):
-                        durations.append(np.nan)
+                    durations.append(np.nan)
 
-        headers = ["directory", "filename", "time", "duration"]
-        in_list = [root_folders, set_files, times, durations]
+        headers = ["directory", "filename", "date", "time", "duration", "comments"]
+        in_list = [root_folders, set_files, dates, times, durations, comments]
         return list_to_df(in_list, transpose=True, headers=headers)
