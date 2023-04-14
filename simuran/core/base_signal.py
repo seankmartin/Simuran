@@ -1,6 +1,6 @@
 """Module to hold the abstract class setting up information held in a signal."""
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import math
 from copy import deepcopy
 from typing import Optional, Iterable, Any
@@ -47,7 +47,7 @@ class BaseSignal(BaseSimuran):
     """
 
     timestamps: Optional[Iterable[float]] = None
-    samples: Optional[Iterable[float]] = None
+    samples: Iterable[float] = field(default_factory=list)
     sampling_rate: Optional[float] = None
     region: Optional[str] = None
     group: Any = None

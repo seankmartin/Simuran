@@ -141,8 +141,12 @@ class NeurochatLoader(MetadataLoader):
             in simuran.signal.BaseSignal.load()
         """
         self.signal = NLfp()
-        self.signal.load(*args, self.system)
         obj = BaseSignal()
+        try:
+            self.signal.load(*args, self.system)
+        except Exception as e:
+            module_logger.warning(f"Failed to load signal with NeuroChaT due to {e}, skipping")
+            return obj
         obj.data = self.signal
         obj.timestamps = self.signal.get_timestamp()
         obj.samples = self.signal.get_samples()
