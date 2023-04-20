@@ -43,3 +43,6 @@ loader = loader_from_string
 def config_from_file(filename: Union[str, "Path"]) -> ParamHandler:
     """Return a configuration from a filename."""
     return ParamHandler(source_file=filename)
+
+
+load_config = config_from_file
