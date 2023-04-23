@@ -36,6 +36,7 @@ from .plot.figure import SimuranFigure
 from .recording import Recording
 from .recording_container import RecordingContainer
 from .ui.node_factories import register_node_factory
+from skm_pyutils.table import df_from_file, df_to_file
 
 loader = loader_from_string
 
@@ -46,3 +47,5 @@ def config_from_file(filename: Union[str, "Path"]) -> ParamHandler:
 
 
 load_config = config_from_file
+load_table = df_from_file
+save_table = df_to_file
