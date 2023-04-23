@@ -168,6 +168,3 @@ class OneAlyxLoader(MetadataLoader):
         # return clusters_df.loc[clusters["label"] == 1]
 
         return spikes, clusters_df
-    
-    # TODO add download function.
-    # TODO also add some protocol / structure for what is roughly expected to be in such a loader function.
