@@ -91,7 +91,11 @@ class IBLWideBridge(object):
             unit_table = v[1].copy()
             if brain_regions is not None:
                 unit_table = unit_table.loc[unit_table["acronym"].isin(brain_regions)]
-            unit_table.loc["simuran_id"] = str(k) + unit_table["cluster_id"].astype(str)
+            if len(unit_table) == 0:
+                continue
+            unit_table.loc[:, "simuran_id"] = str(k) + unit_table["cluster_id"].astype(
+                str
+            )
 
             if filter_units:
                 unit_table = filter_function(self, unit_table)
@@ -107,7 +111,7 @@ class IBLWideBridge(object):
                     spike_train[f"{k}_{cluster}"].append(spikes["times"][i])
 
             for k2, v2 in spike_train.items():
-                spike_train[k2] = np.array(v2).reshape((1, -1))
+                spike_train[k2] = np.array(v2)
 
         unit_table = pd.concat(unit_dfs, ignore_index=True)
         return unit_table, spike_train
