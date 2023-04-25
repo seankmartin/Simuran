@@ -60,7 +60,9 @@ class IBLWideBridge(object):
         self,
         recording: "Recording",
         filter_units: bool = True,
-        filter_function: Callable[["DataFrame", bool], "DataFrame"] = filter_good_units,
+        filter_function: Callable[
+            ["IBLWideBridge", "DataFrame", bool], "DataFrame"
+        ] = filter_good_units,
         brain_regions: Optional[List[str]] = None,
     ) -> Tuple["DataFrame", Dict[int, np.ndarray]]:
         """
@@ -86,20 +88,20 @@ class IBLWideBridge(object):
         for k, v in recording.data.items():
             if not k.startswith("probe"):
                 continue
-            unit_table = v[1]
+            unit_table = v[1].copy()
             if brain_regions is not None:
                 unit_table = unit_table.loc[unit_table["acronym"].isin(brain_regions)]
-            unit_table["simuran_id"] = str(k) + unit_table["cluster_id"].astype(str)
+            unit_table.loc["simuran_id"] = str(k) + unit_table["cluster_id"].astype(str)
 
             if filter_units:
-                unit_table = filter_function(unit_table)
+                unit_table = filter_function(self, unit_table)
             unit_dfs.append(unit_table)
 
             spikes = v[0]
 
             for cluster in unit_table["cluster_id"]:
                 spike_train[f"{k}_{cluster}"] = []
-            for i in range(len(spikes["depths"])):
+            for i in range(len(spikes["clusters"])):
                 cluster = spikes["clusters"][i]
                 if f"{k}_{cluster}" in spike_train:
                     spike_train[f"{k}_{cluster}"].append(spikes["times"][i])

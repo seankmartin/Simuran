@@ -64,7 +64,9 @@ class AllenVBNBridge(object):
         self,
         recording: "Recording",
         filter_units: bool = True,
-        filter_function: Callable[["DataFrame", bool], "DataFrame"] = filter_good_units,
+        filter_function: Callable[
+            ["AllenVBNBridge", "DataFrame", bool], "DataFrame"
+        ] = filter_good_units,
         brain_regions: Optional[List[str]] = None,
     ) -> Tuple["DataFrame", Dict[int, np.ndarray]]:
         """
