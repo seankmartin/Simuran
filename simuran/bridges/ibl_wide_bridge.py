@@ -1,5 +1,6 @@
 from collections import OrderedDict
-from typing import Callable, TYPE_CHECKING, Tuple, Dict, Optional, List
+from typing import Callable, TYPE_CHECKING, Tuple, Dict, Optional, List, Union
+from dataclasses import dataclass, field
 
 import numpy as np
 import pandas as pd
@@ -10,124 +11,142 @@ if TYPE_CHECKING:
     from pandas import DataFrame
 
 
-def filter_good_units(unit_table: "DataFrame", sort_: bool = False):
-    """
-    Filter out all non-desired_units.
+@dataclass
+class IBLWideBridge(object):
+    """A class to bridge between IBL and other tools."""
 
-    Settings are:
-    presence_ratio > 0.9
-    contamination < 0.4
-    noise_cutoff < 25
-    amp_median > 40uV
+    good_unit_properties: Dict[str, List] = field(default_factory=dict)
 
-    TODO also need to verify this filtering
-    TODO may be possible to compute our own to match allen
+    def __post_init__(self):
+        if len(self.good_unit_properties) == 0:
+            self.good_unit_properties = {
+                "presence_ratio": [">", 0.9],
+                "contamination": ["<", 0.4],
+                "noise_cutoff": ["<", 25],
+                "amp_median": [">", 40 * 10**-6],
+            }
 
-    Parameters
-    ----------
-    unit_table
-    """
-    if sort_:
-        unit_table = unit_table.sort_values("depth", ascending=True)
-    good_unit_filter = (
-        (unit_table["presence_ratio"] > 0.9)
-        & (unit_table["contamination"] < 0.4)
-        & (unit_table["noise_cutoff"] < 25)
-        & (unit_table["amp_median"] > 40 * 10**-6)
-    )
-    return unit_table.loc[good_unit_filter]
+    def filter_good_units(
+        self, unit_table: "DataFrame", sort_: bool = False
+    ) -> "DataFrame":
+        """
+        Filter out all non-desired_units.
 
+        Settings are:
+        presence_ratio > 0.9
+        contamination < 0.4
+        noise_cutoff < 25
+        amp_median > 40uV
 
-def one_spike_train(
-    recording: "Recording",
-    filter_units: bool = True,
-    filter_function: Callable[["DataFrame", bool], "DataFrame"] = filter_good_units,
-    brain_regions: Optional[List[str]] = None,
-) -> Tuple["DataFrame", Dict[int, np.ndarray]]:
-    """
-    Retrieve a spike train for the units in the recording.
+        Parameters
+        ----------
+        unit_table : pd.DataFrame
+            The unit dataframe to filter from, with channel information.
+        sort_ : bool
+            Whether or not to sort the units, which is by depth.
 
-    Parameters
-    ----------
-    recording
-        The recording to retrieve from.
-    filter_units : bool
-        Whether to filter out noisy cells, by default True.
-    filter_function : function
-        The function to use for filtering, be default filter_good_units.
+        """
+        if sort_:
+            unit_table = unit_table.sort_values("depth", ascending=True)
+        good_unit_filter = (
+            (unit_table["presence_ratio"] > 0.9)
+            & (unit_table["contamination"] < 0.4)
+            & (unit_table["noise_cutoff"] < 25)
+            & (unit_table["amp_median"] > 40 * 10**-6)
+        )
+        return unit_table.loc[good_unit_filter]
 
-    Returns
-    -------
-    unit_table, spike_train
-        The unit table and spike train.
+    def spike_train(
+        self,
+        recording: "Recording",
+        filter_units: bool = True,
+        filter_function: Callable[["DataFrame", bool], "DataFrame"] = filter_good_units,
+        brain_regions: Optional[List[str]] = None,
+    ) -> Tuple["DataFrame", Dict[int, np.ndarray]]:
+        """
+        Retrieve a spike train for the units in the recording.
 
-    """
-    unit_dfs = []
-    spike_train = OrderedDict()
-    for k, v in recording.data.items():
-        if not k.startswith("probe"):
-            continue
-        unit_table = v[1]
-        if brain_regions is not None:
-            unit_table = unit_table.loc[unit_table["acronym"].isin(brain_regions)]
-        unit_table["simuran_id"] = str(k) + unit_table["cluster_id"].astype(str)
+        Parameters
+        ----------
+        recording
+            The recording to retrieve from.
+        filter_units : bool
+            Whether to filter out noisy cells, by default True.
+        filter_function : function
+            The function to use for filtering, be default filter_good_units.
 
-        if filter_units:
-            unit_table = filter_function(unit_table)
-        unit_dfs.append(unit_table)
+        Returns
+        -------
+        unit_table, spike_train
+            The unit table and spike train.
 
-        spikes = v[0]
+        """
+        unit_dfs = []
+        spike_train = OrderedDict()
+        for k, v in recording.data.items():
+            if not k.startswith("probe"):
+                continue
+            unit_table = v[1]
+            if brain_regions is not None:
+                unit_table = unit_table.loc[unit_table["acronym"].isin(brain_regions)]
+            unit_table["simuran_id"] = str(k) + unit_table["cluster_id"].astype(str)
 
-        for cluster in unit_table["cluster_id"]:
-            spike_train[f"{k}_{cluster}"] = []
-        for i in range(len(spikes["depths"])):
-            cluster = spikes["clusters"][i]
-            if f"{k}_{cluster}" in spike_train:
-                spike_train[f"{k}_{cluster}"].append(spikes["times"][i])
+            if filter_units:
+                unit_table = filter_function(unit_table)
+            unit_dfs.append(unit_table)
 
-        for k2, v2 in spike_train.items():
-            spike_train[k2] = np.array(v2).reshape((1, -1))
+            spikes = v[0]
 
-    unit_table = pd.concat(unit_dfs, ignore_index=True)
-    return unit_table, spike_train
+            for cluster in unit_table["cluster_id"]:
+                spike_train[f"{k}_{cluster}"] = []
+            for i in range(len(spikes["depths"])):
+                cluster = spikes["clusters"][i]
+                if f"{k}_{cluster}" in spike_train:
+                    spike_train[f"{k}_{cluster}"].append(spikes["times"][i])
 
+            for k2, v2 in spike_train.items():
+                spike_train[k2] = np.array(v2).reshape((1, -1))
 
-def one_trial_info(recording: "Recording") -> dict:
-    """
-    Convert a one recording to a trial information dict.
+        unit_table = pd.concat(unit_dfs, ignore_index=True)
+        return unit_table, spike_train
 
-    Parameters
-    ----------
-    recording : Recording
-        The recording to convert.
+    @staticmethod
+    def trial_info(recording: "Recording") -> dict:
+        """
+        Convert a one recording to a trial information dict.
 
-    Returns
-    -------
-    result_dict : dict
-        The trial passes dict.
+        Parameters
+        ----------
+        recording : Recording
+            The recording to convert.
 
-    """
-    result_dict = {}
-    trials = recording.data["trials"]
+        Returns
+        -------
+        result_dict : dict
+            The trial passes dict.
 
-    # https://int-brain-lab.github.io/iblenv/notebooks_external/loading_trials_data.html
-    result_dict["trial_contrasts"] = get_signed_contrast(trials)
-    result_dict["trial_correct"] = np.array(
-        [True if t == 1 else False for t in trials["feedbackType"]]
-    )
+        """
+        result_dict = {}
+        trials = recording.data["trials"]
 
-    trial_starts = trials["stimOn_times"]
-    trial_ends = trials["response_times"]
-    result_dict["trial_times"] = [(x, y) for x, y in zip(trial_starts, trial_ends)]
+        # https://int-brain-lab.github.io/iblenv/notebooks_external/loading_trials_data.html
+        result_dict["trial_contrasts"] = get_signed_contrast(trials)
+        result_dict["trial_correct"] = np.array(
+            [True if t == 1 else False for t in trials["feedbackType"]]
+        )
 
-    return result_dict
+        trial_starts = trials["stimOn_times"]
+        trial_ends = trials["response_times"]
+        result_dict["trial_times"] = [(x, y) for x, y in zip(trial_starts, trial_ends)]
 
+        return result_dict
 
-def one_recorded_regions(recording: "Recording") -> List[str]:
-    vals = []
-    for k, v in recording.data.items():
-        if not k.startswith("probe"):
-            continue
-        unit_table = v[1]
-        vals.extend(unit_table["acronym"].unique())
-    return list(set(vals))
+    @staticmethod
+    def recorded_regions(recording: "Recording") -> List[str]:
+        vals = []
+        for k, v in recording.data.items():
+            if not k.startswith("probe"):
+                continue
+            unit_table = v[1]
+            vals.extend(unit_table["acronym"].unique())
+        return list(set(vals))
