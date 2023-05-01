@@ -10,7 +10,6 @@ from simuran.plot.base_plot import set_plot_style, despine
 from simuran.plot.figure import SimuranFigure
 
 
-# TODO ensure refactor of bridges not break this
 def plot_unit_properties(
     units_table: "DataFrame",
     properties: List[str],
