@@ -6,6 +6,7 @@ from one.api import ONE
 import one
 from brainbox.io.one import SpikeSortingLoader
 from ibllib.atlas import AllenAtlas
+import requests
 import pandas as pd
 
 from simuran.loaders.base_loader import MetadataLoader
@@ -41,13 +42,20 @@ class OneAlyxLoader(MetadataLoader):
             self.create_cache()
 
     def create_cache(self):
-        one_instance = ONE(
-            base_url="https://openalyx.internationalbrainlab.org",
-            password="international",
-            silent=True,
-            cache_dir=self.cache_directory,
-            mode=self.mode,
-        )
+        try:
+            one_instance = ONE(
+                base_url="https://openalyx.internationalbrainlab.org",
+                password="international",
+                silent=True,
+                cache_dir=self.cache_directory,
+                mode=self.mode,
+            )
+        except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError):
+            one_instance = ONE(
+                silent=True,
+                cache_dir=self.cache_directory,
+                mode="local",
+            )
         param_file_location = one.params.iopar.getfile(one.params._PAR_ID_STR)
         p = Path(param_file_location) / ".caches"
         p.unlink(missing_ok=True)
@@ -118,6 +126,8 @@ class OneAlyxLoader(MetadataLoader):
         return output_str
 
     def _download_data(self, eid, exclude=[]):
+        if self.one.offline:
+            raise ValueError("Cannot download data when in offline mode")
         session_data = [
             "trials",
             "wheels",
