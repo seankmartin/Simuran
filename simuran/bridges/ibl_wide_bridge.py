@@ -114,6 +114,7 @@ class IBLWideBridge(object):
                 spike_train[k2] = np.array(v2)
 
         unit_table = pd.concat(unit_dfs, ignore_index=True)
+        unit_table.set_index("simuran_id", inplace=True)
         return unit_table, spike_train
 
     @staticmethod
