@@ -93,8 +93,8 @@ class IBLWideBridge(object):
                 unit_table = unit_table.loc[unit_table["acronym"].isin(brain_regions)]
             if len(unit_table) == 0:
                 continue
-            unit_table.loc[:, "simuran_id"] = str(k) + unit_table["cluster_id"].astype(
-                str
+            unit_table.loc[:, "simuran_id"] = (
+                str(k) + "_" + unit_table["cluster_id"].astype(str)
             )
 
             if filter_units:
