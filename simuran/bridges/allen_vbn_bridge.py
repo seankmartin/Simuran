@@ -18,7 +18,7 @@ class AllenVBNBridge(object):
     good_unit_properties: Dict[str, List] = field(default_factory=dict)
 
     def __post_init__(self):
-        if len(self.good_unit_properties) == 0:
+        if (self.good_unit_properties is None) or (len(self.good_unit_properties) == 0):
             self.good_unit_properties = {
                 "isi_violations": ["<", 0.4],
                 "nn_hit_rate": [">", 0.9],
