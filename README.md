@@ -5,6 +5,7 @@
 [![codecov](https://codecov.io/gh/seankmartin/SIMURAN/branch/main/graph/badge.svg?token=F67OEU0PF2)](https://codecov.io/gh/seankmartin/SIMURAN)
 [![Maintainability](https://api.codeclimate.com/v1/badges/97aa79ac8f356de695d5/maintainability)](https://codeclimate.com/github/seankmartin/SIMURAN/maintainability)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![DOI](https://zenodo.org/badge/248264803.svg)](https://zenodo.org/badge/latestdoi/248264803)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 ![Demo of UI](images/demo.gif)
@@ -71,6 +72,11 @@ Contributions are welcome, and any issues can be raised on the github page. Plea
 ## License
 
 Simuran is distributed under the GPL-3.0 License.
+
+## Citation
+
+If you use Simuran in your work, please cite the following:
+Sean Martin, & Shane O'Mara. (2023). seankmartin/Simuran: Simuran 23.08.0 (23.08.0). Zenodo. <https://doi.org/10.5281/zenodo.8224426>
 
 ## Inspiration
 
