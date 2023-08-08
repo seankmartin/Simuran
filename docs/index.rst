@@ -12,7 +12,6 @@ SIMURAN - Simultaneous Multi-Region Analysis
    :caption: Contents:
 
    overview
-   getting-started
    reference/simuran
 
 

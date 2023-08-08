@@ -7,9 +7,9 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-![Demo of UI](demo.gif)
+![Demo of UI](images/demo.gif)
 
-To see more details than in the readme and read the docs, see the PhD thesis of Sean K. Martin.
+To see more details than in the README, our [read the docs](https://simuran.readthedocs.io/en/latest/) site, or the PhD thesis of Sean K. Martin.
 
 ## Installation
 
@@ -19,18 +19,18 @@ pip install simuran
 
 ### MAC OS
 
-- To use the UI, you will need to perform at least the following. brew install libpng
+- To use the UI, you will need to perform at least the following - `brew install libpng`.
 - It is possible you may also need the MAC command line developer tools.
 
-## Objective
+## Usage
+
+### Objective
 
 Simuran can help facilitate batch processing of many neural recordings in an easy to handle way.
 
 The main objects to setup are Recordings (containing all information relevant to an experiment, or part of an experiment) and RecordingContainers, which are a series of Recordings.
 For instance, a RecordingContainer could represent all t-maze running speed, spikes, etc. and associated metadata, while a Recording is an individual t-maze session.
 This can then support easy extraction of subcontainers, such as, all trials which were successful in mice expressing a particular gene.
-
-## Usage
 
 ### API
 
@@ -58,7 +58,19 @@ Here, the focus is mostly on the Recording level, but multiple recordings can be
 Recordings are loaded and processed via Nodes which are established through the UI and run in a digraph fashion.
 The UI is built using dearpygui, and supports a subset of the API via nodes, which can be expanded upon.
 
-![Demo of UI still](Demo2.PNG)
+![Demo of UI still](images/Demo2.PNG)
+
+### Examples
+
+Some examples are provided in the examples folder.
+
+## Contributing
+
+Contributions are welcome, and any issues can be raised on the github page. Please feel free to reach out to me if you have any questions.
+
+## License
+
+Simuran is distributed under the GPL-3.0 License.
 
 ## Inspiration
 

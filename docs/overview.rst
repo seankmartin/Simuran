@@ -6,7 +6,15 @@ Project purpose
 ---------------
 SIMURAN is designed to help manage parameters and configuration files for large experiments in neuroscience. Particularly those involving analysing recordings performed in multiple brain regions simultaneously.
 
-It is very much a work in progress, and will be subject to change. The overall idea is to provide a UI to manage parameters and configuration files by using XML files which are rendered as a network.
+This website primarily serves to host the Python API documentation for SIMURAN.
+
+Installation
+------------
+.. code-block:: shell
+
+   git clone https://github.com/seankmartin/SIMURAN
+   cd SIMURAN
+   pip install -e .
 
 Why the name?
 -------------
