@@ -71,7 +71,7 @@ Contributions are welcome, and any issues can be raised on the github page. Plea
 
 ## License
 
-Simuran is distributed under the GPL-3.0 License.
+Simuran is distributed under the MIT license.
 
 ## Citation
 
